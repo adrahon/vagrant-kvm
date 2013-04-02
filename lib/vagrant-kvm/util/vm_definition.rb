@@ -1,15 +1,12 @@
 # Utility class to translate ovf definition to libvirt XML
 # and manage XML formatting for libvirt interaction
 # Not a full OVF converter, only the minimal needed definition
-require 'vagrant/util/template_renderer'
 require "nokogiri"
 
 module VagrantPlugins
   module ProviderKvm
     module Util
       class VmDefinition
-        # For TemplateRenderer
-        include Vagrant::Util
         # Attributes of the VM
         attr_reader :name
         attr_reader :cpus
@@ -98,7 +95,7 @@ module VagrantPlugins
         end
 
         def as_libvirt
-          xml = TemplateRenderer.render("libvirt_domain", {
+          xml = KvmTemplateRenderer.render("libvirt_domain", {
             :name => @name,
             :uuid => @uuid,
             :memory => size_from_bytes(@memory, "KiB"),

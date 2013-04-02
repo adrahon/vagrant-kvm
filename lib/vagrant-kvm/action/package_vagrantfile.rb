@@ -1,11 +1,9 @@
-require 'vagrant/util/template_renderer'
-
 module VagrantPlugins
   module ProviderKvm
     module Action
       class PackageVagrantfile
-        # For TemplateRenderer
-        include Vagrant::Util
+
+        include ProviderKvm::Util
 
         def initialize(app, env)
           @app = app
@@ -22,7 +20,7 @@ module VagrantPlugins
         # have to worry about it.
         def create_vagrantfile
           File.open(File.join(@env["export.temp_dir"], "Vagrantfile"), "w") do |f|
-            f.write(TemplateRenderer.render("package_Vagrantfile", {
+            f.write(KvmTemplateRenderer.render("package_Vagrantfile", {
               :base_mac => @env[:machine].provider.driver.read_mac_address
             }))
           end

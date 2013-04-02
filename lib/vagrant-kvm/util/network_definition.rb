@@ -1,13 +1,10 @@
 # Utility class to manage libvirt network definition
-require 'vagrant/util/template_renderer'
 require "nokogiri"
 
 module VagrantPlugins
   module ProviderKvm
     module Util
       class NetworkDefinition
-        # For TemplateRenderer
-        include Vagrant::Util
         # Attributes of the Network
         attr_reader :name
         attr_reader :domain_name
