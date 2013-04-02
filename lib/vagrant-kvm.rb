@@ -8,8 +8,11 @@ module VagrantPlugins
     autoload :Action, lib_path.join("action")
     autoload :Driver, lib_path.join("driver/driver")
     autoload :Errors, lib_path.join("errors")
-    autoload :VmDefinition, lib_path.join("util/vm_definition")
-    autoload :NetworkDefinition, lib_path.join("util/network_definition")
+
+    module Util
+      autoload :VmDefinition, lib_path.join("util/vm_definition")
+      autoload :NetworkDefinition, lib_path.join("util/network_definition")
+    end
 
     # This returns the path to the source of this plugin.
     #
