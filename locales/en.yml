@@ -1,0 +1,4 @@
+en:
+  vagrant_kvm:
+    test_message: |-
+      This is a test message.
