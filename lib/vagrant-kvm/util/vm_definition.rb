@@ -95,6 +95,12 @@ module VagrantPlugins
         end
 
         def as_libvirt
+          # RedHat and Debian-based systems have different executable names
+          # depending on version/architectures
+          qemu_bin = [ '/usr/bin/qemu-kvm' ]
+          qemu_bin << '/usr/bin/qemu-system-x86_64' if @arch.match(/64$/)
+          qemu_bin << '/usr/bin/qemu-system-i386'   if @arch.match(/^i.86$/)
+
           xml = KvmTemplateRenderer.render("libvirt_domain", {
             :name => @name,
             :uuid => @uuid,
@@ -103,7 +109,8 @@ module VagrantPlugins
             :arch => @arch,
             :disk => @disk,
             :mac => format_mac(@mac),
-            :network => @network
+            :network => @network,
+            :qemu_bin => qemu_bin.detect { |binary| File.exists? binary }
           })
           xml
         end
