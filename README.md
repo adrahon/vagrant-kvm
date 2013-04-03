@@ -24,7 +24,7 @@ shown below.
 ```
 $ vagrant plugin install vagrant-kvm
 ...
-$ vagrant up --provider=aws
+$ vagrant up --provider=kvm
 ...
 ```
 
