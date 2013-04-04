@@ -4,8 +4,9 @@ This is a [Vagrant](http://www.vagrantup.com) 1.1+ plugin that adds a KVM
 provider to Vagrant, allowing Vagrant to control and provision KVM/QEMU VM.
 
 **NOTE:** This plugin requires Vagrant 1.1+
+
 **NOTE:** This plugin requires QEMU 1.2+, it has only been tested on Fedora 18
-at the moment.
+and Debian Wheezy at the moment.
 
 ## Features/Limitations
 
@@ -14,6 +15,8 @@ at the moment.
 * Uses NFS for sync folders
 * Only works with 1 VM per Vagrantfile for now
 * Only works with private networking for now
+* Requires "libvirt" group membership to run vagrant (Debian/Ubuntu only)
+* Requires backporting qemu and libvirt from experimental (Debian) or raring (Ubuntu)
 
 ## Usage
 
@@ -24,7 +27,7 @@ shown below.
 ```
 $ vagrant plugin install vagrant-kvm
 ...
-$ vagrant up --provider=aws
+$ vagrant up --provider=kvm
 ...
 ```
 
