@@ -97,7 +97,7 @@ module VagrantPlugins
         def as_libvirt
           # RedHat and Debian-based systems have different executable names
           # depending on version/architectures
-          qemu_bin = [ '/usr/bin/qemu-kvm' ]
+          qemu_bin = [ '/usr/bin/qemu-kvm', '/usr/bin/kvm' ]
           qemu_bin << '/usr/bin/qemu-system-x86_64' if @arch.match(/64$/)
           qemu_bin << '/usr/bin/qemu-system-i386'   if @arch.match(/^i.86$/)
 
