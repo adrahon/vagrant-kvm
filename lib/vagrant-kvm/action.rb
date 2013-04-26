@@ -63,7 +63,7 @@ module VagrantPlugins
                 b3.use Resume
               end
 
-              b2.use Call, GracefulHalt, :poweroff, :running do |env2, b3|
+              b2.use Call, GracefulHalt, :shutoff, :running do |env2, b3|
                 if !env2[:result]
                   b3.use ForcedHalt
                 end
