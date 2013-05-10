@@ -2,3 +2,7 @@ en:
   vagrant_kvm:
     test_message: |-
       This is a test message.
+    errors:
+      kvm_invalid_version: |-
+        Invalid Kvm version detected: %{actual}, but a version %{required} is
+        required.
