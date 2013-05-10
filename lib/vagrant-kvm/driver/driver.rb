@@ -46,9 +46,11 @@ module VagrantPlugins
               raise e
             end
           end
+
           @version = read_version
-          if (@version[:maj] == 1 && @version[:min] < 2) || @version[:maj] < 1
-            raise Vagrant::Errors::KvmInvalidVersion
+          if @version < "1.2.0"
+            raise Errors::KvmInvalidVersion,
+              :actual => @version, :required => "< 1.2.0"
           end
 
           # Get storage pool if it exists
@@ -207,13 +209,13 @@ module VagrantPlugins
 
         # Return the qemu version
         #
-        # @return [Hash] with :maj and :min version numbers
+        # @return [String] of the form "1.2.2"
         def read_version
           # libvirt returns a number like 1002002 for version 1.2.2
-          # we return just the major.minor part like this 1002
           maj = @conn.version / 1000000
           min = (@conn.version - maj*1000000) / 1000
-          { :maj => maj, :min => min }
+          rel = @conn.version % 1000
+          "#{maj}.#{min}.#{rel}"
         end
 
         # Resumes the previously paused virtual machine.
