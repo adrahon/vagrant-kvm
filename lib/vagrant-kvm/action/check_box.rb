@@ -16,7 +16,7 @@ module VagrantPlugins
 
             # Add the box then reload the box collection so that it becomes
             # aware of it.
-            env[:ui].info I18n.t("vagrant.actions.vm.check_box.not_found", :name => box_name)
+            env[:ui].info I18n.t("vagrant.actions.vm.check_box.not_found", :name => box_name, :provider => env[:machine].provider_name)
             env[:action_runner].run(Vagrant::Action.action_box_add, {
               :box_name     => box_name,
               :box_provider => env[:machine].provider_name,
