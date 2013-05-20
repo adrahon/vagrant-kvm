@@ -1,3 +1,8 @@
+# 0.1.3 (May 20, 2013)
+
+* Merge pull request #13 Fixed error in check_box.rb (Vagrant v1.2.2 compat)
+* Merge pull request #12 improve invalid version reporting
+
 # 0.1.2 (May 7, 2013)
 
 * Merge pull request #2 add "/usr/bin/kvm" to search options 
