@@ -8,7 +8,7 @@ module VagrantPlugins
     module Util
       class VmDefinition
         # Attributes of the VM
-        attr_reader :name
+        attr_accessor :name
         attr_reader :cpus
         attr_accessor :disk
         attr_reader :mac

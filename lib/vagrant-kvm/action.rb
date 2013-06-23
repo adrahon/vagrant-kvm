@@ -223,6 +223,7 @@ module VagrantPlugins
       def self.action_up
         Vagrant::Action::Builder.new.tap do |b|
           b.use CheckKvm
+          b.use SetName
           b.use ConfigValidate
           b.use InitStoragePool
           b.use Call, Created do |env, b2|
@@ -260,6 +261,7 @@ module VagrantPlugins
       autoload :PrepareNFSSettings, action_root.join("prepare_nfs_settings")
       autoload :PruneNFSExports, action_root.join("prune_nfs_exports")
       autoload :Resume, action_root.join("resume")
+      autoload :SetName, action_root.join("set_name")
       autoload :SetupPackageFiles, action_root.join("setup_package_files")
       autoload :ShareFolders, action_root.join("share_folders")
       autoload :Suspend, action_root.join("suspend")
