@@ -16,6 +16,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "nokogiri", "~> 1.5.6"
   s.add_runtime_dependency "ruby-libvirt", "~> 0.4.0"
 
+  s.add_development_dependency "pry"
   s.add_development_dependency "rake"
   s.add_development_dependency "rspec-core", "~> 2.12.2"
   s.add_development_dependency "rspec-expectations", "~> 2.12.1"
