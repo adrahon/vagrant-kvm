@@ -18,10 +18,10 @@ module VagrantPlugins
           b.use PruneNFSExports
           b.use NFS
           b.use PrepareNFSSettings
-          b.use ShareFolders
           b.use SetHostname
           #b.use Customize
           b.use Boot
+          b.use ShareFolders
         end
       end
 
