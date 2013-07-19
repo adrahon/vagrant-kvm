@@ -82,10 +82,16 @@ There are two box formats for the `kvm` provider:
 2. "Native" box - you need a box.xml file (libvirt domain format) and a raw
    image file (you can convert a .vmdk with qemu-img)
 
-To turn this into a native box, you need to create a vagrant image and do:
+To turn this into a native box, you need to create a vagrant image
+and make it sparse using libguestfs-tools:
 
 ```
-$ tar cvzf kvm.box ./metadata.json ./Vagrantfile ./box.xml ./box-disk1.img
+$ env TMPDIR=/tmp virt-sparsify box-disk1-orig.img box-disk1.img
+```
+
+and make box with keeping sparse:
+```
+$ tar cvSzf kvm.box ./metadata.json ./Vagrantfile ./box.xml ./box-disk1.img
 ```
 
 You need a base MAC address and a private network like in the example.
