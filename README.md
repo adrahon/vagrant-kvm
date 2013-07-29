@@ -70,6 +70,12 @@ end
 
 And then run `vagrant up --provider=kvm`.
 
+If you always use kvm provider as default, please set it in your .bashrc:
+```
+export VAGRANT_DEFAULT_PROVIDER=kvm
+```
+then you can simply run `vagrant up` with kvm provider.
+
 ## Box Format
 
 Vagrant providers each require a custom provider-specific box format.
