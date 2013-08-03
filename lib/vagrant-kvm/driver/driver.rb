@@ -22,7 +22,7 @@ module VagrantPlugins
           :crashed]
 
         # The Name of the virtual machine we represent
-        attr_accessor :name
+        attr_reader :name
 
         # The UUID of the virtual machine we represent
         attr_reader :uuid
@@ -111,7 +111,7 @@ module VagrantPlugins
           @pool.refresh
           volume = @pool.lookup_volume_by_name(new_disk)
           definition.disk = volume.path
-          definition.name = name
+          definition.name = @name
           # create vm
           @logger.info("Creating new VM")
           domain = @conn.define_domain_xml(definition.as_libvirt)
@@ -140,7 +140,7 @@ module VagrantPlugins
           @pool.refresh
           volume = @pool.lookup_volume_by_name(new_disk)
           definition.disk = volume.path
-          definition.name = name
+          definition.name = @name
           # create vm
           @logger.info("Creating new VM")
           domain = @conn.define_domain_xml(definition.as_libvirt)
@@ -231,7 +231,6 @@ module VagrantPlugins
           true
         end
 
-        # XXX: doesn't really set the name, just makes it available for import
         def set_name(name)
           @name = name
         end
