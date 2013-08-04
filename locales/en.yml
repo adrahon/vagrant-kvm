@@ -3,6 +3,10 @@ en:
     test_message: |-
       This is a test message.
     errors:
+      kvm_no_connection: |-
+        Cannot connect to KVM through Libvirt. Please check kernel module
+	'kvm' and 'kvm-intel' or 'kvm-amd' are installed and your id is in 
+	group libvirt(in debian/ubuntu).
       kvm_invalid_version: |-
         Invalid Kvm version detected: %{actual}, but a version %{required} is
         required.
