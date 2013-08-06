@@ -5,10 +5,14 @@ provider to Vagrant, allowing Vagrant to control and provision KVM/QEMU VM.
 
 **NOTE:** This plugin requires Vagrant 1.1+
 
-**NOTE:** This plugin requires QEMU 1.2+, it has only been tested on Fedora 18
-and Debian Wheezy at the moment.
+**NOTE:** This plugin requires QEMU 1.2+, it has only been tested on Fedora 18,
+Debian Wheezy, Ubuntu 12.04(LTS) Precise and Ubuntu 13.04 Raring at the moment.
 
-**NOTE:** This plugin requires `libvirt-dev` package to be installed (Ubuntu 13.04) or `libvirt-devel` (openSUSE)
+**NOTE:** This plugin requires `libvirt-dev` package to be installed 
+(as in Debian/Ubuntu) or `libvirt-devel` (Fedora/openSUSE)
+
+**NOTE** You can use a backported KVM/QEMU 1.2 with Private Package Archive(PPA)
+for Ubuntu 12.04(LTS) at https://launchpad.net/~miurahr/+archive/vagrant
 
 ## Features/Limitations
 
