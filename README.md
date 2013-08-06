@@ -88,11 +88,24 @@ There are two box formats for the `kvm` provider:
 2. "Native" box - you need a box.xml file (libvirt domain format) and a raw
    image file (you can convert a .vmdk with qemu-img)
 
-To turn this into a native box, you need to create a vagrant image and do:
+To turn this into a native box, you need to create a vagrant image and
+make it sparse.
+You need ```libguestfs-tools``` package 
+in Debian/Ubuntu/Mint, Fedora15 and after, or CentOS/RHEL6.
 
 ```
-$ tar cvzf kvm.box ./metadata.json ./Vagrantfile ./box.xml ./box-disk1.img
+$ env TMPDIR=/tmp virt-sparsify box-disk1-orig.img box-disk1.img
 ```
+
+Please keep enough disk space for TMPDIR!
+To make box with keeping sparse, don't forget -S in tar option:
+
+```
+$ tar cvSzf kvm.box ./metadata.json ./Vagrantfile ./box.xml ./box-disk1.img
+```
+
+For CentOS/RHEL5, there is a package in EPEL5. 
+For Gentoo, you can use ```emerge libguestfs```.
 
 You need a base MAC address and a private network like in the example.
 
