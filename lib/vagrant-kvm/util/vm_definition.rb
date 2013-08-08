@@ -27,7 +27,7 @@ module VagrantPlugins
             nics[adapter][:type] = :user
           end
           # look for interfaces on virtual network
-          doc.css("devices interface[type='netwok']").each do |item|
+          doc.css("devices interface[type='network']").each do |item|
             ifcount += 1
             adapter = ifcount
             nics[adapter] ||= {}
