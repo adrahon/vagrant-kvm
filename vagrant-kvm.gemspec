@@ -5,11 +5,12 @@ Gem::Specification.new do |s|
   s.name          = "vagrant-kvm"
   s.version       = VagrantPlugins::ProviderKvm::VERSION
   s.platform      = Gem::Platform::RUBY
-  s.authors       = "Alex Drahon"
+  s.authors       = ["Alex Drahon", "Hiroshi Miura"]
   s.email         = "adrahon@gmail.com"
   s.homepage      = "http://www.vagrantup.com"
   s.summary       = "Enables Vagrant to use KVM instead of VirtualBox."
   s.description   = "Enables Vagrant to use KVM instead of VirtualBox."
+  s.license       = 'MIT'
 
   s.required_rubygems_version = ">= 1.3.6"
   s.requirements << 'KVM/QEMU, v1.2.0 or greater'
