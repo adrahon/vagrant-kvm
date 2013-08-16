@@ -10,6 +10,7 @@ module VagrantPlugins
         class VMNotFound < StandardError; end
 
         include Util
+        include Errors
 
         # enum for states return by libvirt
         VM_STATE = [
