@@ -94,8 +94,9 @@ module VagrantPlugins
         #
         # @param [String] xml Path to the libvirt XML file.
         # @param [String] path Destination path for the volume.
+        # @param [String] image_type An image type for the volume.
         # @return [String] UUID of the imported VM.
-        def import(xml, path)
+        def import(xml, path, image_type)
           @logger.info("Importing VM")
           # create vm definition from xml
           definition = File.open(xml) { |f|
@@ -108,11 +109,12 @@ module VagrantPlugins
           old_path = File.join(File.dirname(xml), box_disk)
           new_path = File.join(path, new_disk)
           # we use qemu-img convert to preserve image size
-          system("qemu-img convert -p #{old_path} -O raw #{new_path}")
+          system("qemu-img convert -p #{old_path} -O #{image_type} #{new_path}")
           @pool.refresh
           volume = @pool.lookup_volume_by_name(new_disk)
           definition.disk = volume.path
           definition.name = @name
+          definition.image_type = image_type
           # create vm
           @logger.info("Creating new VM")
           domain = @conn.define_domain_xml(definition.as_libvirt)
@@ -124,8 +126,9 @@ module VagrantPlugins
         #
         # @param [String] ovf Path to the OVF file.
         # @param [String] path Destination path for the volume.
+        # @param [String] image_type An image type for the volume.
         # @return [String] UUID of the imported VM.
-        def import_ovf(ovf, path)
+        def import_ovf(ovf, path, image_type)
           @logger.info("Importing OVF definition for VM")
           # create vm definition from ovf
           definition = File.open(ovf) { |f|
@@ -137,11 +140,12 @@ module VagrantPlugins
           @logger.info("Converting volume #{box_disk} to #{new_disk}")
           old_path = File.join(File.dirname(ovf), box_disk)
           new_path = File.join(path, new_disk)
-          system("qemu-img convert -p #{old_path} -O raw #{new_path}")
+          system("qemu-img convert -p #{old_path} -O #{image_type} #{new_path}")
           @pool.refresh
           volume = @pool.lookup_volume_by_name(new_disk)
           definition.disk = volume.path
           definition.name = @name
+          definition.image_type = image_type
           # create vm
           @logger.info("Creating new VM")
           domain = @conn.define_domain_xml(definition.as_libvirt)

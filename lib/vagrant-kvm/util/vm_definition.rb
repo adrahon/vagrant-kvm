@@ -14,6 +14,7 @@ module VagrantPlugins
         attr_reader :mac
         attr_reader :arch
         attr_reader :network
+        attr_accessor :image_type
 
         def self.list_interfaces(definition)
           nics = {}
@@ -69,7 +70,7 @@ module VagrantPlugins
           # disk volume
           diskref = doc.at_css("DiskSection Disk")["fileRef"]
           @disk = doc.at_css("References File[id='#{diskref}']")["href"]
-
+          @image_type = 'raw'
           # mac address
           # XXX we use only the first nic
           @mac = format_mac(doc.at_css("Machine Hardware Adapter[enabled='true']")['MACAddress'])
@@ -93,6 +94,7 @@ module VagrantPlugins
           @disk = doc.at_css("devices disk source")["file"]
           @mac = doc.at_css("devices interface mac")["address"]
           @network = doc.at_css("devices interface source")["network"]
+          @image_type = doc.at_css("devices disk driver")["type"]
         end
 
         def as_libvirt
@@ -112,6 +114,7 @@ module VagrantPlugins
             :mac => format_mac(@mac),
             :network => @network,
             :gui => @gui,
+            :image_type => @image_type,
             :qemu_bin => qemu_bin.detect { |binary| File.exists? binary }
           })
           xml

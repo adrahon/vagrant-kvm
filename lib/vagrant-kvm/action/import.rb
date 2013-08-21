@@ -10,6 +10,10 @@ module VagrantPlugins
           env[:ui].info I18n.t("vagrant.actions.vm.import.importing",
                                :name => env[:machine].box.name)
 
+          # Ignore unsupported image types
+          image_type = env[:machine].provider_config.image_type
+          image_type = 'raw' unless image_type == 'qcow2'
+
           # Import the virtual machine (ovf or libvirt)
           # if a libvirt XML definition is present we use it
           # otherwise we convert the OVF
@@ -17,11 +21,11 @@ module VagrantPlugins
           box_file = env[:machine].box.directory.join("box.xml").to_s
           if File.file?(box_file)
             env[:machine].id = env[:machine].provider.driver.import(
-                        box_file, storage_path)
+                        box_file, storage_path, image_type)
           else
             box_file = env[:machine].box.directory.join("box.ovf").to_s
             env[:machine].id = env[:machine].provider.driver.import_ovf(
-                        box_file, storage_path)
+                        box_file, storage_path, image_type)
           end
 
           # If we got interrupted, then the import could have been
