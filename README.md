@@ -116,4 +116,7 @@ You need a base MAC address and a private network like in the example.
 
 ## Configuration
 
-There are no provider-specific parameters at the moment.
+There are some provider specific parameter to control VM definition.
+
+* `gui` - boolean for starting VM with VNC enabled.
+

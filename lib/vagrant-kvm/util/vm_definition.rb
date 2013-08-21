@@ -39,6 +39,7 @@ module VagrantPlugins
 
         def initialize(definition, source_type='libvirt')
           @uuid = nil
+          @gui = nil
           @network = 'default'
           if source_type == 'ovf'
             create_from_ovf(definition)
@@ -110,6 +111,7 @@ module VagrantPlugins
             :disk => @disk,
             :mac => format_mac(@mac),
             :network => @network,
+            :gui => @gui,
             :qemu_bin => qemu_bin.detect { |binary| File.exists? binary }
           })
           xml
@@ -121,6 +123,10 @@ module VagrantPlugins
 
         def set_mac(mac)
           @mac = format_mac(mac)
+        end
+
+        def set_gui
+          @gui = true
         end
 
         # Takes a quantity and a unit

@@ -6,6 +6,11 @@ module VagrantPlugins
       # @return [Array]
       attr_reader :customizations
 
+      # If set to `true`, then KVM/Qemu will be launched with a VNC console.
+      #
+      # @return [Boolean]
+      attr_accessor :gui
+
       # This should be set to the name of the VM
       #
       # @return [String]
@@ -18,6 +23,7 @@ module VagrantPlugins
 
       def initialize
         @name             = UNSET_VALUE
+        @gui              = UNSET_VALUE
       end
 
       # This is the hook that is called to finalize the object before it
@@ -25,6 +31,8 @@ module VagrantPlugins
       def finalize!
         # The default name is just nothing, and we default it
         @name = nil if @name == UNSET_VALUE
+        # Default is to not show a GUI
+        @gui = false if @gui == UNSET_VALUE
       end
     end
   end
