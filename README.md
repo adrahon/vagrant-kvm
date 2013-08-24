@@ -119,4 +119,5 @@ You need a base MAC address and a private network like in the example.
 There are some provider specific parameter to control VM definition.
 
 * `gui` - boolean for starting VM with VNC enabled.
+* `image_type` - an image format for vm disk: 'raw' or 'qcow2'
 

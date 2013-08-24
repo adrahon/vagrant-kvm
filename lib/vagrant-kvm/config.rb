@@ -21,9 +21,15 @@ module VagrantPlugins
       # @return [Hash]
       attr_reader :network_adapters
 
+      # The VM image format
+      #
+      # @return [String]
+      attr_accessor :image_type
+
       def initialize
         @name             = UNSET_VALUE
         @gui              = UNSET_VALUE
+        @image_type       = UNSET_VALUE
       end
 
       # This is the hook that is called to finalize the object before it
@@ -33,6 +39,8 @@ module VagrantPlugins
         @name = nil if @name == UNSET_VALUE
         # Default is to not show a GUI
         @gui = false if @gui == UNSET_VALUE
+        # Default image type is a sparsed raw
+        @image_type = 'raw' if @image_type == UNSET_VALUE
       end
     end
   end
