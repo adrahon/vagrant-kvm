@@ -1,3 +1,16 @@
+# 0.1.4 (August 20, 2013)
+
+* Add support for qcow2 and configuration for image type [GH-45]
+* Improve error handling [GH-43] [GH-44]
+* Add license and additional author Hiroshi Miura @miurahr to gemfile [GH-42]
+* Add option to enable/disable VNC [GH-41]
+* Fixes to VM set_name [GH-29]
+* Fix typo in VM definition [GH-35]
+* Expanded Readme file [GH-26] [GH-25][GH-34]
+* Add support for VNC console [GH-27]
+* ShareFolders after Boot to avoid ssh timeout [GH-19]
+* Set vm name to avoid collisions [GH-15]
+
 # 0.1.3 (May 20, 2013)
 
 * Merge pull request #13 Fixed error in check_box.rb (Vagrant v1.2.2 compat)
