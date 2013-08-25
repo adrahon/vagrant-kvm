@@ -14,6 +14,10 @@ Debian Wheezy, Ubuntu 12.04(LTS) Precise and Ubuntu 13.04 Raring at the moment.
 **NOTE** You can use a backported KVM/QEMU 1.2 with Private Package Archive(PPA)
 for Ubuntu 12.04(LTS) at https://launchpad.net/~miurahr/+archive/vagrant
 
+**NOTE** There is another plugin `vagrant-libvirt` that makes breakage for 
+`vagrant-kvm` because of a bug of `vagrant-libvirt(0.0.6)`. This will be fixed
+in `vagrant-libvirt(0.0.7 and after)`.
+
 ## Features/Limitations
 
 * Provides the same workflow as the Vagrant VirtualBox provider.
