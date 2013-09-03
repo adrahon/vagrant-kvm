@@ -9,7 +9,7 @@ module VagrantPlugins
         def call(env)
           @env = env
 
-          if @env[:machine].provider_config.gui
+          if @env[:machine].provider_config.gui and @env[:machine_action] != :resume
             env[:machine].provider.driver.set_gui
           end
 
