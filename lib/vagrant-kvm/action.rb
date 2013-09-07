@@ -196,6 +196,7 @@ module VagrantPlugins
 
                 # The VM is not saved, so we must have to boot it up
                 # like normal. Boot!
+                b4.use PrepareGui
                 b4.use action_boot
               end
             end
@@ -258,6 +259,7 @@ module VagrantPlugins
       autoload :MessageNotCreated, action_root.join("message_not_created")
       autoload :MessageWillNotDestroy, action_root.join("message_will_not_destroy")
       autoload :Network, action_root.join("network")
+      autoload :PrepareGui, action_root.join("prepare_gui")
       autoload :PrepareNFSSettings, action_root.join("prepare_nfs_settings")
       autoload :PruneNFSExports, action_root.join("prune_nfs_exports")
       autoload :Resume, action_root.join("resume")
