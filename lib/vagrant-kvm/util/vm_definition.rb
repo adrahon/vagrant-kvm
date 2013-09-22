@@ -7,6 +7,9 @@ module VagrantPlugins
   module ProviderKvm
     module Util
       class VmDefinition
+
+        include Errors
+
         # Attributes of the VM
         attr_accessor :name
         attr_reader :cpus
@@ -15,6 +18,7 @@ module VagrantPlugins
         attr_reader :arch
         attr_reader :network
         attr_accessor :image_type
+        attr_accessor :qemu_bin
 
         def self.list_interfaces(definition)
           nics = {}
@@ -95,14 +99,27 @@ module VagrantPlugins
           @mac = doc.at_css("devices interface mac")["address"]
           @network = doc.at_css("devices interface source")["network"]
           @image_type = doc.at_css("devices disk driver")["type"]
+          @qemu_bin = doc.at_css("domain devices emulator").content
         end
 
         def as_libvirt
-          # RedHat and Debian-based systems have different executable names
-          # depending on version/architectures
-          qemu_bin = [ '/usr/bin/qemu-kvm', '/usr/bin/kvm' ]
-          qemu_bin << '/usr/bin/qemu-system-x86_64' if @arch.match(/64$/)
-          qemu_bin << '/usr/bin/qemu-system-i386'   if @arch.match(/^i.86$/)
+          if @qemu_bin
+            # user specified path of qemu binary
+            qemu_bin_list = [@qemu_bin]
+          else
+            # RedHat and Debian-based systems have different executable names
+            # depending on version/architectures
+            qemu_bin_list = [ '/usr/bin/qemu-kvm', '/usr/bin/kvm' ]
+            qemu_bin_list << '/usr/bin/qemu-system-x86_64' if @arch.match(/64$/)
+            qemu_bin_list << '/usr/bin/qemu-system-i386'   if @arch.match(/^i.86$/)
+          end
+
+          qemu_bin = qemu_bin_list.detect { |binary| File.exists? binary }
+          if not qemu_bin
+            raise Errors::KvmNoQEMUBinary,
+            :cause => @qemu_bin ?
+            "Vagrantfile (specified binary: #{@qemu_bin})" : "QEMU installation"
+          end
 
           xml = KvmTemplateRenderer.render("libvirt_domain", {
             :name => @name,
@@ -115,7 +132,7 @@ module VagrantPlugins
             :network => @network,
             :gui => @gui,
             :image_type => @image_type,
-            :qemu_bin => qemu_bin.detect { |binary| File.exists? binary }
+            :qemu_bin => qemu_bin
           })
           xml
         end

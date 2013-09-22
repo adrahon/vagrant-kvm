@@ -12,6 +12,9 @@ module VagrantPlugins
       class KvmInvalidVersion < VagrantKVMError
         error_key(:kvm_invalid_version)
       end
+      class KvmNoQEMUBinary < VagrantKVMError
+        error_key(:kvm_no_qemu_binary)
+      end
     end
   end
 end
