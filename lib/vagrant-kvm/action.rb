@@ -16,10 +16,12 @@ module VagrantPlugins
           b.use Network
           b.use Provision
           b.use PruneNFSExports
+          b.use Vagrant::Action::Builtin::HandleForwardedPortCollisions
           b.use NFS
           b.use PrepareNFSSettings
           b.use SetHostname
           #b.use Customize
+          b.use ForwardPorts
           b.use Boot
           b.use ShareFolders
         end
@@ -63,6 +65,7 @@ module VagrantPlugins
                 b3.use Resume
               end
 
+              b2.use ClearForwardedPorts
               b2.use Call, GracefulHalt, :shutoff, :running do |env2, b3|
                 if !env2[:result]
                   b3.use ForcedHalt
@@ -246,11 +249,13 @@ module VagrantPlugins
       autoload :CheckCreated, action_root.join("check_created")
       autoload :CheckKvm, action_root.join("check_kvm")
       autoload :CheckRunning, action_root.join("check_running")
+      autoload :ClearForwardedPorts, action_root.join("clear_forwarded_ports")
       autoload :Created, action_root.join("created")
       autoload :Destroy, action_root.join("destroy")
       autoload :DestroyConfirm, action_root.join("destroy_confirm")
       autoload :Export, action_root.join("export")
       autoload :ForcedHalt, action_root.join("forced_halt")
+      autoload :ForwardPorts, action_root.join("forward_ports")
       autoload :Import, action_root.join("import")
       autoload :InitStoragePool, action_root.join("init_storage_pool")
       autoload :IsPaused, action_root.join("is_paused")
