@@ -31,6 +31,7 @@ module VagrantPlugins
           #b.use Customize
           b.use ForwardPorts
           b.use Boot
+          b.use WaitForCommunicator, [:running]
           b.use ShareFolders
         end
       end
