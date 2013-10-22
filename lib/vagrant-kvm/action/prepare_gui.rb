@@ -10,6 +10,7 @@ module VagrantPlugins
           if env[:machine].provider_config.gui
             env[:machine].provider.driver.set_gui
           end
+          @app.call(env)
         end
       end
     end
