@@ -146,17 +146,18 @@ module VagrantPlugins
           # create vm definition from ovf
           definition = File.open(ovf) { |f|
             Util::VmDefinition.new(f.read, 'ovf') }
-          # copy volume to storage pool
+          # create volume to storage pool
           box_disk = definition.disk
           new_disk = File.basename(box_disk, File.extname(box_disk)) + "-" +
             Time.now.to_i.to_s + ".img"
-          old_path = File.join(File.dirname(ovf), box_disk)
           tmp_disk = File.basename(box_disk, File.extname(box_disk)) + ".img"
+          # path settings
+          old_path = File.join(File.dirname(ovf), box_disk)
+          new_path = File.join(path, new_disk)
           tmp_path = File.join(File.dirname(ovf), tmp_disk)
           case image_type
           when 'qcow2'
             unless File.file?(tmp_path)
-              new_path = File.join(path, new_disk)
               @logger.info("Creating native qcow2 base box image #{tmp_disk}")
               if system("qemu-img convert -p #{old_path} -c -S 16k -O #{image_type} #{tmp_path}")
                 File.unlink(old_path)
