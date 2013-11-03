@@ -106,11 +106,21 @@ module VagrantPlugins
           box_disk = definition.disk
           new_disk = File.basename(box_disk, File.extname(box_disk)) + "-" +
             Time.now.to_i.to_s + ".img"
-          @logger.info("Copying volume #{box_disk} to #{new_disk}")
-          old_path = File.join(File.dirname(xml), box_disk)
-          new_path = File.join(path, new_disk)
-          # we use qemu-img convert to preserve image size
-          system("qemu-img convert -p #{old_path} -O #{image_type} #{new_path}")
+          case image_type
+          when 'qcow2'
+            @logger.info("Creating volume #{new_disk} backed by #{box_disk}")
+            old_path = File.join(File.dirname(xml), box_disk)
+            new_path = File.join(path, new_disk)
+            system("qemu-img create -f qcow2 -b #{old_path} #{new_path}")
+          when 'raw'
+            @logger.info("Copying volume #{box_disk} to #{new_disk}")
+            old_path = File.join(File.dirname(xml), box_disk)
+            new_path = File.join(path, new_disk)
+            # we use qemu-img convert to preserve image size
+            system("qemu-img convert #{old_path} -O #{image_type} #{new_path}")
+          else
+            @logger.info("Unknown Image type #{image_type}")
+          end
           @pool.refresh
           volume = @pool.lookup_volume_by_name(new_disk)
           definition.disk = volume.path
@@ -136,14 +146,38 @@ module VagrantPlugins
           # create vm definition from ovf
           definition = File.open(ovf) { |f|
             Util::VmDefinition.new(f.read, 'ovf') }
-          # copy volume to storage pool
+          # create volume to storage pool
           box_disk = definition.disk
           new_disk = File.basename(box_disk, File.extname(box_disk)) + "-" +
             Time.now.to_i.to_s + ".img"
-          @logger.info("Converting volume #{box_disk} to #{new_disk}")
+          tmp_disk = File.basename(box_disk, File.extname(box_disk)) + ".img"
+          # path settings
           old_path = File.join(File.dirname(ovf), box_disk)
           new_path = File.join(path, new_disk)
-          system("qemu-img convert -p #{old_path} -O #{image_type} #{new_path}")
+          tmp_path = File.join(File.dirname(ovf), tmp_disk)
+          case image_type
+          when 'qcow2'
+            unless File.file?(tmp_path)
+              @logger.info("Creating native qcow2 base box image #{tmp_disk}")
+              if system("qemu-img convert -p #{old_path} -c -S 16k -O #{image_type} #{tmp_path}")
+                File.unlink(old_path)
+              else
+                raise Errors::KvmFailImageConversion
+              end
+            end
+            @logger.info("Creating volume #{new_disk} backed by #{tmp_disk}")
+            system("qemu-img create -f qcow2 -b #{tmp_path} #{new_path}")
+          when 'raw'
+            if File.file?(tmp_path)
+              @logger.info("Converting volume #{tmp_disk} to #{new_disk}")
+              system("qemu-img convert ${tmp_path} -O ${image_type} #{new_path}")
+            else
+              @logger.info("Converting volume #{old_disk} to #{new_disk}")
+              system("qemu-img convert ${old_path} -O ${image_type} #{new_path}")
+            end
+          else
+            @logger.info("Unknown Image type #{image_type}")
+          end
           @pool.refresh
           volume = @pool.lookup_volume_by_name(new_disk)
           definition.disk = volume.path

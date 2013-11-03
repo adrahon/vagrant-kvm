@@ -46,7 +46,7 @@ module VagrantPlugins
         # Default is to not show a GUI
         @gui = false if @gui == UNSET_VALUE
         # Default image type is a sparsed raw
-        @image_type = 'raw' if @image_type == UNSET_VALUE
+        @image_type = 'qcow2' if @image_type == UNSET_VALUE
         # Search qemu binary with the default behavior
         @qemu_bin = nil if @qemu_bin == UNSET_VALUE
       end
