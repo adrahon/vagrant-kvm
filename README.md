@@ -11,12 +11,15 @@ Debian Wheezy, Ubuntu 12.04(LTS) Precise and Ubuntu 13.04 Raring at the moment.
 **NOTE:** This plugin requires `libvirt-dev` package to be installed 
 (as in Debian/Ubuntu) or `libvirt-devel` (Fedora/openSUSE)
 
-**NOTE** You can use a backported KVM/QEMU 1.2 with Private Package Archive(PPA)
+**NOTE** You can use a backported KVM/QEMU 1.4 with Private Package Archive(PPA)
 for Ubuntu 12.04(LTS) at https://launchpad.net/~miurahr/+archive/vagrant
 
 **NOTE** There is another plugin `vagrant-libvirt` that makes breakage for 
 `vagrant-kvm` because of a bug of `vagrant-libvirt(0.0.6)`. This will be fixed
 in `vagrant-libvirt(0.0.7 and after)`.
+
+**NOTE** CHNAGE default box image as qcow2 instead of sparsed raw image from
+vagrant-kvm version 0.1.5. Please take care what type are your box images.
 
 ## Features/Limitations
 
@@ -27,6 +30,7 @@ in `vagrant-libvirt(0.0.7 and after)`.
 * Only works with private networking for now
 * Requires "libvirt" group membership to run vagrant (Debian/Ubuntu only)
 * Requires backporting qemu and libvirt from experimental (Debian) or raring (Ubuntu)
+* Use qcow2 backing image in default, that make boot speed up.
 
 ## Usage
 
@@ -92,36 +96,27 @@ This folder shows the example contents of a box for the `kvm` provider.
 There are two box formats for the `kvm` provider:
 
 1. VirtualBox box - you need to change the provider to `kvm` in the
-   `metadata.json` file, the box will be converted on the fly.
-2. "Native" box - you need a box.xml file (libvirt domain format) and a raw
+   `metadata.json` file, the box will be converted on the fly at first boot.
+2. "Native" box - you need a box.xml file (libvirt domain format) and a qcow2
    image file (you can convert a .vmdk with qemu-img)
 
 To turn this into a native box, you need to create a vagrant image and
-make it sparse.
-You need ```libguestfs-tools``` package 
-in Debian/Ubuntu/Mint, Fedora15 and after, or CentOS/RHEL6.
+make it sparse and compressed. For example:
 
 ```
-$ env TMPDIR=/tmp virt-sparsify box-disk1-orig.img box-disk1.img
-```
-
-Please keep enough disk space for TMPDIR!
-To make box with keeping sparse, don't forget -S in tar option:
-
-```
+$ qemu-img convert -c -S 16k -f vmdk -O qcow2 box-disk1.vmdk box-disk1.img
 $ tar cvSzf kvm.box ./metadata.json ./Vagrantfile ./box.xml ./box-disk1.img
 ```
 
-For CentOS/RHEL5, there is a package in EPEL5. 
-For Gentoo, you can use ```emerge libguestfs```.
-
-You need a base MAC address and a private network like in the example.
-
+You need a base MAC address like in the example.
 
 ## Configuration
 
 There are some provider specific parameter to control VM definition.
 
 * `gui` - boolean for starting VM with VNC enabled.
-* `image_type` - an image format for vm disk: 'raw' or 'qcow2'
+* `image_type` - an image format for vm disk: 'raw' or 'qcow2': default is "qcow2"
+  When choosing 'raw', vagrant-kvm always convert box image into storage-pool,
+  it requires disk space and duration to boot. Recommendation is 'qcow2'.
+
 
