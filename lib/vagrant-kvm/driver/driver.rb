@@ -39,6 +39,28 @@ module VagrantPlugins
           @pool_name = "vagrant"
           @network_name = "vagrant"
 
+          @logger.info("Check KVM kernel modules")
+          kvm = false
+          File.readlines("/proc/modules").each do |line|
+            if line =~ /kvm_intel|kvm_amd/
+              kvm = true
+              break
+            end
+          end
+          if !kvm then
+            File.readlines("/proc/cpuinfo").each do |line|
+              if line =~ /vmx/
+                system("sudo /sbin/modprobe kvm-intel")
+                kvm = true
+                break
+              elsif line =~ /svm/
+                system("sudo /sbin/modprobe kvm-amd")
+                kvm = true
+                break
+              end
+            end
+          end
+
           # Open a connection to the qemu driver
           begin
             @conn = Libvirt::open('qemu:///system')
