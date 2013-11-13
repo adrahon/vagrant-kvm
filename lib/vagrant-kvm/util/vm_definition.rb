@@ -12,13 +12,14 @@ module VagrantPlugins
 
         # Attributes of the VM
         attr_accessor :name
-        attr_reader :cpus
+        attr_accessor :cpus
         attr_accessor :disk
         attr_reader :mac
-        attr_reader :arch
+        attr_accessor :arch
         attr_reader :network
         attr_accessor :image_type
         attr_accessor :qemu_bin
+        attr_accessor :memory
 
         def self.list_interfaces(definition)
           nics = {}
