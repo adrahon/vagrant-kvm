@@ -114,9 +114,14 @@ You need a base MAC address like in the example.
 
 There are some provider specific parameter to control VM definition.
 
+* `cpu_model` - cpu architecture: 'i686' or 'x86_64': default is x86_64.
+  When importing VirtualBox box it may fails to recognize cpu architecture.
+  you can set it for such case.
+* `core_number` - cpu core number.
+* `memory_size` - memory size such as 512m, 1GiB, 100000KiB etc.
+  if only number supplied, use it in KiB.
 * `gui` - boolean for starting VM with VNC enabled.
 * `image_type` - an image format for vm disk: 'raw' or 'qcow2': default is "qcow2"
   When choosing 'raw', vagrant-kvm always convert box image into storage-pool,
   it requires disk space and duration to boot. Recommendation is 'qcow2'.
-
 
