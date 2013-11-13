@@ -19,7 +19,9 @@ module VagrantPlugins
         # box. This Vagrantfile contains the MAC address so that the user doesn't
         # have to worry about it.
         def create_vagrantfile
-          File.open(File.join(@env["export.temp_dir"], "Vagrantfile"), "w") do |f|
+          tmp_dir = @env["export.temp_dir"]
+          tmp_dir = "/tmp" if !tmp_dir
+          File.open(File.join(tmp_dir, "Vagrantfile"), "w") do |f|
             f.write(KvmTemplateRenderer.render("package_Vagrantfile", {
               :base_mac => @env[:machine].provider.driver.read_mac_address
             }))
