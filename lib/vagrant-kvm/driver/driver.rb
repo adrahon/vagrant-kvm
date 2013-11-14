@@ -42,14 +42,13 @@ module VagrantPlugins
           @logger.info("Check KVM kernel modules")
           unless File.readlines('/proc/modules').any? { |line| line =~ /kvm_(intel|amd)/ }
             case File.read('/proc/cpuinfo')
-              when /vmx/
-                system("sudo /sbin/modprobe kvm-intel")
-              when /svm/
+            when /vmx/
+              system("sudo /sbin/modprobe kvm-intel")
+            when /svm/
                 system("sudo /sbin/modprobe kvm-amd")
-              else
+            else
                 # looks like virtualization is not supported
                 raise Errors::VagrantKVMError, "KVM is unavailable"
-              end
             end
           end
 
