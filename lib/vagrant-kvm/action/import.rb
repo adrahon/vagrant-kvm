@@ -16,6 +16,10 @@ module VagrantPlugins
 
           qemu_bin = env[:machine].provider_config.qemu_bin
 
+          cpus = env[:machine].provider_config.core_number
+          memory_size = env[:machine].provider_config.memory_size
+          cpu_model =env[:machine].provider_config.cpu_model
+
           # Import the virtual machine (ovf or libvirt)
           # if a libvirt XML definition is present we use it
           # otherwise we convert the OVF
@@ -23,11 +27,11 @@ module VagrantPlugins
           box_file = env[:machine].box.directory.join("box.xml").to_s
           if File.file?(box_file)
             env[:machine].id = env[:machine].provider.driver.import(
-                        box_file, storage_path, image_type, qemu_bin)
+                        box_file, storage_path, image_type, qemu_bin, cpus, memory_size, cpu_model)
           else
             box_file = env[:machine].box.directory.join("box.ovf").to_s
             env[:machine].id = env[:machine].provider.driver.import_ovf(
-                        box_file, storage_path, image_type, qemu_bin)
+                        box_file, storage_path, image_type, qemu_bin, cpus, memory_size, cpu_model)
           end
 
           # If we got interrupted, then the import could have been

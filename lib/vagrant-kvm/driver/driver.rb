@@ -115,7 +115,7 @@ module VagrantPlugins
         # @param [String] image_type An image type for the volume.
         # @param [String] qemu_bin A path of qemu binary.
         # @return [String] UUID of the imported VM.
-        def import(xml, path, image_type, qemu_bin)
+        def import(xml, path, image_type, qemu_bin, cpus, memory_size, cpu_model)
           @logger.info("Importing VM")
           # create vm definition from xml
           definition = File.open(xml) { |f|
@@ -145,6 +145,15 @@ module VagrantPlugins
           definition.name = @name
           definition.image_type = image_type
           definition.qemu_bin = qemu_bin
+          if cpu_model
+            definition.arch = cpu_model
+          end
+          if memory_size
+            definition.memory = memory_size
+          end
+          if cpus
+            definition.cpus = cpus
+          end
           # create vm
           @logger.info("Creating new VM")
           domain = @conn.define_domain_xml(definition.as_libvirt)
@@ -159,7 +168,7 @@ module VagrantPlugins
         # @param [String] image_type An image type for the volume.
         # @param [String] qemu_bin A path of qemu binary.
         # @return [String] UUID of the imported VM.
-        def import_ovf(ovf, path, image_type, qemu_bin)
+        def import_ovf(ovf, path, image_type, qemu_bin, cpus, memory_size, cpu_model)
           @logger.info("Importing OVF definition for VM")
           # create vm definition from ovf
           definition = File.open(ovf) { |f|
@@ -202,6 +211,15 @@ module VagrantPlugins
           definition.name = @name
           definition.image_type = image_type
           definition.qemu_bin = qemu_bin
+          if cpu_model
+            definition.arch = cpu_model
+          end
+          if memory_size
+            definition.memory = memory_size
+          end
+          if cpus
+            definition.cpus = cpus
+          end
           # create vm
           @logger.info("Creating new VM")
           domain = @conn.define_domain_xml(definition.as_libvirt)
