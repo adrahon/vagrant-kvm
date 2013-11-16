@@ -15,7 +15,7 @@ module VagrantPlugins
           # TODO: Validate network configuration prior to anything below
           @env = env
 
-          options = []
+          options= {}
           env[:machine].config.vm.networks.each do |type, network_options|
             options = network_options if type == :private_network
           end
