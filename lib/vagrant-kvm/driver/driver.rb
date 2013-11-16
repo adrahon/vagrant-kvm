@@ -32,12 +32,30 @@ module VagrantPlugins
         # XXX sufficient or have to check kvm and libvirt versions?
         attr_reader :version
 
+        # KVM support status
+        attr_reader :kvm
+
         def initialize(uuid=nil)
           @logger = Log4r::Logger.new("vagrant::provider::kvm::driver")
           @uuid = uuid
           # This should be configurable
           @pool_name = "vagrant"
           @network_name = "vagrant"
+
+          @logger.info("Check KVM kernel modules")
+          @kvm = File.readlines('/proc/modules').any? { |line| line =~ /kvm_(intel|amd)/ }
+          unless @kvm
+            case File.read('/proc/cpuinfo')
+            when /vmx/
+              @kvm = true if system("sudo /sbin/modprobe kvm-intel")
+            when /svm/
+              @kvm = true if system("sudo /sbin/modprobe kvm-amd")
+            else
+              # looks like virtualization is not supported
+            end
+          end
+          # FIXME: see KVM/ARM project
+          raise Errors::VagrantKVMError, "KVM is unavailable" unless @kvm
 
           # Open a connection to the qemu driver
           begin
