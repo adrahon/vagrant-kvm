@@ -81,6 +81,7 @@ module VagrantPlugins
         state_id = :not_created if !@driver.uuid
         state_id = @driver.read_state if !state_id
         state_id = :unknown if !state_id
+        @logger.info("state is now:", state_id)
 
         # TODO Translate into short/long descriptions
         short = state_id

@@ -97,18 +97,16 @@ There are two box formats for the `kvm` provider:
 
 1. VirtualBox box - you need to change the provider to `kvm` in the
    `metadata.json` file, the box will be converted on the fly at first boot.
+   It will convert original .vmdk disk to qcow2 image and remove the orginal.
 2. "Native" box - you need a box.xml file (libvirt domain format) and a qcow2
    image file (you can convert a .vmdk with qemu-img)
 
-To turn this into a native box, you need to create a vagrant image and
-make it sparse and compressed. For example:
+To turn VirtualBox box into a Native box, you need to create a vagrant image first
+and test it, then run package command;
 
 ```
-$ qemu-img convert -c -S 16k -f vmdk -O qcow2 box-disk1.vmdk box-disk1.img
-$ tar cvSzf kvm.box ./metadata.json ./Vagrantfile ./box.xml ./box-disk1.img
+$ vagrant package
 ```
-
-You need a base MAC address like in the example.
 
 ## Configuration
 

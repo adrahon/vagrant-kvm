@@ -285,8 +285,14 @@ module VagrantPlugins
           domain = @conn.lookup_domain_by_uuid(@uuid)
           state, reason = domain.state
           # check if domain has been saved
-          if VM_STATE[state] == :shutoff and domain.has_managed_save?
-            return :saved
+          case VM_STATE[state]
+          when :shutoff
+            if domain.has_managed_save?
+              return :saved
+            end
+            return :poweroff
+          when :shutdown
+            return :poweroff
           end
           VM_STATE[state]
         end
@@ -300,6 +306,12 @@ module VagrantPlugins
           min = (@conn.version - maj*1000000) / 1000
           rel = @conn.version % 1000
           "#{maj}.#{min}.#{rel}"
+        end
+
+        def read_mac_address
+          domain = @conn.lookup_domain_by_uuid(@uuid)
+          definition = Util::VmDefinition.new(domain.xml_desc, 'libvirt')
+          definition.mac
         end
 
         # Resumes the previously paused virtual machine.
@@ -341,6 +353,32 @@ module VagrantPlugins
         def suspend
           domain = @conn.lookup_domain_by_uuid(@uuid)
           domain.managed_save
+        end
+
+        # Export
+        def export(xml_path)
+          @logger.info("FIXME: export has not tested yet.")
+          new_disk = 'disk.img'
+          # create new_disk
+          domain = @conn.lookup_domain_by_uuid(@uuid)
+          definition = Util::VmDefinition.new(domain.xml_desc, 'libvirt')
+          disk_image = definition.disk
+          to_path = File.dirname(xml_path)
+          new_path = File.join(to_path, new_disk)
+          @logger.info("create disk image #{new_path}")
+          system("qemu-img convert -S 16k -f qcow2 #{disk_image} #{new_path}")
+          # write out box.xml
+          definition.disk = new_disk
+          definition.uuid = nil
+          definition.gui = nil
+          File.open(xml_path,'w') do |f|
+            f.puts(definition.as_libvirt)
+          end
+          # write metadata.json
+          json_path=File.join(to_path, 'metadata.json')
+          File.open(json_path,'w') do |f|
+            f.puts("{"provider": "kvm"}")
+          end
         end
 
         # Verifies that the driver is ready and the connection is open

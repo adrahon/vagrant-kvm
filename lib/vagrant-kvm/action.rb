@@ -87,7 +87,7 @@ module VagrantPlugins
 
             b2.use SetupPackageFiles
             b2.use action_halt
-            #b2.use Export
+            b2.use Export
             b2.use PackageVagrantfile
             b2.use Package
           end
@@ -249,6 +249,7 @@ module VagrantPlugins
       autoload :Created, action_root.join("created")
       autoload :Destroy, action_root.join("destroy")
       autoload :DestroyConfirm, action_root.join("destroy_confirm")
+      autoload :Export, action_root.join("export")
       autoload :ForcedHalt, action_root.join("forced_halt")
       autoload :Import, action_root.join("import")
       autoload :InitStoragePool, action_root.join("init_storage_pool")
@@ -259,6 +260,8 @@ module VagrantPlugins
       autoload :MessageNotCreated, action_root.join("message_not_created")
       autoload :MessageWillNotDestroy, action_root.join("message_will_not_destroy")
       autoload :Network, action_root.join("network")
+      autoload :PackageVagrantfile, action_root.join("package_vagrantfile")
+      autoload :Package, action_root.join("package")
       autoload :PrepareGui, action_root.join("prepare_gui")
       autoload :PrepareNFSSettings, action_root.join("prepare_nfs_settings")
       autoload :PruneNFSExports, action_root.join("prune_nfs_exports")
