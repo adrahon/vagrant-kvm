@@ -377,7 +377,7 @@ module VagrantPlugins
           # write metadata.json
           json_path=File.join(to_path, 'metadata.json')
           File.open(json_path,'w') do |f|
-            f.puts("{"provider": "kvm"}")
+            f.puts('{"provider": "kvm"}')
           end
         end
 
