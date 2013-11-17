@@ -53,7 +53,9 @@ module VagrantPlugins
             end
           end
 
-          nil
+          # XXX duplicated with network.rb default
+          # If no private network configuration, return default ip
+          "192.168.123.10"
         end
       end
     end
