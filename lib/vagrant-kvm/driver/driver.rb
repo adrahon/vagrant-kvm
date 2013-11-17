@@ -308,6 +308,22 @@ module VagrantPlugins
           end
         end
 
+        # Returns a hostname of the guest
+        # introduced from ruby-libvirt 0.5.0
+        #
+        # @return [String]
+        def hostname?
+          domain = @conn.lookup_domain_by_uuid(@uuid)
+          domain.hostname
+        end
+
+        # reset the guest
+        # introduced from ruby-libvirt 0.5.0
+        def reset
+          domain = @conn.lookup_domain_by_uuid(@uuid)
+          domain.reset
+        end
+
         def read_state
           domain = @conn.lookup_domain_by_uuid(@uuid)
           state, reason = domain.state
@@ -395,6 +411,20 @@ module VagrantPlugins
           domain.managed_save
         end
 
+        # Suspend for duration
+        # introduced from ruby-libvirt 0.5.0
+        def suspend_for_duration(target, duration)
+          domain = @conn.lookup_domain_by_uuid(@uuid)
+          domain.pmsuspend_for_duration(target, duration)
+        end
+
+        # Wakeup the virtual machine
+        # introduced from ruby-libvirt 0.5.0
+        def wakeup
+          domain = @conn.lookup_domain_by_uuid(@uuid)
+          domain.pmwakeup
+        end
+
         # Export
         def export(xml_path)
           @logger.info("FIXME: export has not tested yet.")
@@ -419,7 +449,17 @@ module VagrantPlugins
           end
         end
 
-        # Verifies that the driver is ready and the connection is open
+        # Verifies that the connection is alive
+        # introduced from ruby-libvirt 0.5.0
+        #
+        # This will raise a VagrantError if things are not ready.
+        def alive!
+          unless @conn.alive?
+            raise Vagrant::Errors::KvmNoConnection
+          end
+        end
+
+        # Verifies that the driver is	 ready and the connection is open
         #
         # This will raise a VagrantError if things are not ready.
         def verify!
