@@ -1,3 +1,19 @@
+# 0.1.5 (,2013)
+
+* Change default box format to qcow2 [GH-63]
+* Add support for configuration for memory/cpu [GH-54][GH-51][GH-68]
+* Add support for gui configuration [GH-41][GH-53]
+* Add support for 'vagrant package' [GH-69]
+* Speed-up by copy-on-write backing disk image [GH-63]
+* Fixes segment fault when VirtualBox installed [GH-57][GH-66]
+* Making a path of qemu binary specifiable [GH-59]
+* Fixes error when box has not private network defition[GH-70]
+* Add Japanese error messages translation [GH-71]
+* Add check for kvm kernel module and loading if needed [GH-67]
+* Respect disabled directive on synced_folder configuration [GH-65]
+* Improve error handling [GH-50]
+* Expanded/Fixes Readme file [GH-55]
+
 # 0.1.4 (August 20, 2013)
 
 * Add support for qcow2 and configuration for image type [GH-45]
