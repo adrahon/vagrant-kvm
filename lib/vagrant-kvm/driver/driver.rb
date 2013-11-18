@@ -129,13 +129,13 @@ module VagrantPlugins
             @logger.info("Creating volume #{new_disk} backed by #{box_disk}")
             old_path = File.join(File.dirname(xml), box_disk)
             new_path = File.join(path, new_disk)
-            system("qemu-img create -f qcow2 -b #{old_path} #{new_path}")
+            run_command("qemu-img create -f qcow2 -b #{old_path} #{new_path}")
           when 'raw'
             @logger.info("Copying volume #{box_disk} to #{new_disk}")
             old_path = File.join(File.dirname(xml), box_disk)
             new_path = File.join(path, new_disk)
             # we use qemu-img convert to preserve image size
-            system("qemu-img convert #{old_path} -O #{image_type} #{new_path}")
+            run_command("qemu-img convert #{old_path} -O #{image_type} #{new_path}")
           else
             @logger.info("Unknown Image type #{image_type}")
           end
@@ -186,25 +186,27 @@ module VagrantPlugins
           when 'qcow2'
             unless File.file?(tmp_path)
               @logger.info("Creating native qcow2 base box image #{tmp_disk}")
-              if system("qemu-img convert -p #{old_path} -c -S 16k -O #{image_type} #{tmp_path}")
+              if run_command("qemu-img convert -p #{old_path} -c -S 16k -O #{image_type} #{tmp_path}")
                 File.unlink(old_path)
               else
                 raise Errors::KvmFailImageConversion
               end
             end
             @logger.info("Creating volume #{new_disk} backed by #{tmp_disk}")
-            system("qemu-img create -f qcow2 -b #{tmp_path} #{new_path}")
+            run_command("qemu-img create -f qcow2 -b #{tmp_path} #{new_path}")
           when 'raw'
             if File.file?(tmp_path)
               @logger.info("Converting volume #{tmp_disk} to #{new_disk}")
-              system("qemu-img convert ${tmp_path} -O ${image_type} #{new_path}")
+              run_command("qemu-img convert ${tmp_path} -O ${image_type} #{new_path}")
             else
               @logger.info("Converting volume #{old_disk} to #{new_disk}")
-              system("qemu-img convert ${old_path} -O ${image_type} #{new_path}")
+              run_command("qemu-img convert ${old_path} -O ${image_type} #{new_path}")
             end
           else
             @logger.info("Unknown Image type #{image_type}")
           end
+
+          run_command "chmod 777 #{new_path}"
           @pool.refresh
           volume = @pool.lookup_volume_by_name(new_disk)
           definition.disk = volume.path
@@ -334,12 +336,14 @@ module VagrantPlugins
           @conn.define_domain_xml(definition.as_libvirt)
         end
 
-        def set_gui
-          domain = @conn.lookup_domain_by_uuid(@uuid)
-          definition = Util::VmDefinition.new(domain.xml_desc, 'libvirt')
-          definition.set_gui
-          domain.undefine
-          @conn.define_domain_xml(definition.as_libvirt)
+        [:gui, :vnc_port, :vnc_autoport].each do |method|
+          define_method "#{method}=" do |val|
+            domain = @conn.lookup_domain_by_uuid(@uuid)
+            definition = Util::VmDefinition.new(domain.xml_desc, 'libvirt')
+            definition.send "#{method}=", val
+            domain.undefine
+            @conn.define_domain_xml(definition.as_libvirt)
+          end
         end
 
         # Starts the virtual machine.
@@ -400,6 +404,14 @@ module VagrantPlugins
           rescue Libvirt::RetrieveError
             false
           end
+        end
+
+        def run_command(cmd)
+          status = system(cmd)
+          unless status
+            raise "System command `#{cmd}` returned with status code #{status}"
+          end
+          status
         end
       end
     end

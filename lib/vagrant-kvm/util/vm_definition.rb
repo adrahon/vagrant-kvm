@@ -7,19 +7,11 @@ module VagrantPlugins
   module ProviderKvm
     module Util
       class VmDefinition
-
         include Errors
 
         # Attributes of the VM
-        attr_accessor :name
-        attr_accessor :cpus
-        attr_accessor :disk
-        attr_reader :mac
-        attr_accessor :arch
-        attr_reader :network
-        attr_accessor :image_type
-        attr_accessor :qemu_bin
-        attr_accessor :memory
+        attr_accessor :name, :image_type, :qemu_bin, :disk, :vnc_port, :vnc_autoport, :gui, :cpus, :arch, :memory
+        attr_reader :mac, :arch, :network
 
         def self.list_interfaces(definition)
           nics = {}
@@ -46,6 +38,7 @@ module VagrantPlugins
         def initialize(definition, source_type='libvirt')
           @uuid = nil
           @gui = nil
+          @vnc_autoport = true
           @network = 'default'
           if source_type == 'ovf'
             create_from_ovf(definition)
@@ -136,7 +129,9 @@ module VagrantPlugins
             :network => @network,
             :gui => @gui,
             :image_type => @image_type,
-            :qemu_bin => qemu_bin
+            :qemu_bin => qemu_bin,
+            :vnc_port => @vnc_port,
+            :vnc_autoport => format_bool(@vnc_autoport),
           })
           xml
         end
@@ -147,10 +142,6 @@ module VagrantPlugins
 
         def set_mac(mac)
           @mac = format_mac(mac)
-        end
-
-        def set_gui
-          @gui = true
         end
 
         # Takes a quantity and a unit
@@ -212,6 +203,10 @@ module VagrantPlugins
           else
             raise ArgumentError, "Unknown unit #{unit}"
           end
+        end
+
+        def format_bool(v)
+          v ? "yes" : "no"
         end
 
         def format_mac(mac)

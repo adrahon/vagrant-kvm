@@ -46,6 +46,8 @@ module VagrantPlugins
         end
 
         def recover(env)
+          # FIXME Disabled for now as it's  breaking the importing 
+          return
           if env[:machine].provider.state.id != :not_created
             return if env["vagrant.error"].is_a?(Vagrant::Errors::VagrantError)
 

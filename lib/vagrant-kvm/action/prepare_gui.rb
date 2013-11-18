@@ -7,8 +7,12 @@ module VagrantPlugins
         end
 
         def call(env)
-          if env[:machine].provider_config.gui
-            env[:machine].provider.driver.set_gui
+          config = env[:machine].provider_config
+          if config.gui
+            driver = env[:machine].provider.driver
+            driver.gui = true
+            driver.vnc_port = config.vnc_port if config.vnc_port
+            driver.vnc_autoport = config.vnc_autoport if config.vnc_autoport
           end
           @app.call(env)
         end

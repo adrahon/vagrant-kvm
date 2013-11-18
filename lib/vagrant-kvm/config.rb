@@ -47,6 +47,8 @@ module VagrantPlugins
       #
       # @return [String]
       attr_accessor :core_number
+      attr_accessor :vnc_port
+      attr_accessor :vnc_autoport
 
       def initialize
         @name             = UNSET_VALUE
@@ -56,6 +58,8 @@ module VagrantPlugins
         @cpu_model        = UNSET_VALUE
         @memory_size      = UNSET_VALUE
         @core_number      = UNSET_VALUE
+        @vnc_port         = UNSET_VALUE
+        @vnc_autoport     = UNSET_VALUE
       end
 
       # This is the hook that is called to finalize the object before it
@@ -99,6 +103,9 @@ module VagrantPlugins
         end
         # Default core number is 1
         @core_number = 1 if @core_number == UNSET_VALUE
+
+        @vnc_autoport = true if @vnc_autoport == UNSET_VALUE
+        @vnc_port = -1 if @vnc_port == UNSET_VALUE
       end
     end
   end
