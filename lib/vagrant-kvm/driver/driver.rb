@@ -249,6 +249,9 @@ module VagrantPlugins
 
         # Initialize or create storage pool
         def init_storage(base_path)
+          pool_path = base_path.join("storage-pool")
+          pool_path.mkpath unless Dir.exists?(pool_path)
+
           begin
             # Get the storage pool if it exists
             @pool = @conn.lookup_storage_pool_by_name(@pool_name)
@@ -257,8 +260,6 @@ module VagrantPlugins
             # Storage pool doesn't exist so we create it
             # create dir if it doesn't exist
             # if we let libvirt create the dir it is owned by root
-            pool_path = base_path.join("storage-pool")
-            pool_path.mkpath unless Dir.exists?(pool_path)
             storage_pool_xml = <<-EOF
           <pool type="dir">
             <name>#{@pool_name}</name>
@@ -336,14 +337,23 @@ module VagrantPlugins
           @conn.define_domain_xml(definition.as_libvirt)
         end
 
-        [:gui, :vnc_port, :vnc_autoport].each do |method|
+        [:gui, :vnc_port, :vnc_autoport, :vnc_password].each do |method|
           define_method "#{method}=" do |val|
-            domain = @conn.lookup_domain_by_uuid(@uuid)
-            definition = Util::VmDefinition.new(domain.xml_desc, 'libvirt')
-            definition.send "#{method}=", val
-            domain.undefine
-            @conn.define_domain_xml(definition.as_libvirt)
+            set_options(method => val)
           end
+        end
+
+        def set_options(values)
+          domain = @conn.lookup_domain_by_uuid(@uuid)
+          definition = Util::VmDefinition.new(domain.xml_desc, 'libvirt')
+
+          values.each do |method, val|
+            definition.send "#{method}=", val
+          end
+
+          domain.undefine
+          xml = definition.as_libvirt
+          @conn.define_domain_xml(xml)
         end
 
         # Starts the virtual machine.

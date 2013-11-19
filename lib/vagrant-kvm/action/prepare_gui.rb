@@ -10,9 +10,10 @@ module VagrantPlugins
           config = env[:machine].provider_config
           if config.gui
             driver = env[:machine].provider.driver
-            driver.gui = true
-            driver.vnc_port = config.vnc_port if config.vnc_port
-            driver.vnc_autoport = config.vnc_autoport if config.vnc_autoport
+            driver.set_options gui: true,
+              vnc_port: config.vnc_port,
+              vnc_autoport: config.vnc_autoport,
+              vnc_password: config.vnc_password
           end
           @app.call(env)
         end

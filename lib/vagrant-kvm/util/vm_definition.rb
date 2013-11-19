@@ -10,7 +10,9 @@ module VagrantPlugins
         include Errors
 
         # Attributes of the VM
-        attr_accessor :name, :image_type, :qemu_bin, :disk, :vnc_port, :vnc_autoport, :gui, :cpus, :arch, :memory
+        attr_accessor :name, :image_type, :qemu_bin, :disk, :vnc_port, :vnc_autoport, 
+          :vnc_password, :gui, :cpus, :arch, :memory
+
         attr_reader :mac, :arch, :network
 
         def self.list_interfaces(definition)
@@ -38,7 +40,8 @@ module VagrantPlugins
         def initialize(definition, source_type='libvirt')
           @uuid = nil
           @gui = nil
-          @vnc_autoport = true
+          @vnc_autoport = false 
+          @vnc_password = nil
           @network = 'default'
           if source_type == 'ovf'
             create_from_ovf(definition)
@@ -97,6 +100,14 @@ module VagrantPlugins
           @network = doc.elements["//devices/interface/source"].attributes["network"]
           @image_type = doc.elements["//devices/disk/driver"].attributes["type"]
           @qemu_bin = doc.elements["/domain/devices/emulator"].text
+
+          if doc.elements["//devices/graphics"]
+            attrs = doc.elements["//devices/graphics"].attributes
+            @gui = attrs["type"] == 'vnc'
+            @vnc_port = attrs['port'].to_i
+            @vnc_autoport = attrs['autoport'] == 'yes'
+            @vnc_password = attrs['passwd']
+          end
         end
 
         def as_libvirt
@@ -132,6 +143,7 @@ module VagrantPlugins
             :qemu_bin => qemu_bin,
             :vnc_port => @vnc_port,
             :vnc_autoport => format_bool(@vnc_autoport),
+            :vnc_password=> @vnc_password,
           })
           xml
         end
