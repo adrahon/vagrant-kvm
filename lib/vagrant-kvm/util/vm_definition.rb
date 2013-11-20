@@ -153,6 +153,10 @@ module VagrantPlugins
           @gui = true
         end
 
+        def unset_uuid
+          @uuid = nil
+        end
+
         # Takes a quantity and a unit
         # returns quantity in bytes
         # mib = true to use mebibytes, etc
