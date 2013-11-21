@@ -369,7 +369,7 @@ module VagrantPlugins
           system("qemu-img convert -S 16k -f qcow2 #{disk_image} #{new_path}")
           # write out box.xml
           definition.disk = new_disk
-          definition.gui = nil
+          definition.unset_gui
           definition.unset_uuid
           File.open(xml_path,'w') do |f|
             f.puts(definition.as_libvirt)
