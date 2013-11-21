@@ -153,6 +153,10 @@ module VagrantPlugins
           @gui = true
         end
 
+        def unset_gui
+          @gui = false
+        end
+
         def unset_uuid
           @uuid = nil
         end
