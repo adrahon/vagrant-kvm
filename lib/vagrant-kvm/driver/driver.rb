@@ -145,15 +145,9 @@ module VagrantPlugins
           definition.name = @name
           definition.image_type = image_type
           definition.qemu_bin = qemu_bin
-          if cpu_model
-            definition.arch = cpu_model
-          end
-          if memory_size
-            definition.memory = memory_size
-          end
-          if cpus
-            definition.cpus = cpus
-          end
+          definition.arch = cpu_model if cpu_model
+          definition.memory = memory_size if memory_size
+          definition.cpus = cpus if cpus
           # create vm
           @logger.info("Creating new VM")
           domain = @conn.define_domain_xml(definition.as_libvirt)
@@ -211,15 +205,10 @@ module VagrantPlugins
           definition.name = @name
           definition.image_type = image_type
           definition.qemu_bin = qemu_bin
-          if cpu_model
-            definition.arch = cpu_model
-          end
-          if memory_size
-            definition.memory = memory_size
-          end
-          if cpus
-            definition.cpus = cpus
-          end
+          definition.arch = cpu_model if cpu_model
+          definition.memory = memory_size if memory_size
+          definition.cpus = cpus if cpus
+          definition.disk_bus = disk_bus if disk_bus
           # create vm
           @logger.info("Creating new VM")
           domain = @conn.define_domain_xml(definition.as_libvirt)
