@@ -104,6 +104,7 @@ module VagrantPlugins
           @network = doc.elements["//devices/interface/source"].attributes["network"]
           @image_type = doc.elements["//devices/disk/driver"].attributes["type"]
           @qemu_bin = doc.elements["/domain/devices/emulator"].text
+          @disk_bus = doc.elements["//devices/disk/target"].attributes["bus"]
         end
 
         def as_libvirt
@@ -136,7 +137,8 @@ module VagrantPlugins
             :network => @network,
             :gui => @gui,
             :image_type => @image_type,
-            :qemu_bin => qemu_bin
+            :qemu_bin => qemu_bin,
+            :disk_bus => @disk_bus
           })
           xml
         end
