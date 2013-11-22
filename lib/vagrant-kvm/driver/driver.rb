@@ -42,6 +42,7 @@ module VagrantPlugins
           # This should be configurable
           @pool_name = "vagrant"
           @network_name = "vagrant"
+          @virsh_path = "virsh"
 
           load_kvm_module!
 
@@ -401,6 +402,25 @@ module VagrantPlugins
           File.open(json_path,'w') do |f|
             f.puts('{"provider": "kvm"}')
           end
+        end
+
+        # Executes a command and returns the raw result object.
+        def raw(*command, &block)
+          int_callback = lambda do
+            @interrupted = true
+            @logger.info("Interrupted.")
+          end
+
+          # Append in the options for subprocess
+          command << { :notify => [:stdout, :stderr] }
+
+          Vagrant::Util::Busy.busy(int_callback) do
+            Vagrant::Util::Subprocess.execute(@virsh_path, *command, &block)
+          end
+        end
+
+        def execute_command(command)
+          raw(*command)
         end
 
         # Verifies that the driver is ready and the connection is open
