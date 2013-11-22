@@ -64,6 +64,13 @@ module VagrantPlugins
       attr_accessor :network_model
       attr_accessor :video_model
 
+      # disk bus type
+      # sata/virtio
+      #
+      # @return [String]
+      attr_accessor :disk_bus
+
+
       def initialize
         @name             = UNSET_VALUE
         @gui              = UNSET_VALUE
@@ -79,6 +86,7 @@ module VagrantPlugins
         @machine_type     = UNSET_VALUE
         @network_model    = UNSET_VALUE
         @video_model      = UNSET_VALUE
+        @disk_bus         = UNSET_VALUE
       end
 
       # This is the hook that is called to finalize the object before it
@@ -139,6 +147,7 @@ module VagrantPlugins
         @machine_type = "pc-1.2" if @machine_type == UNSET_VALUE
         @network_model = "virtio" if @network_model == UNSET_VALUE
         @video_model = "cirrus" if @video_model == UNSET_VALUE
+        @disk_bus = 'virtio' if @disk_bus == UNSET_VALUE
       end
     end
   end

@@ -96,6 +96,9 @@ set to vga.
 * `image_mode` - Possible value are `clone` or `cow`, defaults to `cow`. If set
 to `clone`, the image disk will be copied rather than use the original box
 image. This is slower but allows multiple VMs to be booted at the same time.
+* `disk_bus` - disk interface to show virtual disk to guest: 'virtio' or 'sata', 'scsi'
+  A box, which is 'mutate'-ed from virtualbox/vmware box, may specify sata/ide for disk bus.
+  It may be useful to specify 'virtio' for performance, even when box defaults disk bus as sata/ide/scsi.
 
 ## Specs
 
