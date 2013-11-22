@@ -75,6 +75,7 @@ module VagrantPlugins
           diskref = doc.elements["//DiskSection/Disk"].attributes["ovf:fileRef"]
           @disk = doc.elements["//References/File[@ovf:id='file1']"].attributes["ovf:href"]
           @image_type = 'raw'
+	  @disk_bus = 'virtio'
           # mac address
           # XXX we use only the first nic
           doc.elements.each("//vbox:Machine/Hardware//Adapter") do |ele|
