@@ -26,13 +26,19 @@ module VagrantPlugins
           storage_path = File.join(env[:tmp_path],"/storage-pool")
           box_file = env[:machine].box.directory.join("box.xml").to_s
           if File.file?(box_file)
-            env[:machine].id = env[:machine].provider.driver.import(
-                        box_file, storage_path, image_type, qemu_bin, cpus, memory_size, cpu_model)
+            box_type = "libvirt"
           else
             box_file = env[:machine].box.directory.join("box.ovf").to_s
-            env[:machine].id = env[:machine].provider.driver.import_ovf(
-                        box_file, storage_path, image_type, qemu_bin, cpus, memory_size, cpu_model)
+            box_type = "ovf"
           end
+          raise Errors::KvmBadBoxFormat unless File.file?(box_file)
+
+          # import box volume
+          volume_name = import_volume(storage_path, image_type, box_file, box_type, env)
+
+          # import the box to a new vm
+          env[:machine].id = env[:machine].provider.driver.import(
+            box_file, box_type, volume_name, image_type, qemu_bin, cpus, memory_size, cpu_model)
 
           # If we got interrupted, then the import could have been
           # interrupted and its not a big deal. Just return out.
@@ -43,6 +49,55 @@ module VagrantPlugins
 
           # Import completed successfully. Continue the chain
           @app.call(env)
+        end
+
+        def import_volume(storage_path, image_type, box_file, box_type, env)
+          if box_type == 'libvirt'
+            box_disk = env[:machine].provider.driver.find_box_disk(box_file, box_type)
+            # create volume to storage pool
+            new_disk = File.basename(box_disk, File.extname(box_disk)) + "-" +
+              Time.now.to_i.to_s + ".img"
+            # path settings
+            old_path = File.join(File.dirname(box_file), box_disk)
+            new_path = File.join(storage_path, new_disk)
+            capacity = volume_size(old_path)
+            if image_type == 'qcow2'
+              # create volume with box disk as backing volume
+              env[:machine].provider.driver.create_volume(new_disk, capacity, new_path, image_type, old_path)
+            elsif image_type == 'raw'
+              # create volume then upload box disk content
+              env[:machine].provider.driver.create_volume(new_disk, capacity, new_path, image_type)
+              # Upload box image content (taken from vagrant-libvirt)
+              box_image_size = Integer(capacity[:size])
+              result = env[:machine].provider.driver.upload_image(
+                old_path, new_disk, box_image_size) do |progress|
+                  env[:ui].clear_line
+                  env[:ui].report_progress(progress, box_image_size, false)
+                end
+                env[:ui].clear_line
+                # TODO cleanup if interupted
+            end
+          elsif box_type == 'ovf'
+            # TODO
+          end
+          new_disk
+        end
+
+        # returns volume virtual capacity
+        def volume_size(vol_path)
+          # default values
+          vol_vsize = {:size => 10, :unit => 'G'}
+          vsize_regex = %r{virtual size:\s+(?<size>\d+(\.\d+))?(?<unit>.)\s+\((?<bytesize>\d+)\sbytes\)}
+          diskinfo = %x[qemu-img info #{vol_path}]
+          diskinfo.each_line do |line|
+            result = line.match(vsize_regex)
+            if result
+              # always take the size in bytes to avoid conversion
+              vol_vsize = {:size => result[:bytesize], :unit => "B"}
+              break
+            end
+          end
+          return vol_vsize
         end
 
         def recover(env)
