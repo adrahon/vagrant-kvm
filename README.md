@@ -8,13 +8,13 @@ provider to Vagrant, allowing Vagrant to control and provision KVM/QEMU VM.
 **NOTE:** This plugin requires QEMU 1.2+, it has only been tested on Fedora 18,
 Debian Wheezy, Ubuntu 12.04(LTS) Precise and Ubuntu 13.04 Raring at the moment.
 
-**NOTE:** This plugin requires `libvirt-dev` package to be installed 
+**NOTE:** This plugin requires `libvirt-dev` package to be installed
 (as in Debian/Ubuntu) or `libvirt-devel` (Fedora/openSUSE)
 
 **NOTE** You can use a backported KVM/QEMU 1.2 with Private Package Archive(PPA)
 for Ubuntu 12.04(LTS) at https://launchpad.net/~miurahr/+archive/vagrant
 
-**NOTE** There is another plugin `vagrant-libvirt` that makes breakage for 
+**NOTE** There is another plugin `vagrant-libvirt` that makes breakage for
 `vagrant-kvm` because of a bug of `vagrant-libvirt(0.0.6)`. This will be fixed
 in `vagrant-libvirt(0.0.7 and after)`.
 
@@ -34,11 +34,9 @@ Install using standard Vagrant 1.1+ plugin installation methods. After
 installing, `vagrant up` and specify the `kvm` provider. An example is
 shown below.
 
-```
+```bash
 $ vagrant plugin install vagrant-kvm
-...
 $ vagrant up --provider=kvm
-...
 ```
 
 Of course prior to doing this, you'll need to obtain a KVM-compatible
@@ -50,18 +48,17 @@ After installing the plugin (instructions above), the quickest way to get
 started is to use a VirtualBox box and change the provider manually. For
 example:
 
-```
+```bash
 $ vagrant box add precise32 http://files.vagrantup.com/precise32.box
-...
 ```
 
 The box will be installed in `~/.vagrant.d/boxes/precise32/virtualbox`, you
 need to change this to `~/.vagrant.d/boxes/precise32/kvm` and change the
 provider in `metadata.json`. For example:
 
-```
-mv ~/.vagrant.d/boxes/precise32/virtualbox ~/.vagrant.d/boxes/precise32/kvm
-cat <<EOF >~/.vagrant.d/boxes/precise32/kvm/metadata.json
+```bash
+$ mv ~/.vagrant.d/boxes/precise32/virtualbox ~/.vagrant.d/boxes/precise32/kvm
+$ cat <<EOF >~/.vagrant.d/boxes/precise32/kvm/metadata.json
 > {"provider": "kvm"}
 > EOF
 ```
@@ -69,7 +66,7 @@ cat <<EOF >~/.vagrant.d/boxes/precise32/kvm/metadata.json
 You will need a private network specifying an IP address in your Vagrantfile,
 the minimum Vagrantfile would then be:
 
-```
+```ruby
 Vagrant.configure("2") do |config|
   config.vm.box = "precise32"
   config.vm.network :private_network, ip: "192.168.192.10"
@@ -79,9 +76,11 @@ end
 And then run `vagrant up --provider=kvm`.
 
 If you always use kvm provider as default, please set it in your .bashrc:
-```
+
+```bash
 export VAGRANT_DEFAULT_PROVIDER=kvm
 ```
+
 then you can simply run `vagrant up` with kvm provider.
 
 ## Box Format
@@ -98,25 +97,24 @@ There are two box formats for the `kvm` provider:
 
 To turn this into a native box, you need to create a vagrant image and
 make it sparse.
-You need ```libguestfs-tools``` package 
+You need `libguestfs-tools` package
 in Debian/Ubuntu/Mint, Fedora15 and after, or CentOS/RHEL6.
 
-```
+```bash
 $ env TMPDIR=/tmp virt-sparsify box-disk1-orig.img box-disk1.img
 ```
 
 Please keep enough disk space for TMPDIR!
 To make box with keeping sparse, don't forget -S in tar option:
 
-```
+```bash
 $ tar cvSzf kvm.box ./metadata.json ./Vagrantfile ./box.xml ./box-disk1.img
 ```
 
-For CentOS/RHEL5, there is a package in EPEL5. 
+For CentOS/RHEL5, there is a package in EPEL5.
 For Gentoo, you can use ```emerge libguestfs```.
 
 You need a base MAC address and a private network like in the example.
-
 
 ## Configuration
 
@@ -125,3 +123,25 @@ There are some provider specific parameter to control VM definition.
 * `gui` - boolean for starting VM with VNC enabled.
 * `image_type` - an image format for vm disk: 'raw' or 'qcow2'
 
+## Specs
+
+To run specs, you first need to add and prepare Vagrant box which will be used.
+
+```bash
+$ bundle exec rake box:add
+$ bundle exec rake box:prepare
+```
+
+Once box is added and prepared, you can run specs:
+
+```bash
+$ bundle exec rake spec
+```
+
+When you're done, feel free to remove the box.
+
+```bash
+$ bundle exec rake box:remove
+```
+
+If you're Mac user and you have Vagrant and VMware Fusion, you can use bundled box for development. See `Vagrantfile` for details.
