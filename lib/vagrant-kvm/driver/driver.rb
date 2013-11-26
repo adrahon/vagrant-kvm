@@ -145,15 +145,9 @@ module VagrantPlugins
           definition.name = @name
           definition.image_type = image_type
           definition.qemu_bin = qemu_bin
-          if cpu_model
-            definition.arch = cpu_model
-          end
-          if memory_size
-            definition.memory = memory_size
-          end
-          if cpus
-            definition.cpus = cpus
-          end
+          definition.arch = cpu_model if cpu_model
+          definition.memory = memory_size if memory_size
+          definition.cpus = cpus if cpus
           # create vm
           @logger.info("Creating new VM")
           domain = @conn.define_domain_xml(definition.as_libvirt)
@@ -213,15 +207,10 @@ module VagrantPlugins
           definition.name = @name
           definition.image_type = image_type
           definition.qemu_bin = qemu_bin
-          if cpu_model
-            definition.arch = cpu_model
-          end
-          if memory_size
-            definition.memory = memory_size
-          end
-          if cpus
-            definition.cpus = cpus
-          end
+          definition.arch = cpu_model if cpu_model
+          definition.memory = memory_size if memory_size
+          definition.cpus = cpus if cpus
+          definition.disk_bus = disk_bus if disk_bus
           # create vm
           @logger.info("Creating new VM")
           domain = @conn.define_domain_xml(definition.as_libvirt)
@@ -380,11 +369,11 @@ module VagrantPlugins
           to_path = File.dirname(xml_path)
           new_path = File.join(to_path, new_disk)
           @logger.info("create disk image #{new_path}")
-          system("qemu-img convert -S 16k -f qcow2 #{disk_image} #{new_path}")
+          system("qemu-img convert -S 16k -O qcow2 #{disk_image} #{new_path}")
           # write out box.xml
           definition.disk = new_disk
-          definition.uuid = nil
-          definition.gui = nil
+          definition.unset_gui
+          definition.unset_uuid
           File.open(xml_path,'w') do |f|
             f.puts(definition.as_libvirt)
           end

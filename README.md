@@ -8,7 +8,7 @@ provider to Vagrant, allowing Vagrant to control and provision KVM/QEMU VM.
 **NOTE:** This plugin requires QEMU 1.2+, it has only been tested on Fedora 18,
 Debian Wheezy, Ubuntu 12.04(LTS) Precise and Ubuntu 13.04 Raring at the moment.
 
-**NOTE:** This plugin requires `libvirt-dev` package to be installed 
+**NOTE:** This plugin requires redir package, and`libvirt-dev` to be installed 
 (as in Debian/Ubuntu) or `libvirt-devel` (Fedora/openSUSE)
 
 **NOTE** You can use a backported KVM/QEMU 1.4 with Private Package Archive(PPA)
@@ -27,7 +27,7 @@ vagrant-kvm version 0.1.5. Please take care what type are your box images.
 * Uses VirtualBox boxes almost seamlessly (see below).
 * Uses NFS for sync folders
 * Only works with 1 VM per Vagrantfile for now
-* Only works with private networking for now
+* Only works with port forward and private networking for now
 * Requires "libvirt" group membership to run vagrant (Debian/Ubuntu only)
 * Requires backporting qemu and libvirt from experimental (Debian) or raring (Ubuntu)
 * Use qcow2 backing image in default, that make boot speed up.

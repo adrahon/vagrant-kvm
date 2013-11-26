@@ -4,6 +4,7 @@
 * Add support for configuration for memory/cpu [GH-54][GH-51][GH-68]
 * Add support for gui configuration [GH-41][GH-53]
 * Add support for 'vagrant package' [GH-69]
+* Add support for port forwarding [GH-72]
 * Speed-up by copy-on-write backing disk image [GH-63]
 * Fixes segment fault when VirtualBox installed [GH-57][GH-66]
 * Making a path of qemu binary specifiable [GH-59]

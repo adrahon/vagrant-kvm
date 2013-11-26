@@ -71,6 +71,7 @@ module VagrantPlugins
           diskref = doc.elements["//DiskSection/Disk"].attributes["ovf:fileRef"]
           @disk = doc.elements["//References/File[@ovf:id='file1']"].attributes["ovf:href"]
           @image_type = 'raw'
+	  @disk_bus = 'virtio'
           # mac address
           # XXX we use only the first nic
           doc.elements.each("//vbox:Machine/Hardware//Adapter") do |ele|
@@ -108,6 +109,7 @@ module VagrantPlugins
             @vnc_autoport = attrs['autoport'] == 'yes'
             @vnc_password = attrs['passwd']
           end
+          @disk_bus = doc.elements["//devices/disk/target"].attributes["bus"]
         end
 
         def as_libvirt
@@ -144,6 +146,7 @@ module VagrantPlugins
             :vnc_port => @vnc_port,
             :vnc_autoport => format_bool(@vnc_autoport),
             :vnc_password=> @vnc_password,
+            :disk_bus => @disk_bus,
           })
           xml
         end
@@ -154,6 +157,18 @@ module VagrantPlugins
 
         def set_mac(mac)
           @mac = format_mac(mac)
+        end
+
+        def set_gui
+          @gui = true
+        end
+
+        def unset_gui
+          @gui = false
+        end
+
+        def unset_uuid
+          @uuid = nil
         end
 
         # Takes a quantity and a unit
