@@ -15,28 +15,27 @@ module VagrantPlugins
           # TODO: Validate network configuration prior to anything below
           @env = env
 
-          options = nil
+          options= {}
           env[:machine].config.vm.networks.each do |type, network_options|
             options = network_options if type == :private_network
           end
 
-          if options.has_key?(:ip)
-            addr = options[:ip].split(".")
-            addr[3] = "1"
-            base_ip = addr.join(".")
-            addr[3] = "100"
-            start_ip = addr.join(".")
-            addr[3] = "200"
-            end_ip = addr.join(".")
-            range = {
+          options[:ip] = "192.168.123.10" unless options.has_key?(:ip)
+          addr = options[:ip].split(".")
+          addr[3] = "1"
+          base_ip = addr.join(".")
+          addr[3] = "100"
+          start_ip = addr.join(".")
+          addr[3] = "200"
+          end_ip = addr.join(".")
+          range = {
               :start => start_ip,
               :end   => end_ip }
-            options = {
+          options = {
               :base_ip => base_ip,
               :netmask => "255.255.255.0",
               :range   => range
-            }.merge(options)
-          end
+          }.merge(options)
 
           hosts = []
           name = env[:machine].provider_config.name ?

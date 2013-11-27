@@ -66,7 +66,9 @@ module VagrantPlugins
           end
         end
 
-        nil
+        # XXX duplicated with network.rb default
+        # If no private network configuration, return default ip
+        "192.168.123.10"
       end
 
       # Return the state of the VM
@@ -81,6 +83,7 @@ module VagrantPlugins
         state_id = :not_created if !@driver.uuid
         state_id = @driver.read_state if !state_id
         state_id = :unknown if !state_id
+        @logger.info("state is now:", state_id)
 
         # TODO Translate into short/long descriptions
         short = state_id

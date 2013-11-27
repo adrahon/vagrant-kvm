@@ -15,4 +15,4 @@ To turn this into a native box, you need to create a vagrant image and do:
 $ tar cvzf kvm.box ./metadata.json ./Vagrantfile ./box.xml ./box-disk1.img
 ```
 
-You need a base MAC address and a private network like in the example.
+You need a base MAC address like in the example.

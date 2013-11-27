@@ -11,12 +11,15 @@ Debian Wheezy, Ubuntu 12.04(LTS) Precise and Ubuntu 13.04 Raring at the moment.
 **NOTE:** This plugin requires `libvirt-dev` package to be installed
 (as in Debian/Ubuntu) or `libvirt-devel` (Fedora/openSUSE)
 
-**NOTE** You can use a backported KVM/QEMU 1.2 with Private Package Archive(PPA)
+**NOTE** You can use a backported KVM/QEMU 1.4 with Private Package Archive(PPA)
 for Ubuntu 12.04(LTS) at https://launchpad.net/~miurahr/+archive/vagrant
 
 **NOTE** There is another plugin `vagrant-libvirt` that makes breakage for
 `vagrant-kvm` because of a bug of `vagrant-libvirt(0.0.6)`. This will be fixed
 in `vagrant-libvirt(0.0.7 and after)`.
+
+**NOTE** CHNAGE default box image as qcow2 instead of sparsed raw image from
+vagrant-kvm version 0.1.5. Please take care what type are your box images.
 
 ## Features/Limitations
 
@@ -24,9 +27,10 @@ in `vagrant-libvirt(0.0.7 and after)`.
 * Uses VirtualBox boxes almost seamlessly (see below).
 * Uses NFS for sync folders
 * Only works with 1 VM per Vagrantfile for now
-* Only works with private networking for now
+* Only works with port forward and private networking for now
 * Requires "libvirt" group membership to run vagrant (Debian/Ubuntu only)
 * Requires backporting qemu and libvirt from experimental (Debian) or raring (Ubuntu)
+* Use qcow2 backing image in default, that make boot speed up.
 
 ## Usage
 
@@ -91,8 +95,9 @@ This folder shows the example contents of a box for the `kvm` provider.
 There are two box formats for the `kvm` provider:
 
 1. VirtualBox box - you need to change the provider to `kvm` in the
-   `metadata.json` file, the box will be converted on the fly.
-2. "Native" box - you need a box.xml file (libvirt domain format) and a raw
+   `metadata.json` file, the box will be converted on the fly at first boot.
+   It will convert original .vmdk disk to qcow2 image and remove the orginal.
+2. "Native" box - you need a box.xml file (libvirt domain format) and a qcow2
    image file (you can convert a .vmdk with qemu-img)
 
 To turn this into a native box, you need to create a vagrant image and
@@ -120,8 +125,16 @@ You need a base MAC address and a private network like in the example.
 
 There are some provider specific parameter to control VM definition.
 
+* `cpu_model` - cpu architecture: 'i686' or 'x86_64': default is x86_64.
+  When importing VirtualBox box it may fails to recognize cpu architecture.
+  you can set it for such case.
+* `core_number` - cpu core number.
+* `memory_size` - memory size such as 512m, 1GiB, 100000KiB etc.
+  if only number supplied, use it in KiB.
 * `gui` - boolean for starting VM with VNC enabled.
-* `image_type` - an image format for vm disk: 'raw' or 'qcow2'
+* `image_type` - an image format for vm disk: 'raw' or 'qcow2': default is "qcow2"
+  When choosing 'raw', vagrant-kvm always convert box image into storage-pool,
+  it requires disk space and duration to boot. Recommendation is 'qcow2'.
 
 ## Specs
 

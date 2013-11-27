@@ -1,7 +1,7 @@
 # Utility class to translate ovf definition to libvirt XML
 # and manage XML formatting for libvirt interaction
 # Not a full OVF converter, only the minimal needed definition
-require "nokogiri"
+require "rexml/document"
 
 module VagrantPlugins
   module ProviderKvm
@@ -12,31 +12,32 @@ module VagrantPlugins
 
         # Attributes of the VM
         attr_accessor :name
-        attr_reader :cpus
+        attr_accessor :cpus
         attr_accessor :disk
         attr_reader :mac
-        attr_reader :arch
+        attr_accessor :arch
         attr_reader :network
         attr_accessor :image_type
         attr_accessor :qemu_bin
+        attr_accessor :memory
 
         def self.list_interfaces(definition)
           nics = {}
           ifcount = 0
-          doc = Nokogiri::XML(definition)
+          doc = REXML::Document new definition
           # look for user mode interfaces
-          doc.css("devices interface[type='user']").each do |item|
+          doc.elements.each("//devices/interface[@type='user']") do |item|
             ifcount += 1
             adapter = ifcount
             nics[adapter] ||= {}
             nics[adapter][:type] = :user
           end
           # look for interfaces on virtual network
-          doc.css("devices interface[type='network']").each do |item|
+          doc.elements.each("//devices/interface[@type='network']") do |item|
             ifcount += 1
             adapter = ifcount
             nics[adapter] ||= {}
-            nics[adapter][:network] = item.at_css("source")["network"]
+            nics[adapter][:network] = item.elements["source"].attributes["network"]
             nics[adapter][:type] = :network
           end
           nics
@@ -54,52 +55,57 @@ module VagrantPlugins
         end
 
         def create_from_ovf(definition)
-          doc = Nokogiri::XML(definition)
+          doc = REXML::Document.new definition
           # we don't need no namespace
-          doc.remove_namespaces!
-          @name = doc.at_css("VirtualSystemIdentifier").content
-          devices = doc.css("VirtualHardwareSection Item")
-          for device in devices
-            case device.at_css("ResourceType").content
+          #doc.remove_namespaces!
+          @name = doc.elements["//VirtualSystemIdentifier"].text if doc.elements["//VirtualSystemIdentifier"]
+          doc.elements.each("//VirtualHardwareSection/Item") do |device|
+            case device.elements["rasd:ResourceType"].text
               # CPU
             when "3"
-              @cpus = device.at_css("VirtualQuantity").content
+              @cpus = device.elements["rasd:VirtualQuantity"].text
               # Memory
             when "4"
-              @memory = size_in_bytes(device.at_css("VirtualQuantity").content,
-                                      device.at_css("AllocationUnits").content)
+              @memory = size_in_bytes(device.elements["rasd:VirtualQuantity"].text,
+                                      device.elements["rasd:AllocationUnits"].text)
             end
           end
 
           # disk volume
-          diskref = doc.at_css("DiskSection Disk")["fileRef"]
-          @disk = doc.at_css("References File[id='#{diskref}']")["href"]
+          diskref = doc.elements["//DiskSection/Disk"].attributes["ovf:fileRef"]
+          @disk = doc.elements["//References/File[@ovf:id='file1']"].attributes["ovf:href"]
           @image_type = 'raw'
+	  @disk_bus = 'virtio'
           # mac address
           # XXX we use only the first nic
-          @mac = format_mac(doc.at_css("Machine Hardware Adapter[enabled='true']")['MACAddress'])
+          doc.elements.each("//vbox:Machine/Hardware//Adapter") do |ele|
+            if ele.attributes['enabled'] == 'true'
+              @mac = format_mac( ele.attributes['MACAddress'])
+              break
+            end
+          end
 
           # the architecture is not defined in the ovf file
           # we try to guess from OSType
           # see https://www.virtualbox.org/browser/vbox/trunk/src/VBox/Main/include/ovfreader.h
-          @arch = doc.at_css("VirtualSystemIdentifier").
-            content[-2..-1] == '64' ? "x86_64" : "i686"
+          @arch = doc.elements["//vssd:VirtualSystemIdentifier"].text[-2..-1] == '64' ? "x86_64" : "i686"
         end
 
         def create_from_libvirt(definition)
-          doc = Nokogiri::XML(definition)
-          @name = doc.at_css("domain name").content
-          @uuid = doc.at_css("domain uuid").content if doc.at_css("domain uuid")
-          memory_unit = doc.at_css("domain memory")["unit"]
-          @memory = size_in_bytes(doc.at_css("domain memory").content,
+          doc = REXML::Document.new definition
+          @name = doc.elements["/domain/name"].text
+          @uuid = doc.elements["/domain/uuid"].text if doc.elements["/domain/uuid"]
+          memory_unit = doc.elements["/domain/memory"].attributes["unit"]
+          @memory = size_in_bytes(doc.elements["/domain/memory"].text,
                                   memory_unit)
-          @cpus = doc.at_css("domain vcpu").content
-          @arch = doc.at_css("domain os type")["arch"]
-          @disk = doc.at_css("devices disk source")["file"]
-          @mac = doc.at_css("devices interface mac")["address"]
-          @network = doc.at_css("devices interface source")["network"]
-          @image_type = doc.at_css("devices disk driver")["type"]
-          @qemu_bin = doc.at_css("domain devices emulator").content
+          @cpus = doc.elements["/domain/vcpu"].text
+          @arch = doc.elements["/domain/os/type"].attributes["arch"]
+          @disk = doc.elements["//devices/disk/source"].attributes["file"]
+          @mac = doc.elements["//devices/interface/mac"].attributes["address"]
+          @network = doc.elements["//devices/interface/source"].attributes["network"]
+          @image_type = doc.elements["//devices/disk/driver"].attributes["type"]
+          @qemu_bin = doc.elements["/domain/devices/emulator"].text
+          @disk_bus = doc.elements["//devices/disk/target"].attributes["bus"]
         end
 
         def as_libvirt
@@ -132,7 +138,8 @@ module VagrantPlugins
             :network => @network,
             :gui => @gui,
             :image_type => @image_type,
-            :qemu_bin => qemu_bin
+            :qemu_bin => qemu_bin,
+            :disk_bus => @disk_bus
           })
           xml
         end
@@ -147,6 +154,14 @@ module VagrantPlugins
 
         def set_gui
           @gui = true
+        end
+
+        def unset_gui
+          @gui = false
+        end
+
+        def unset_uuid
+          @uuid = nil
         end
 
         # Takes a quantity and a unit

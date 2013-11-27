@@ -1,5 +1,5 @@
 # Utility class to manage libvirt network definition
-require "nokogiri"
+require "rexml/document"
 
 module VagrantPlugins
   module ProviderKvm
@@ -13,21 +13,21 @@ module VagrantPlugins
         def initialize(name, definition=nil)
           @name = name
           if definition
-            doc = Nokogiri::XML(definition)
-            @forward = doc.at_css("network forward")["mode"] if doc.at_css("network forward")
-            @domain_name = doc.at_css("network domain")["name"] if doc.at_css("network domain")
-            @base_ip = doc.at_css("network ip")["address"]
-            @netmask = doc.at_css("network ip")["netmask"]
+            doc = REXML::Document.new definition
+            @forward = doc.elements["/network/forward"].attributes["mode"] if doc.elements["/network/forward"]
+            @domain_name = doc.elements["/network/domain"].attributes["name"] if doc.elements["/network/domain"]
+            @base_ip = doc.elements["/network/ip"].attributes["address"]
+            @netmask = doc.elements["/network/ip"].attributes["netmask"]
             @range = {
-              :start => doc.at_css("network ip dhcp range")["start"],
-              :end => doc.at_css("network ip dhcp range")["end"]
+              :start => doc.elements["/network/ip/dhcp/range"].attributes["start"],
+              :end => doc.elements["/network/ip/dhcp/range"].attributes["end"]
             }
             @hosts = []
-            doc.css("network ip dhcp host").each do |host|
+            doc.elements.each("/network/ip/dhcp/host") do |host|
               @hosts << {
-                :mac => host["mac"],
-                :name => host["name"],
-                :ip => host["ip"]
+                :mac => host.attributes["mac"],
+                :name => host.attributes["name"],
+                :ip => host.attributes["ip"]
               }
             end
           else
@@ -92,12 +92,12 @@ module VagrantPlugins
         end
 
         def inject_hosts(xml)
-          doc = Nokogiri::XML(xml)
-          entry_point = doc.at_css("network ip dhcp range")
+          doc = REXML::Document.new xml
+          entry_point = doc.elements["/network/ip/dhcp"]
           @hosts.each do |host|
-            entry_point.add_next_sibling "<host mac='#{host[:mac]}' name='#{host[:name]}' ip='#{host[:ip]}' />"
+            entry_point.add_element("host", {'mac' => host[:mac], 'name' => host[:name], 'ip' => host[:ip]})
           end
-          doc.to_xml
+          doc.to_s
         end
 
       end

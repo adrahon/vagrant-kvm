@@ -28,11 +28,12 @@ module VagrantPlugins
               # Ignore NFS shared folders 
               #next if data[:nfs]
 
-              # convert to NFS share
-              data[:nfs] = true
-
-              # This to prevent overwriting the actual shared folders data
-              result[id] = data.dup
+              unless data[:disabled]
+                # convert to NFS share
+                data[:nfs] = true
+                # This to prevent overwriting the actual shared folders data
+                result[id] = data.dup
+              end
             end
           end
         end

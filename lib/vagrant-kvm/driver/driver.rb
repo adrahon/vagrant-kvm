@@ -32,12 +32,30 @@ module VagrantPlugins
         # XXX sufficient or have to check kvm and libvirt versions?
         attr_reader :version
 
+        # KVM support status
+        attr_reader :kvm
+
         def initialize(uuid=nil)
           @logger = Log4r::Logger.new("vagrant::provider::kvm::driver")
           @uuid = uuid
           # This should be configurable
           @pool_name = "vagrant"
           @network_name = "vagrant"
+
+          @logger.info("Check KVM kernel modules")
+          @kvm = File.readlines('/proc/modules').any? { |line| line =~ /kvm_(intel|amd)/ }
+          unless @kvm
+            case File.read('/proc/cpuinfo')
+            when /vmx/
+              @kvm = true if system("sudo /sbin/modprobe kvm-intel")
+            when /svm/
+              @kvm = true if system("sudo /sbin/modprobe kvm-amd")
+            else
+              # looks like virtualization is not supported
+            end
+          end
+          # FIXME: see KVM/ARM project
+          raise Errors::VagrantKVMError, "KVM is unavailable" unless @kvm
 
           # Open a connection to the qemu driver
           begin
@@ -97,7 +115,7 @@ module VagrantPlugins
         # @param [String] image_type An image type for the volume.
         # @param [String] qemu_bin A path of qemu binary.
         # @return [String] UUID of the imported VM.
-        def import(xml, path, image_type, qemu_bin)
+        def import(xml, path, image_type, qemu_bin, cpus, memory_size, cpu_model)
           @logger.info("Importing VM")
           # create vm definition from xml
           definition = File.open(xml) { |f|
@@ -106,17 +124,30 @@ module VagrantPlugins
           box_disk = definition.disk
           new_disk = File.basename(box_disk, File.extname(box_disk)) + "-" +
             Time.now.to_i.to_s + ".img"
-          @logger.info("Copying volume #{box_disk} to #{new_disk}")
-          old_path = File.join(File.dirname(xml), box_disk)
-          new_path = File.join(path, new_disk)
-          # we use qemu-img convert to preserve image size
-          system("qemu-img convert -p #{old_path} -O #{image_type} #{new_path}")
+          case image_type
+          when 'qcow2'
+            @logger.info("Creating volume #{new_disk} backed by #{box_disk}")
+            old_path = File.join(File.dirname(xml), box_disk)
+            new_path = File.join(path, new_disk)
+            system("qemu-img create -f qcow2 -b #{old_path} #{new_path}")
+          when 'raw'
+            @logger.info("Copying volume #{box_disk} to #{new_disk}")
+            old_path = File.join(File.dirname(xml), box_disk)
+            new_path = File.join(path, new_disk)
+            # we use qemu-img convert to preserve image size
+            system("qemu-img convert #{old_path} -O #{image_type} #{new_path}")
+          else
+            @logger.info("Unknown Image type #{image_type}")
+          end
           @pool.refresh
           volume = @pool.lookup_volume_by_name(new_disk)
           definition.disk = volume.path
           definition.name = @name
           definition.image_type = image_type
           definition.qemu_bin = qemu_bin
+          definition.arch = cpu_model if cpu_model
+          definition.memory = memory_size if memory_size
+          definition.cpus = cpus if cpus
           # create vm
           @logger.info("Creating new VM")
           domain = @conn.define_domain_xml(definition.as_libvirt)
@@ -131,25 +162,53 @@ module VagrantPlugins
         # @param [String] image_type An image type for the volume.
         # @param [String] qemu_bin A path of qemu binary.
         # @return [String] UUID of the imported VM.
-        def import_ovf(ovf, path, image_type, qemu_bin)
+        def import_ovf(ovf, path, image_type, qemu_bin, cpus, memory_size, cpu_model)
           @logger.info("Importing OVF definition for VM")
           # create vm definition from ovf
           definition = File.open(ovf) { |f|
             Util::VmDefinition.new(f.read, 'ovf') }
-          # copy volume to storage pool
+          # create volume to storage pool
           box_disk = definition.disk
           new_disk = File.basename(box_disk, File.extname(box_disk)) + "-" +
             Time.now.to_i.to_s + ".img"
-          @logger.info("Converting volume #{box_disk} to #{new_disk}")
+          tmp_disk = File.basename(box_disk, File.extname(box_disk)) + ".img"
+          # path settings
           old_path = File.join(File.dirname(ovf), box_disk)
           new_path = File.join(path, new_disk)
-          system("qemu-img convert -p #{old_path} -O #{image_type} #{new_path}")
+          tmp_path = File.join(File.dirname(ovf), tmp_disk)
+          case image_type
+          when 'qcow2'
+            unless File.file?(tmp_path)
+              @logger.info("Creating native qcow2 base box image #{tmp_disk}")
+              if system("qemu-img convert -p #{old_path} -c -S 16k -O #{image_type} #{tmp_path}")
+                File.unlink(old_path)
+              else
+                raise Errors::KvmFailImageConversion
+              end
+            end
+            @logger.info("Creating volume #{new_disk} backed by #{tmp_disk}")
+            system("qemu-img create -f qcow2 -b #{tmp_path} #{new_path}")
+          when 'raw'
+            if File.file?(tmp_path)
+              @logger.info("Converting volume #{tmp_disk} to #{new_disk}")
+              system("qemu-img convert ${tmp_path} -O ${image_type} #{new_path}")
+            else
+              @logger.info("Converting volume #{old_disk} to #{new_disk}")
+              system("qemu-img convert ${old_path} -O ${image_type} #{new_path}")
+            end
+          else
+            @logger.info("Unknown Image type #{image_type}")
+          end
           @pool.refresh
           volume = @pool.lookup_volume_by_name(new_disk)
           definition.disk = volume.path
           definition.name = @name
           definition.image_type = image_type
           definition.qemu_bin = qemu_bin
+          definition.arch = cpu_model if cpu_model
+          definition.memory = memory_size if memory_size
+          definition.cpus = cpus if cpus
+          definition.disk_bus = disk_bus if disk_bus
           # create vm
           @logger.info("Creating new VM")
           domain = @conn.define_domain_xml(definition.as_libvirt)
@@ -215,8 +274,14 @@ module VagrantPlugins
           domain = @conn.lookup_domain_by_uuid(@uuid)
           state, reason = domain.state
           # check if domain has been saved
-          if VM_STATE[state] == :shutoff and domain.has_managed_save?
-            return :saved
+          case VM_STATE[state]
+          when :shutoff
+            if domain.has_managed_save?
+              return :saved
+            end
+            return :poweroff
+          when :shutdown
+            return :poweroff
           end
           VM_STATE[state]
         end
@@ -230,6 +295,12 @@ module VagrantPlugins
           min = (@conn.version - maj*1000000) / 1000
           rel = @conn.version % 1000
           "#{maj}.#{min}.#{rel}"
+        end
+
+        def read_mac_address
+          domain = @conn.lookup_domain_by_uuid(@uuid)
+          definition = Util::VmDefinition.new(domain.xml_desc, 'libvirt')
+          definition.mac
         end
 
         # Resumes the previously paused virtual machine.
@@ -271,6 +342,32 @@ module VagrantPlugins
         def suspend
           domain = @conn.lookup_domain_by_uuid(@uuid)
           domain.managed_save
+        end
+
+        # Export
+        def export(xml_path)
+          @logger.info("FIXME: export has not tested yet.")
+          new_disk = 'disk.img'
+          # create new_disk
+          domain = @conn.lookup_domain_by_uuid(@uuid)
+          definition = Util::VmDefinition.new(domain.xml_desc, 'libvirt')
+          disk_image = definition.disk
+          to_path = File.dirname(xml_path)
+          new_path = File.join(to_path, new_disk)
+          @logger.info("create disk image #{new_path}")
+          system("qemu-img convert -S 16k -O qcow2 #{disk_image} #{new_path}")
+          # write out box.xml
+          definition.disk = new_disk
+          definition.unset_gui
+          definition.unset_uuid
+          File.open(xml_path,'w') do |f|
+            f.puts(definition.as_libvirt)
+          end
+          # write metadata.json
+          json_path=File.join(to_path, 'metadata.json')
+          File.open(json_path,'w') do |f|
+            f.puts('{"provider": "kvm"}')
+          end
         end
 
         # Verifies that the driver is ready and the connection is open
