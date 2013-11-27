@@ -144,4 +144,4 @@ When you're done, feel free to remove the box.
 $ bundle exec rake box:remove
 ```
 
-If you're Mac user and you have Vagrant and VMware Fusion, you can use bundled box for development. See `Vagrantfile` for details.
+If you're Mac user and you have Vagrant and VMware Fusion, you can use bundled box for development. See `spec/Vagrantfile` for details.
