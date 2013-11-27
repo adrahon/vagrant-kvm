@@ -10,19 +10,21 @@ module VagrantPlugins
           env[:ui].info I18n.t("vagrant.actions.vm.import.importing",
                                :name => env[:machine].box.name)
 
+          provider_config = env[:machine].provider_config
+
           # Ignore unsupported image types
-          image_type = env[:machine].provider_config.image_type
+          image_type = provider_config.image_type
           image_type = 'raw' unless image_type == 'qcow2'
 
-          qemu_bin = env[:machine].provider_config.qemu_bin
+          qemu_bin = provider_config.qemu_bin
 
-          cpus = env[:machine].provider_config.core_number
-          memory_size = env[:machine].provider_config.memory_size
-          cpu_model =env[:machine].provider_config.cpu_model
+          cpus = provider_config.core_number
+          memory_size = provider_config.memory_size
+          cpu_model = provider_config.cpu_model
+          machine_type = provider_config.machine_type
 
-          # Import the virtual machine (ovf or libvirt)
-          # if a libvirt XML definition is present we use it
-          # otherwise we convert the OVF
+          # Import the virtual machine (ovf or libvirt) if a libvirt XML
+          # definition is present we use it otherwise we convert the OVF
           storage_path = File.join(env[:tmp_path],"/storage-pool")
           box_file = env[:machine].box.directory.join("box.xml").to_s
           if File.file?(box_file)
@@ -38,7 +40,7 @@ module VagrantPlugins
 
           # import the box to a new vm
           env[:machine].id = env[:machine].provider.driver.import(
-            box_file, box_type, volume_name, image_type, qemu_bin, cpus, memory_size, cpu_model)
+            box_file, box_type, volume_name, image_type, qemu_bin, cpus, memory_size, cpu_model, machine_type)
 
           # If we got interrupted, then the import could have been
           # interrupted and its not a big deal. Just return out.
@@ -113,8 +115,6 @@ module VagrantPlugins
         end
 
         def recover(env)
-          # FIXME Disabled for now as it's  breaking the importing 
-          return
           if env[:machine].provider.state.id != :not_created
             return if env["vagrant.error"].is_a?(Vagrant::Errors::VagrantError)
 

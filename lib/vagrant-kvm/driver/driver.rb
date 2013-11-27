@@ -151,11 +151,10 @@ module VagrantPlugins
         # @param [String] image_type Image type of the imported the volume.
         # @param [String] qemu_bin Path of qemu binary.
         # @return [String] UUID of the imported VM.
-        def import(xml, box_type, volume_name, image_type, qemu_bin, cpus, memory_size, cpu_model)
+        def import(xml, box_type, volume_name, image_type, qemu_bin, cpus, memory_size, cpu_model, machine_type)
           @logger.info("Importing VM")
           # create vm definition from xml
-          definition = File.open(xml) { |f|
-            Util::VmDefinition.new(f.read, box_type) }
+          definition = File.open(xml) { |f| Util::VmDefinition.new(f.read, box_type) }
           volume = @pool.lookup_volume_by_name(volume_name)
           definition.disk = volume.path
           definition.name = @name
@@ -164,9 +163,12 @@ module VagrantPlugins
           definition.arch = cpu_model if cpu_model
           definition.memory = memory_size if memory_size
           definition.cpus = cpus if cpus
+          definition.machine_type = machine_type if machine_type
           # create vm
           @logger.info("Creating new VM")
-          domain = @conn.define_domain_xml(definition.as_libvirt)
+          libvirt_xml = definition.as_libvirt
+          @logger.debug("Creating new VM with XML config:\n#{libvirt_xml}")
+          domain = @conn.define_domain_xml(libvirt_xml)
           domain.uuid
         end
 

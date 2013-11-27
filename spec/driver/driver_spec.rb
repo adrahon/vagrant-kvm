@@ -12,6 +12,7 @@ module VagrantPlugins
         let(:cpus) { nil }
         let(:memory_size) { nil }
         let(:cpu_model) { nil }
+        let(:computer_type) { nil }
 
         describe "#import" do
           # FIXME All of these required stubs are a symptom of bad design in the
@@ -26,9 +27,10 @@ module VagrantPlugins
             described_class.new(nil, conn)
           end
 
-          it "does stuff" do
-            subject.stub(run_command: true)
-            subject.import(xml, box_type, volume_name ,image_type, qemu_bin, cpus, memory_size, cpu_model)
+          it "does not raise exception" do
+            expect do
+              subject.import(xml, box_type, volume_name ,image_type, qemu_bin, cpus, memory_size, cpu_model, computer_type)
+            end.to_not raise_exception
           end
         end
       end
