@@ -62,10 +62,11 @@ module VagrantPlugins
           # if ovf convert box volume
           if box_type == 'ovf'
             tmp_disk = File.basename(box_disk, File.extname(box_disk)) + ".img"
-            tmp_path = File.join(File.dirname(ovf), tmp_disk)
+            tmp_path = File.join(File.dirname(box_file), tmp_disk)
             unless File.file?(tmp_path)
               options = "-c -S 16k" if image_type == 'qcow2' # XXX is -S 16k necessary?
-              env[:logger].info("Converting box image to #{image_type} volume #{tmp_disk}")
+              #env[:logger].info("Converting box image to #{image_type} volume #{tmp_disk}")
+              # no access to log?
               if system("qemu-img convert -p #{old_path} #{options} -O #{image_type} #{tmp_path}")
                 File.unlink(old_path)
               else
