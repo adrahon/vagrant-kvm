@@ -170,67 +170,6 @@ module VagrantPlugins
           domain.uuid
         end
 
-        # Imports the VM from an OVF file.
-        # XXX should be fusioned with import
-        #
-        # @param [String] ovf Path to the OVF file.
-        # @param [String] path Destination path for the volume.
-        # @param [String] image_type An image type for the volume.
-        # @param [String] qemu_bin A path of qemu binary.
-        # @return [String] UUID of the imported VM.
-        def import_ovf(ovf, path, image_type, qemu_bin, cpus, memory_size, cpu_model)
-          @logger.info("Importing OVF definition for VM")
-          # create vm definition from ovf
-          definition = File.open(ovf) { |f|
-            Util::VmDefinition.new(f.read, 'ovf') }
-          # create volume to storage pool
-          box_disk = definition.disk
-          new_disk = File.basename(box_disk, File.extname(box_disk)) + "-" +
-            Time.now.to_i.to_s + ".img"
-          tmp_disk = File.basename(box_disk, File.extname(box_disk)) + ".img"
-          # path settings
-          old_path = File.join(File.dirname(ovf), box_disk)
-          new_path = File.join(path, new_disk)
-          tmp_path = File.join(File.dirname(ovf), tmp_disk)
-          case image_type
-          when 'qcow2'
-            unless File.file?(tmp_path)
-              @logger.info("Creating native qcow2 base box image #{tmp_disk}")
-              if system("qemu-img convert -p #{old_path} -c -S 16k -O #{image_type} #{tmp_path}")
-                File.unlink(old_path)
-              else
-                raise Errors::KvmFailImageConversion
-              end
-            end
-            @logger.info("Creating volume #{new_disk} backed by #{tmp_disk}")
-            system("qemu-img create -f qcow2 -b #{tmp_path} #{new_path}")
-          when 'raw'
-            if File.file?(tmp_path)
-              @logger.info("Converting volume #{tmp_disk} to #{new_disk}")
-              system("qemu-img convert ${tmp_path} -O ${image_type} #{new_path}")
-            else
-              @logger.info("Converting volume #{old_disk} to #{new_disk}")
-              system("qemu-img convert ${old_path} -O ${image_type} #{new_path}")
-            end
-          else
-            @logger.info("Unknown Image type #{image_type}")
-          end
-          @pool.refresh
-          volume = @pool.lookup_volume_by_name(new_disk)
-          definition.disk = volume.path
-          definition.name = @name
-          definition.image_type = image_type
-          definition.qemu_bin = qemu_bin
-          definition.arch = cpu_model if cpu_model
-          definition.memory = memory_size if memory_size
-          definition.cpus = cpus if cpus
-          definition.disk_bus = disk_bus if disk_bus
-          # create vm
-          @logger.info("Creating new VM")
-          domain = @conn.define_domain_xml(definition.as_libvirt)
-          domain.uuid
-        end
-
         # Create network
         def create_network(config)
           begin

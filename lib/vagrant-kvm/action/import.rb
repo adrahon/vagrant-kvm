@@ -52,34 +52,45 @@ module VagrantPlugins
         end
 
         def import_volume(storage_path, image_type, box_file, box_type, env)
-          if box_type == 'libvirt'
-            box_disk = env[:machine].provider.driver.find_box_disk(box_file, box_type)
-            # create volume to storage pool
-            new_disk = File.basename(box_disk, File.extname(box_disk)) + "-" +
-              Time.now.to_i.to_s + ".img"
-            # path settings
-            old_path = File.join(File.dirname(box_file), box_disk)
-            new_path = File.join(storage_path, new_disk)
-            capacity = volume_size(old_path)
-            if image_type == 'qcow2'
-              # create volume with box disk as backing volume
-              env[:machine].provider.driver.create_volume(new_disk, capacity, new_path, image_type, old_path)
-            elsif image_type == 'raw'
-              # create volume then upload box disk content
-              env[:machine].provider.driver.create_volume(new_disk, capacity, new_path, image_type)
-              # Upload box image content (taken from vagrant-libvirt)
-              box_image_size = Integer(capacity[:size])
-              result = env[:machine].provider.driver.upload_image(
-                old_path, new_disk, box_image_size) do |progress|
-                  env[:ui].clear_line
-                  env[:ui].report_progress(progress, box_image_size, false)
-                end
-                env[:ui].clear_line
-                # TODO cleanup if interupted
+          box_disk = env[:machine].provider.driver.find_box_disk(box_file, box_type)
+          new_disk = File.basename(box_disk, File.extname(box_disk)) + "-" +
+            Time.now.to_i.to_s + ".img"
+          old_path = File.join(File.dirname(box_file), box_disk)
+          new_path = File.join(storage_path, new_disk)
+          capacity = volume_size(old_path)
+
+          # if ovf convert box volume
+          if box_type == 'ovf'
+            tmp_disk = File.basename(box_disk, File.extname(box_disk)) + ".img"
+            tmp_path = File.join(File.dirname(ovf), tmp_disk)
+            unless File.file?(tmp_path)
+              options = "-c -S 16k" if image_type == 'qcow2' # XXX is -S 16k necessary?
+              env[:logger].info("Converting box image to #{image_type} volume #{tmp_disk}")
+              if system("qemu-img convert -p #{old_path} #{options} -O #{image_type} #{tmp_path}")
+                File.unlink(old_path)
+              else
+                raise Errors::KvmFailImageConversion
+              end
             end
-          elsif box_type == 'ovf'
-            # TODO
+            old_path = tmp_path
           end
+
+          if image_type == 'qcow2'
+            # create volume with box disk as backing volume
+            env[:machine].provider.driver.create_volume(new_disk, capacity, new_path, image_type, old_path)
+          elsif image_type == 'raw'
+            # create volume then upload box disk content
+            env[:machine].provider.driver.create_volume(new_disk, capacity, new_path, image_type)
+            # Upload box image content (taken from vagrant-libvirt)
+            box_image_size = Integer(capacity[:size])
+            result = env[:machine].provider.driver.upload_image(
+              old_path, new_disk, box_image_size) do |progress|
+                env[:ui].clear_line
+                env[:ui].report_progress(progress, box_image_size, false)
+              end
+              env[:ui].clear_line
+          end
+          # TODO cleanup if interupted
           new_disk
         end
 
