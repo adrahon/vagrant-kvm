@@ -1,13 +1,25 @@
-FileUtils.rm_rf "~/.vagrant.d/boxes/test_box/"
-
 require 'vagrant-kvm'
+require 'support/libvirt_helper'
+require 'support/vagrant_kvm_helper'
 require 'pry'
 
-RSpec.configure do |config|
-  config.treat_symbols_as_metadata_keys_with_true_values = true
-  config.run_all_when_everything_filtered = true
-  config.filter_run :focus
-  config.order = 'random'
+RSpec.configure do |spec|
+  spec.include VagrantKvmHelper
+
+  spec.before(:all) do
+    @libvirt = LibvirtHelper.new
+
+    # make sure everything is run in tmp
+    Dir.chdir '/tmp'
+  end
+
+  spec.after(:all) do
+    @libvirt.connection.close
+  end
+
+  at_exit do
+    File.delete('Vagrantfile') if File.exists?('Vagrantfile')
+  end
 end
 
 def test_file(path)

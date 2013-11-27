@@ -35,14 +35,12 @@ module VagrantPlugins
         # KVM support status
         attr_reader :kvm
 
-        def initialize(uuid=nil, conn = nil)
-          @conn = conn
+        def initialize(uuid=nil, conn=nil)
           @logger = Log4r::Logger.new("vagrant::provider::kvm::driver")
           @uuid = uuid
           # This should be configurable
           @pool_name = "vagrant"
           @network_name = "vagrant"
-          @name = "vagrant"
 
           @logger.info("Check KVM kernel modules")
           @kvm = File.readlines('/proc/modules').any? { |line| line =~ /kvm_(intel|amd)/ }
@@ -61,7 +59,7 @@ module VagrantPlugins
 
           # Open a connection to the qemu driver
           begin
-            @conn ||= Libvirt::open('qemu:///system')
+            @conn = conn || Libvirt::open('qemu:///system')
           rescue Libvirt::Error => e
             if e.libvirt_code == 5
               # can't connect to hypervisor
@@ -92,6 +90,35 @@ module VagrantPlugins
           end
         end
 
+        # create empty volume in storage pool
+        def create_volume(disk_name, capacity, path, image_type, backing_vol=nil)
+          msg = "Creating volume #{disk_name}"
+          msg += " backed by volume #{backing_vol}" if backing_vol
+          @logger.info(msg)
+          storage_vol_xml = <<-EOF
+          <volume>
+            <name>#{disk_name}</name>
+            <allocation>0</allocation>
+            <capacity unit="#{capacity[:unit]}">#{capacity[:size]}</capacity>
+            <target>
+              <path>#{path}</path>
+              <format type='#{image_type}'/>
+            </target>
+          EOF
+          if backing_vol
+            storage_vol_xml += <<-EOF
+            <backingStore>
+              <path>#{backing_vol}</path>
+            </backingStore>
+            EOF
+          end
+          storage_vol_xml += <<-EOF
+          </volume>
+          EOF
+          vol = @pool.create_volume_xml(storage_vol_xml)
+          @pool.refresh
+        end
+
         def delete
           domain = @conn.lookup_domain_by_uuid(@uuid)
           definition = Util::VmDefinition.new(domain.xml_desc, 'libvirt')
@@ -104,6 +131,12 @@ module VagrantPlugins
           domain.undefine
         end
 
+        def find_box_disk(xml, box_type)
+          definition = File.open(xml) { |f|
+            Util::VmDefinition.new(f.read, box_type) }
+          definition.disk
+        end
+
         # Halts the virtual machine
         def halt
           domain = @conn.lookup_domain_by_uuid(@uuid)
@@ -112,36 +145,18 @@ module VagrantPlugins
 
         # Imports the VM
         #
-        # @param [String] xml Path to the libvirt XML file.
-        # @param [String] path Destination path for the volume.
-        # @param [String] image_type An image type for the volume.
-        # @param [String] qemu_bin A path of qemu binary.
+        # @param [String] xml Path to the VM XML file.
+        # @param [String] box_type KVM or OVF.
+        # @param [String] volume_name Name of the imported volume
+        # @param [String] image_type Image type of the imported the volume.
+        # @param [String] qemu_bin Path of qemu binary.
         # @return [String] UUID of the imported VM.
-        def import(xml, path, image_type, qemu_bin, cpus, memory_size, cpu_model)
+        def import(xml, box_type, volume_name, image_type, qemu_bin, cpus, memory_size, cpu_model)
           @logger.info("Importing VM")
           # create vm definition from xml
-          definition = File.open(xml) { |f| Util::VmDefinition.new(f.read) }
-          # copy volume to storage pool
-          box_disk = definition.disk
-          new_disk = File.basename(box_disk, File.extname(box_disk)) + "-" +
-            Time.now.to_i.to_s + ".img"
-          case image_type
-          when 'qcow2'
-            @logger.info("Creating volume #{new_disk} backed by #{box_disk}")
-            old_path = File.join(File.dirname(xml), box_disk)
-            new_path = File.join(path, new_disk)
-            run_command("qemu-img create -f qcow2 -b #{old_path} #{new_path}")
-          when 'raw'
-            @logger.info("Copying volume #{box_disk} to #{new_disk}")
-            old_path = File.join(File.dirname(xml), box_disk)
-            new_path = File.join(path, new_disk)
-            # we use qemu-img convert to preserve image size
-            run_command("qemu-img convert #{old_path} -O #{image_type} #{new_path}")
-          else
-            @logger.info("Unknown Image type #{image_type}")
-          end
-          @pool.refresh
-          volume = @pool.lookup_volume_by_name(new_disk)
+          definition = File.open(xml) { |f|
+            Util::VmDefinition.new(f.read, box_type) }
+          volume = @pool.lookup_volume_by_name(volume_name)
           definition.disk = volume.path
           definition.name = @name
           definition.image_type = image_type
@@ -149,71 +164,6 @@ module VagrantPlugins
           definition.arch = cpu_model if cpu_model
           definition.memory = memory_size if memory_size
           definition.cpus = cpus if cpus
-          # create vm
-          @logger.info("Creating new VM")
-          libvirt_xml = definition.as_libvirt
-          @logger.debug("Creating new VM with XML definition:\n#{libvirt_xml}")
-          domain = @conn.define_domain_xml(libvirt_xml)
-          domain.uuid
-        end
-
-        # Imports the VM from an OVF file.
-        # XXX should be fusioned with import
-        #
-        # @param [String] ovf Path to the OVF file.
-        # @param [String] path Destination path for the volume.
-        # @param [String] image_type An image type for the volume.
-        # @param [String] qemu_bin A path of qemu binary.
-        # @return [String] UUID of the imported VM.
-        def import_ovf(ovf, path, image_type, qemu_bin, cpus, memory_size, cpu_model)
-          @logger.info("Importing OVF definition for VM")
-          # create vm definition from ovf
-          definition = File.open(ovf) { |f|
-            Util::VmDefinition.new(f.read, 'ovf') }
-          # create volume to storage pool
-          box_disk = definition.disk
-          new_disk = File.basename(box_disk, File.extname(box_disk)) + "-" +
-            Time.now.to_i.to_s + ".img"
-          tmp_disk = File.basename(box_disk, File.extname(box_disk)) + ".img"
-          # path settings
-          old_path = File.join(File.dirname(ovf), box_disk)
-          new_path = File.join(path, new_disk)
-          tmp_path = File.join(File.dirname(ovf), tmp_disk)
-          case image_type
-          when 'qcow2'
-            unless File.file?(tmp_path)
-              @logger.info("Creating native qcow2 base box image #{tmp_disk}")
-              if run_command("qemu-img convert -p #{old_path} -c -S 16k -O #{image_type} #{tmp_path}")
-                File.unlink(old_path)
-              else
-                raise Errors::KvmFailImageConversion
-              end
-            end
-            @logger.info("Creating volume #{new_disk} backed by #{tmp_disk}")
-            run_command("qemu-img create -f qcow2 -b #{tmp_path} #{new_path}")
-          when 'raw'
-            if File.file?(tmp_path)
-              @logger.info("Converting volume #{tmp_disk} to #{new_disk}")
-              run_command("qemu-img convert ${tmp_path} -O ${image_type} #{new_path}")
-            else
-              @logger.info("Converting volume #{old_disk} to #{new_disk}")
-              run_command("qemu-img convert ${old_path} -O ${image_type} #{new_path}")
-            end
-          else
-            @logger.info("Unknown Image type #{image_type}")
-          end
-
-          run_command "chmod 777 #{new_path}"
-          @pool.refresh
-          volume = @pool.lookup_volume_by_name(new_disk)
-          definition.disk = volume.path
-          definition.name = @name
-          definition.image_type = image_type
-          definition.qemu_bin = qemu_bin
-          definition.arch = cpu_model if cpu_model
-          definition.memory = memory_size if memory_size
-          definition.cpus = cpus if cpus
-          definition.disk_bus = disk_bus if disk_bus
           # create vm
           @logger.info("Creating new VM")
           domain = @conn.define_domain_xml(definition.as_libvirt)
@@ -241,9 +191,6 @@ module VagrantPlugins
 
         # Initialize or create storage pool
         def init_storage(base_path)
-          pool_path = base_path.join("storage-pool")
-          pool_path.mkpath unless Dir.exists?(pool_path)
-
           begin
             # Get the storage pool if it exists
             @pool = @conn.lookup_storage_pool_by_name(@pool_name)
@@ -252,6 +199,8 @@ module VagrantPlugins
             # Storage pool doesn't exist so we create it
             # create dir if it doesn't exist
             # if we let libvirt create the dir it is owned by root
+            pool_path = base_path.join("storage-pool")
+            pool_path.mkpath unless Dir.exists?(pool_path)
             storage_pool_xml = <<-EOF
           <pool type="dir">
             <name>#{@pool_name}</name>
@@ -329,23 +278,12 @@ module VagrantPlugins
           @conn.define_domain_xml(definition.as_libvirt)
         end
 
-        [:gui, :vnc_port, :vnc_autoport, :vnc_password].each do |method|
-          define_method "#{method}=" do |val|
-            set_options(method => val)
-          end
-        end
-
-        def set_options(values)
+        def set_gui
           domain = @conn.lookup_domain_by_uuid(@uuid)
           definition = Util::VmDefinition.new(domain.xml_desc, 'libvirt')
-
-          values.each do |method, val|
-            definition.send "#{method}=", val
-          end
-
+          definition.set_gui
           domain.undefine
-          xml = definition.as_libvirt
-          @conn.define_domain_xml(xml)
+          @conn.define_domain_xml(definition.as_libvirt)
         end
 
         # Starts the virtual machine.
@@ -359,6 +297,35 @@ module VagrantPlugins
         def suspend
           domain = @conn.lookup_domain_by_uuid(@uuid)
           domain.managed_save
+        end
+
+        def upload_image(source, volume_name, size)
+          begin
+            @logger.info("Copying box data to new volume")
+            volume = @pool.lookup_volume_by_name(volume_name)
+            stream = @conn.stream
+            volume.upload(stream, offset=0, length=size)
+
+            buf_size = 1024*250 # 250K
+            progress = 0
+            open(source, 'rb') do |io|
+              while (buff = io.read(buf_size)) do
+                sent = stream.send buff
+                progress += sent
+                yield progress
+              end
+            end
+          rescue => e
+            raise Vagrant::Errors::KvmImageUploadError,
+              :error_message => e.message
+          end
+          @pool.refresh
+
+          if progress == size
+            return true
+          else
+            return false
+          end
         end
 
         # Export
@@ -406,14 +373,6 @@ module VagrantPlugins
           rescue Libvirt::RetrieveError
             false
           end
-        end
-
-        def run_command(cmd)
-          status = system(cmd)
-          unless status
-            raise "System command `#{cmd}` returned with status code #{status}"
-          end
-          status
         end
       end
     end

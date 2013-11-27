@@ -5,7 +5,8 @@ module VagrantPlugins
     module Driver
       describe Driver do
         let(:xml) { test_file "box.xml" }
-        let(:path) { "spec/tmp" }
+        let(:box_type) { "" }
+        let(:volume_name) { "" }
         let(:image_type) { "raw" }
         let(:qemu_bin) { nil }
         let(:cpus) { nil }
@@ -27,7 +28,7 @@ module VagrantPlugins
 
           it "does stuff" do
             subject.stub(run_command: true)
-            subject.import(xml, path, image_type, qemu_bin, cpus, memory_size, cpu_model)
+            subject.import(xml, box_type, volume_name ,image_type, qemu_bin, cpus, memory_size, cpu_model)
           end
         end
       end
