@@ -35,12 +35,14 @@ module VagrantPlugins
         # KVM support status
         attr_reader :kvm
 
-        def initialize(uuid=nil)
+        def initialize(uuid=nil, conn = nil)
+          @conn = conn
           @logger = Log4r::Logger.new("vagrant::provider::kvm::driver")
           @uuid = uuid
           # This should be configurable
           @pool_name = "vagrant"
           @network_name = "vagrant"
+          @name = "vagrant"
 
           @logger.info("Check KVM kernel modules")
           @kvm = File.readlines('/proc/modules').any? { |line| line =~ /kvm_(intel|amd)/ }
@@ -59,7 +61,7 @@ module VagrantPlugins
 
           # Open a connection to the qemu driver
           begin
-            @conn = Libvirt::open('qemu:///system')
+            @conn ||= Libvirt::open('qemu:///system')
           rescue Libvirt::Error => e
             if e.libvirt_code == 5
               # can't connect to hypervisor
@@ -118,8 +120,7 @@ module VagrantPlugins
         def import(xml, path, image_type, qemu_bin, cpus, memory_size, cpu_model)
           @logger.info("Importing VM")
           # create vm definition from xml
-          definition = File.open(xml) { |f|
-            Util::VmDefinition.new(f.read) }
+          definition = File.open(xml) { |f| Util::VmDefinition.new(f.read) }
           # copy volume to storage pool
           box_disk = definition.disk
           new_disk = File.basename(box_disk, File.extname(box_disk)) + "-" +
@@ -150,7 +151,9 @@ module VagrantPlugins
           definition.cpus = cpus if cpus
           # create vm
           @logger.info("Creating new VM")
-          domain = @conn.define_domain_xml(definition.as_libvirt)
+          libvirt_xml = definition.as_libvirt
+          @logger.debug("Creating new VM with XML definition:\n#{libvirt_xml}")
+          domain = @conn.define_domain_xml(libvirt_xml)
           domain.uuid
         end
 

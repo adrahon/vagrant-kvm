@@ -26,11 +26,6 @@ describe VagrantPlugins::ProviderKvm::Util::VmDefinition do
         subject.should include("<vcpu placement='static'>1</vcpu>")
       end
 
-      it "should convert backfrom libvirt" do
-        new_definition = VagrantPlugins::ProviderKvm::Util::VmDefinition.new(subject, 'libvirt')
-        new_definition.gui.should be_false
-      end
-
       it "sets the VNC port and autoport" do
         definition.gui = true
         definition.vnc_port = 1234
@@ -45,14 +40,31 @@ describe VagrantPlugins::ProviderKvm::Util::VmDefinition do
         new_definition.vnc_password.should == 'abc123'
       end
 
-      it "should load the GUI settings" do
-        definition.gui = true
+      it "should set and load the GUI settings" do
+        should_set(:gui, true) do |xml|
+          xml.should include("<graphics type='vnc' port='-1' autoport='no'")
+        end
       end
 
-      it "defaults to VNC port to -1 and autoport to no" do
-        definition.gui = true
-        subject.should include("<graphics type='vnc' port='-1' autoport='no'")
+      it "sets machine type" do
+        should_default(:machine_type, "pc-1.2")
+        should_set(:machine_type, "pc-i440fx-1.4")
       end
     end
+  end
+
+  private
+  def should_set(key, value)
+    definition.send(:"#{key}=", value)
+    definition.send(key).should == value
+    yield subject if block_given?
+
+    # Validates that it's symetrical
+    new_definition = VagrantPlugins::ProviderKvm::Util::VmDefinition.new(subject, 'libvirt')
+    new_definition.send(key).should == value
+  end
+
+  def should_default(key, value)
+    definition.send(key).should == value
   end
 end

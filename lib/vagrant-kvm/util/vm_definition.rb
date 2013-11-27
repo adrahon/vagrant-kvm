@@ -11,7 +11,7 @@ module VagrantPlugins
 
         # Attributes of the VM
         attr_accessor :name, :image_type, :qemu_bin, :disk, :vnc_port, :vnc_autoport, 
-          :vnc_password, :gui, :cpus, :arch, :memory
+          :vnc_password, :gui, :cpus, :arch, :memory, :machine_type
 
         attr_reader :mac, :arch, :network
 
@@ -71,7 +71,9 @@ module VagrantPlugins
           diskref = doc.elements["//DiskSection/Disk"].attributes["ovf:fileRef"]
           @disk = doc.elements["//References/File[@ovf:id='file1']"].attributes["ovf:href"]
           @image_type = 'raw'
-	  @disk_bus = 'virtio'
+          @disk_bus = 'virtio'
+          @machine_type = 'pc-1.2'
+
           # mac address
           # XXX we use only the first nic
           doc.elements.each("//vbox:Machine/Hardware//Adapter") do |ele|
@@ -96,6 +98,7 @@ module VagrantPlugins
                                   memory_unit)
           @cpus = doc.elements["/domain/vcpu"].text
           @arch = doc.elements["/domain/os/type"].attributes["arch"]
+          @machine_type = doc.elements["/domain/os/type"].attributes["machine"]
           @disk = doc.elements["//devices/disk/source"].attributes["file"]
           @mac = doc.elements["//devices/interface/mac"].attributes["address"]
           @network = doc.elements["//devices/interface/source"].attributes["network"]
@@ -141,6 +144,7 @@ module VagrantPlugins
             :mac => format_mac(@mac),
             :network => @network,
             :gui => @gui,
+            :machine_type => @machine_type,
             :image_type => @image_type,
             :qemu_bin => qemu_bin,
             :vnc_port => @vnc_port,
