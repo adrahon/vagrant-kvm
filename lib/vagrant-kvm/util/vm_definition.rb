@@ -163,14 +163,6 @@ module VagrantPlugins
           @mac = format_mac(mac)
         end
 
-        def set_gui
-          @gui = true
-        end
-
-        def unset_gui
-          @gui = false
-        end
-
         def unset_uuid
           @uuid = nil
         end

@@ -280,10 +280,13 @@ module VagrantPlugins
           @conn.define_domain_xml(definition.as_libvirt)
         end
 
-        def set_gui
+        def set_gui(vnc_port, vnc_autoport, vnc_password)
           domain = @conn.lookup_domain_by_uuid(@uuid)
           definition = Util::VmDefinition.new(domain.xml_desc, 'libvirt')
-          definition.set_gui
+          definition.gui = true
+          definition.vnc_port = vnc_port
+          definition.vnc_autoport = vnc_autoport
+          definition.vnc_password = vnc_password
           domain.undefine
           @conn.define_domain_xml(definition.as_libvirt)
         end
@@ -344,7 +347,7 @@ module VagrantPlugins
           system("qemu-img convert -S 16k -O qcow2 #{disk_image} #{new_path}")
           # write out box.xml
           definition.disk = new_disk
-          definition.unset_gui
+          definition.gui = false
           definition.unset_uuid
           File.open(xml_path,'w') do |f|
             f.puts(definition.as_libvirt)
