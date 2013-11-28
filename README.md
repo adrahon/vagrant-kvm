@@ -28,7 +28,7 @@ vagrant-kvm version 0.1.5. Please take care what type are your box images.
 * Uses NFS for sync folders
 * Only works with 1 VM per Vagrantfile for now
 * Only works with port forward and private networking for now
-* Requires "libvirt" group membership to run vagrant (Debian/Ubuntu only)
+* Requires "libvirtd" group membership to run vagrant (Debian/Ubuntu only)
 * Requires backporting qemu and libvirt from experimental (Debian) or raring (Ubuntu)
 * Use qcow2 backing image in default, that make boot speed up.
 
