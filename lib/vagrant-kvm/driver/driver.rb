@@ -316,7 +316,7 @@ module VagrantPlugins
               end
             end
           rescue => e
-            raise Vagrant::Errors::KvmImageUploadError,
+            raise Errors::KvmImageUploadError,
               :error_message => e.message
           end
           @pool.refresh
