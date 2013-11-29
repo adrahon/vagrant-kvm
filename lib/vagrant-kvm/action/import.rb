@@ -57,7 +57,6 @@ module VagrantPlugins
             Time.now.to_i.to_s + ".img"
           old_path = File.join(File.dirname(box_file), box_disk)
           new_path = File.join(storage_path, new_disk)
-          capacity = volume_size(old_path)
 
           # if ovf convert box volume
           if box_type == 'ovf'
@@ -76,6 +75,7 @@ module VagrantPlugins
             old_path = tmp_path
           end
 
+          capacity = volume_size(old_path)
           if image_type == 'qcow2'
             # create volume with box disk as backing volume
             env[:machine].provider.driver.create_volume(new_disk, capacity, new_path, image_type, old_path)
