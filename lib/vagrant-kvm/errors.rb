@@ -21,6 +21,9 @@ module VagrantPlugins
       class KvmImageUploadError < VagrantKVMError
         error_key(:kvm_fail_image_conversion)
       end
+      class KvmBadBoxFormat < VagrantKVMError
+        error_key(:kvm_fail_image_conversion)
+      end
     end
   end
 end
