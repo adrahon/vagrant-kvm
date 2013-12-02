@@ -99,7 +99,7 @@ module VagrantPlugins
         def volume_size(vol_path)
           # default values
           vol_vsize = {:size => 10, :unit => 'G'}
-          vsize_regex = %r{virtual size:\s+(?<size>\d+(\.\d+))?(?<unit>.)\s+\((?<bytesize>\d+)\sbytes\)}
+          vsize_regex = %r{virtual size:\s+(?<size>\d+(\.\d+)?)(?<unit>.)\s+\((?<bytesize>\d+)\sbytes\)}
           diskinfo = %x[qemu-img info #{vol_path}]
           diskinfo.each_line do |line|
             result = line.match(vsize_regex)
