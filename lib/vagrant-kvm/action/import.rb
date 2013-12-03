@@ -12,7 +12,7 @@ module VagrantPlugins
 
           # Ignore unsupported image types
           image_type = env[:machine].provider_config.image_type
-          image_type = 'raw' unless image_type == 'qcow2'
+          image_type = 'qcow2' unless image_type == 'raw'
 
           qemu_bin = env[:machine].provider_config.qemu_bin
 
