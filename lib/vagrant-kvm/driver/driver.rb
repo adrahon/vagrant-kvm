@@ -109,6 +109,7 @@ module VagrantPlugins
             storage_vol_xml += <<-EOF
             <backingStore>
               <path>#{backing_vol}</path>
+              <format type='#{image_type}'/>
             </backingStore>
             EOF
           end
