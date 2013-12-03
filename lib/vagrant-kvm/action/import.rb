@@ -2,8 +2,11 @@ module VagrantPlugins
   module ProviderKvm
     module Action
       class Import
+        include Util::Commands
+
         def initialize(app, env)
           @app = app
+          @logger = Log4r::Logger.new("vagrant::kvm::action::import")
         end
 
         def call(env)
@@ -99,17 +102,22 @@ module VagrantPlugins
         def volume_size(vol_path)
           # default values
           vol_vsize = {:size => 10, :unit => 'G'}
-          vsize_regex = %r{virtual size:\s+(?<size>\d+(\.\d+)?)(?<unit>.)\s+\((?<bytesize>\d+)\sbytes\)}
-          diskinfo = %x[qemu-img info #{vol_path}]
-          diskinfo.each_line do |line|
-            result = line.match(vsize_regex)
-            if result
-              # always take the size in bytes to avoid conversion
-              vol_vsize = {:size => result[:bytesize], :unit => "B"}
-              break
+          begin
+            vsize_regex = %r{virtual size:\s+(?<size>\d+(\.\d+)?)(?<unit>.)\s+\((?<bytesize>\d+)\sbytes\)}
+            diskinfo = %x[qemu-img info #{vol_path}]
+            diskinfo.each_line do |line|
+              result = line.match(vsize_regex)
+              if result
+                # always take the size in bytes to avoid conversion
+                vol_vsize = {:size => result[:bytesize], :unit => "B"}
+                break
+              end
             end
+          rescue Errors::KvmFailedCommand =>e
+            @logger.error 'Failed to find volume size. Using defaults.'
+            @logger.error e
           end
-          return vol_vsize
+          vol_vsize
         end
 
         def recover(env)

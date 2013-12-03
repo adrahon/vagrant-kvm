@@ -5,6 +5,8 @@ module VagrantPlugins
   module ProviderKvm
     module Action
       class ClearForwardedPorts
+        include Util::Commands
+
         def initialize(app, env)
           @app = app
           @logger = Log4r::Logger.new("vagrant::kvm::action::clear_forwarded_ports")
@@ -18,7 +20,7 @@ module VagrantPlugins
             redir_pids.each do |pid|
               next unless is_redir_pid?(pid)
               @logger.debug "Killing pid #{pid}"
-              system "pkill -TERM -P #{pid}"
+              run_command "pkill -TERM -P #{pid}"
             end
 
             remove_redir_pids
