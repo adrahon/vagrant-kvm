@@ -18,6 +18,10 @@ module VagrantPlugins
       class KvmFailImageConversion < VagrantKVMError
         error_key(:kvm_fail_image_conversion)
       end
+
+      class KvmFailedCommand < VagrantKVMError
+        error_key(:kvm_command_failed)
+      end
     end
   end
 end
