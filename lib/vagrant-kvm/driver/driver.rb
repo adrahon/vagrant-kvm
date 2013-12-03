@@ -11,6 +11,7 @@ module VagrantPlugins
 
         include Util
         include Errors
+        include Util::Commands
 
         # enum for states return by libvirt
         VM_STATE = [
@@ -47,9 +48,9 @@ module VagrantPlugins
           unless @kvm
             case File.read('/proc/cpuinfo')
             when /vmx/
-              @kvm = true if system("sudo /sbin/modprobe kvm-intel")
+              @kvm = true if run_command("sudo /sbin/modprobe kvm-intel")
             when /svm/
-              @kvm = true if system("sudo /sbin/modprobe kvm-amd")
+              @kvm = true if run_command("sudo /sbin/modprobe kvm-amd")
             else
               # looks like virtualization is not supported
             end
@@ -109,6 +110,7 @@ module VagrantPlugins
             storage_vol_xml += <<-EOF
             <backingStore>
               <path>#{backing_vol}</path>
+              <format type='#{image_type}'/>
             </backingStore>
             EOF
           end
@@ -152,7 +154,7 @@ module VagrantPlugins
         # @param [String] qemu_bin Path of qemu binary.
         # @return [String] UUID of the imported VM.
         def import(xml, box_type, volume_name, image_type, qemu_bin, cpus, memory_size, cpu_model, machine_type)
-          @logger.info("Importing VM")
+          @logger.info("Importing VM #{@name}")
           # create vm definition from xml
           definition = File.open(xml) { |f| Util::VmDefinition.new(f.read, box_type) }
           volume = @pool.lookup_volume_by_name(volume_name)
@@ -273,6 +275,7 @@ module VagrantPlugins
         end
 
         def set_mac_address(mac)
+          @logger.debug("Setting mac address to #{mac}")
           domain = @conn.lookup_domain_by_uuid(@uuid)
           definition = Util::VmDefinition.new(domain.xml_desc, 'libvirt')
           definition.set_mac(mac)
@@ -321,7 +324,7 @@ module VagrantPlugins
               end
             end
           rescue => e
-            raise Vagrant::Errors::KvmImageUploadError,
+            raise Errors::KvmImageUploadError,
               :error_message => e.message
           end
           @pool.refresh
@@ -344,7 +347,7 @@ module VagrantPlugins
           to_path = File.dirname(xml_path)
           new_path = File.join(to_path, new_disk)
           @logger.info("create disk image #{new_path}")
-          system("qemu-img convert -S 16k -O qcow2 #{disk_image} #{new_path}")
+          run_command("qemu-img convert -S 16k -O qcow2 #{disk_image} #{new_path}")
           # write out box.xml
           definition.disk = new_disk
           definition.gui = false

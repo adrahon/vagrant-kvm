@@ -95,7 +95,7 @@ module VagrantPlugins
         when /^([0-9][0-9]*)(MB|mb|)$/
           @memory_size = ("#{$1}".to_i * 1000000).to_s
         when /^([0-9][0-9]*)(g||GiB|gib)$/
-          @memory_size = ("#{$1}".to_i *1073741824).to_s
+          @memory_size = ("#{$1}".to_i * 1073741824).to_s
         when /^([0-9][0-9]*)(GB|gb|)$/
           @memory_size = ("#{$1}".to_i * 1000000000).to_s
         when /^([0-9][0-9]*)$/

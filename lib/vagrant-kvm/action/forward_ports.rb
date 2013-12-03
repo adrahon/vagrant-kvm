@@ -5,6 +5,8 @@ module VagrantPlugins
   module ProviderKvm
     module Action
       class ForwardPorts
+        include Util::Commands
+
         def initialize(app, env)
           @app    = app
           @logger = Log4r::Logger.new("vagrant::kvm::action::forward_ports")
@@ -94,7 +96,7 @@ module VagrantPlugins
         end
 
         def redir_installed?
-          system "which redir > /dev/null"
+          run_command "which redir > /dev/null"
         end
       end
     end
