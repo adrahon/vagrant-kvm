@@ -1,15 +1,16 @@
+require 'vagrant-kvm'
 require 'support/libvirt_helper'
 require 'support/vagrant_kvm_helper'
-
-# make sure everything is run in tmp
-Dir.chdir '/tmp'
-
+require 'pry'
 
 RSpec.configure do |spec|
   spec.include VagrantKvmHelper
 
   spec.before(:all) do
     @libvirt = LibvirtHelper.new
+
+    # make sure everything is run in tmp
+    Dir.chdir '/tmp'
   end
 
   spec.after(:all) do
@@ -19,4 +20,8 @@ RSpec.configure do |spec|
   at_exit do
     File.delete('Vagrantfile') if File.exists?('Vagrantfile')
   end
+end
+
+def test_file(path)
+  File.join(File.dirname(__FILE__), "test_files", path)
 end

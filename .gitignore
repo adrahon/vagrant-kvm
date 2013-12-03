@@ -12,3 +12,4 @@ Gemfile.lock
 .vagrant
 Vagrantfile
 !example_box/Vagrantfile
+.rvmrc

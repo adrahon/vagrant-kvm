@@ -36,7 +36,7 @@ module VagrantPlugins
         # KVM support status
         attr_reader :kvm
 
-        def initialize(uuid=nil)
+        def initialize(uuid=nil, conn=nil)
           @logger = Log4r::Logger.new("vagrant::provider::kvm::driver")
           @uuid = uuid
           # This should be configurable
@@ -60,7 +60,7 @@ module VagrantPlugins
 
           # Open a connection to the qemu driver
           begin
-            @conn = Libvirt::open('qemu:///system')
+            @conn = conn || Libvirt::open('qemu:///system')
           rescue Libvirt::Error => e
             if e.libvirt_code == 5
               # can't connect to hypervisor
@@ -153,12 +153,10 @@ module VagrantPlugins
         # @param [String] image_type Image type of the imported the volume.
         # @param [String] qemu_bin Path of qemu binary.
         # @return [String] UUID of the imported VM.
-        def import(xml, box_type, volume_name, image_type, qemu_bin, cpus, memory_size, cpu_model)
+        def import(xml, box_type, volume_name, image_type, qemu_bin, cpus, memory_size, cpu_model, machine_type)
           @logger.info("Importing VM #{@name}")
-
           # create vm definition from xml
-          definition = File.open(xml) { |f|
-            Util::VmDefinition.new(f.read, box_type) }
+          definition = File.open(xml) { |f| Util::VmDefinition.new(f.read, box_type) }
           volume = @pool.lookup_volume_by_name(volume_name)
           definition.disk = volume.path
           definition.name = @name
@@ -167,9 +165,12 @@ module VagrantPlugins
           definition.arch = cpu_model if cpu_model
           definition.memory = memory_size if memory_size
           definition.cpus = cpus if cpus
+          definition.machine_type = machine_type if machine_type
           # create vm
           @logger.info("Creating new VM")
-          domain = @conn.define_domain_xml(definition.as_libvirt)
+          libvirt_xml = definition.as_libvirt
+          @logger.debug("Creating new VM with XML config:\n#{libvirt_xml}")
+          domain = @conn.define_domain_xml(libvirt_xml)
           domain.uuid
         end
 
@@ -282,10 +283,13 @@ module VagrantPlugins
           @conn.define_domain_xml(definition.as_libvirt)
         end
 
-        def set_gui
+        def set_gui(vnc_port, vnc_autoport, vnc_password)
           domain = @conn.lookup_domain_by_uuid(@uuid)
           definition = Util::VmDefinition.new(domain.xml_desc, 'libvirt')
-          definition.set_gui
+          definition.gui = true
+          definition.vnc_port = vnc_port
+          definition.vnc_autoport = vnc_autoport
+          definition.vnc_password = vnc_password
           domain.undefine
           @conn.define_domain_xml(definition.as_libvirt)
         end
@@ -346,7 +350,7 @@ module VagrantPlugins
           run_command("qemu-img convert -S 16k -O qcow2 #{disk_image} #{new_path}")
           # write out box.xml
           definition.disk = new_disk
-          definition.unset_gui
+          definition.gui = false
           definition.unset_uuid
           File.open(xml_path,'w') do |f|
             f.puts(definition.as_libvirt)

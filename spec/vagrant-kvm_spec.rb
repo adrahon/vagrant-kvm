@@ -5,6 +5,11 @@ describe 'vagrant-kvm' do
     create_vagrantfile
   end
 
+  before(:all) do
+    @old_domains = @libvirt.domains.count
+    @old_pool_files = pool_files.count
+  end
+
   describe 'up' do
     before(:all) do
       vagrant_up
@@ -15,7 +20,7 @@ describe 'vagrant-kvm' do
     end
 
     it'creates new libvirt domain' do
-      expect(@libvirt.domains).to have(1).item
+      (@libvirt.domains.count - @old_domains).should == 1
     end
 
     it 'starts created libvirt domain' do
@@ -23,7 +28,7 @@ describe 'vagrant-kvm' do
     end
 
     it 'creates disk image file' do
-      expect(pool_files).to have(1).item
+      (pool_files.count - @old_pool_files).should == 1
     end
 
     it 'creates new pool' do
@@ -57,7 +62,7 @@ describe 'vagrant-kvm' do
     end
 
     it 'undefines domain' do
-      expect(@libvirt.domains).to be_empty
+      @libvirt.domains.count.should == @old_domains
     end
 
     it 'removes disk image file' do
