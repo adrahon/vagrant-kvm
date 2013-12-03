@@ -114,11 +114,12 @@ module VagrantPlugins
                 vol_vsize = {:size => result[:bytesize], :unit => "B"}
                 break
               end
-            rescue Errors::KvmFailedCommand =>e
-              @logger.error 'Failed to find volume size. Using defaults.'
-              @logger.error e
             end
-            return vol_vsize
+          rescue Errors::KvmFailedCommand => e
+            @logger.error 'Failed to find volume size. Using defaults.'
+            @logger.error e
+          end
+          vol_vsize
         end
 
         def recover(env)
