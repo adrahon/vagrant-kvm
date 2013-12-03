@@ -8,7 +8,7 @@ provider to Vagrant, allowing Vagrant to control and provision KVM/QEMU VM.
 **NOTE:** This plugin requires QEMU 1.2+, it has only been tested on Fedora 18,
 Debian Wheezy, Ubuntu 12.04(LTS) Precise and Ubuntu 13.04 Raring at the moment.
 
-**NOTE:** This plugin requires `libvirt-dev` package to be installed
+**NOTE:** This plugin requires redir package, and`libvirt-dev` to be installed
 (as in Debian/Ubuntu) or `libvirt-devel` (Fedora/openSUSE)
 
 **NOTE** You can use a backported KVM/QEMU 1.4 with Private Package Archive(PPA)
@@ -18,7 +18,7 @@ for Ubuntu 12.04(LTS) at https://launchpad.net/~miurahr/+archive/vagrant
 `vagrant-kvm` because of a bug of `vagrant-libvirt(0.0.6)`. This will be fixed
 in `vagrant-libvirt(0.0.7 and after)`.
 
-**NOTE** CHNAGE default box image as qcow2 instead of sparsed raw image from
+**NOTE** Change default box image as qcow2 instead of sparsed raw image from
 vagrant-kvm version 0.1.5. Please take care what type are your box images.
 
 ## Features/Limitations
@@ -28,7 +28,7 @@ vagrant-kvm version 0.1.5. Please take care what type are your box images.
 * Uses NFS for sync folders
 * Only works with 1 VM per Vagrantfile for now
 * Only works with port forward and private networking for now
-* Requires "libvirt" group membership to run vagrant (Debian/Ubuntu only)
+* Requires "libvirtd" group membership to run vagrant (Debian/Ubuntu only)
 * Requires backporting qemu and libvirt from experimental (Debian) or raring (Ubuntu)
 * Use qcow2 backing image in default, that make boot speed up.
 
@@ -100,26 +100,12 @@ There are two box formats for the `kvm` provider:
 2. "Native" box - you need a box.xml file (libvirt domain format) and a qcow2
    image file (you can convert a .vmdk with qemu-img)
 
-To turn this into a native box, you need to create a vagrant image and
-make it sparse.
-You need `libguestfs-tools` package
-in Debian/Ubuntu/Mint, Fedora15 and after, or CentOS/RHEL6.
+To turn VirtualBox box into a Native box, you need to create a vagrant image first
+and test it, then run package command;
 
 ```bash
-$ env TMPDIR=/tmp virt-sparsify box-disk1-orig.img box-disk1.img
+$ vagrant package
 ```
-
-Please keep enough disk space for TMPDIR!
-To make box with keeping sparse, don't forget -S in tar option:
-
-```bash
-$ tar cvSzf kvm.box ./metadata.json ./Vagrantfile ./box.xml ./box-disk1.img
-```
-
-For CentOS/RHEL5, there is a package in EPEL5.
-For Gentoo, you can use ```emerge libguestfs```.
-
-You need a base MAC address and a private network like in the example.
 
 ## Configuration
 

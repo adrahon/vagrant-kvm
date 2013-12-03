@@ -62,7 +62,6 @@ module VagrantPlugins
             Time.now.to_i.to_s + ".img"
           old_path = File.join(File.dirname(box_file), box_disk)
           new_path = File.join(storage_path, new_disk)
-          capacity = volume_size(old_path)
 
           # if ovf convert box volume
           if box_type == 'ovf'
@@ -81,6 +80,7 @@ module VagrantPlugins
             old_path = tmp_path
           end
 
+          capacity = volume_size(old_path)
           if image_type == 'qcow2'
             # create volume with box disk as backing volume
             env[:machine].provider.driver.create_volume(new_disk, capacity, new_path, image_type, old_path)
@@ -105,8 +105,8 @@ module VagrantPlugins
           # default values
           vol_vsize = {:size => 10, :unit => 'G'}
           begin
-            vsize_regex = %r{virtual size:\s+(?<size>\d+(\.\d+))?(?<unit>.)\s+\((?<bytesize>\d+)\sbytes\)}
-            diskinfo = run_command("qemu-img info #{vol_path}")
+            vsize_regex = %r{virtual size:\s+(?<size>\d+(\.\d+)?)(?<unit>.)\s+\((?<bytesize>\d+)\sbytes\)}
+            diskinfo = %x[qemu-img info #{vol_path}]
             diskinfo.each_line do |line|
               result = line.match(vsize_regex)
               if result
@@ -114,12 +114,11 @@ module VagrantPlugins
                 vol_vsize = {:size => result[:bytesize], :unit => "B"}
                 break
               end
+            rescue Errors::KvmFailedCommand =>e
+              @logger.error 'Failed to find volume size. Using defaults.'
+              @logger.error e
             end
-          rescue Errors::KvmFailedCommand =>e
-            @logger.error 'Failed to find volume size. Using defaults.'
-            @logger.error e
-          end
-          return vol_vsize
+            return vol_vsize
         end
 
         def recover(env)
