@@ -51,6 +51,7 @@ module VagrantPlugins
       attr_accessor :vnc_autoport
       attr_accessor :vnc_password
       attr_accessor :machine_type
+      attr_accessor :network_model
 
       def initialize
         @name             = UNSET_VALUE
@@ -64,6 +65,7 @@ module VagrantPlugins
         @vnc_autoport     = UNSET_VALUE
         @vnc_password     = UNSET_VALUE
         @machine_type     = UNSET_VALUE
+        @network_model    = UNSET_VALUE
       end
 
       # This is the hook that is called to finalize the object before it
@@ -112,6 +114,7 @@ module VagrantPlugins
         @vnc_password = nil if @vnc_password == UNSET_VALUE
         @vnc_port = -1 if @vnc_port == UNSET_VALUE
         @machine_type = "pc-1.2" if @machine_type == UNSET_VALUE
+        @network_model = "virtio" if @network_model == UNSET_VALUE
       end
     end
   end

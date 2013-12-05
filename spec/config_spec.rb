@@ -20,6 +20,12 @@ describe  VagrantPlugins::ProviderKvm::Config do
     end
   end
 
+  describe "#network_model" do
+    it "defaults to 'virtio'" do
+      should_default(:network_model, 'virtio')
+    end
+  end
+
   private
   def should_default(field, default_value)
     instance = described_class.new

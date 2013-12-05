@@ -11,31 +11,9 @@ module VagrantPlugins
 
         # Attributes of the VM
         attr_accessor :name, :image_type, :qemu_bin, :disk, :vnc_port, :vnc_autoport, 
-          :vnc_password, :gui, :cpus, :arch, :memory, :machine_type
+          :vnc_password, :gui, :cpus, :arch, :memory, :machine_type, :network_model
 
         attr_reader :mac, :arch, :network
-
-        def self.list_interfaces(definition)
-          nics = {}
-          ifcount = 0
-          doc = REXML::Document new definition
-          # look for user mode interfaces
-          doc.elements.each("//devices/interface[@type='user']") do |item|
-            ifcount += 1
-            adapter = ifcount
-            nics[adapter] ||= {}
-            nics[adapter][:type] = :user
-          end
-          # look for interfaces on virtual network
-          doc.elements.each("//devices/interface[@type='network']") do |item|
-            ifcount += 1
-            adapter = ifcount
-            nics[adapter] ||= {}
-            nics[adapter][:network] = item.elements["source"].attributes["network"]
-            nics[adapter][:type] = :network
-          end
-          nics
-        end
 
         def initialize(definition, source_type='libvirt')
           @uuid = nil
@@ -43,6 +21,8 @@ module VagrantPlugins
           @vnc_autoport = false 
           @vnc_password = nil
           @network = 'default'
+          @network_model = 'virtio'
+
           if source_type == 'ovf'
             create_from_ovf(definition)
           else
@@ -102,6 +82,8 @@ module VagrantPlugins
           @disk = doc.elements["//devices/disk/source"].attributes["file"]
           @mac = doc.elements["//devices/interface/mac"].attributes["address"]
           @network = doc.elements["//devices/interface/source"].attributes["network"]
+          model_node = doc.elements["//devices/interface/model"]
+          @network_model = model_node ? model_node.attributes["type"] : :default
           @image_type = doc.elements["//devices/disk/driver"].attributes["type"]
           @qemu_bin = doc.elements["/domain/devices/emulator"].text
 
@@ -151,6 +133,7 @@ module VagrantPlugins
             :vnc_autoport => format_bool(@vnc_autoport),
             :vnc_password=> @vnc_password,
             :disk_bus => @disk_bus,
+            :network_model => @network_model,
           })
           xml
         end

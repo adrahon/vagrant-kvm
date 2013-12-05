@@ -40,7 +40,9 @@
     <interface type='network'>
       <mac address='<%= mac %>'/>
       <source network='vagrant'/>
-      <model type='virtio'/>
+      <% unless network_model == :default %>
+      <model type='<%= network_model %>'/>
+      <% end %>
     </interface>
     <serial type='pty'>
       <target port='0'/>
@@ -59,7 +61,7 @@
     </graphics>
     <% end %>
     <video>
-      <model type='cirrus' vram='9216' heads='1'/>
+      <model type='vga' vram='9216' heads='1'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>
     </video>
     <memballoon model='virtio'>
