@@ -118,9 +118,16 @@ There are some provider specific parameter to control VM definition.
 * `memory_size` - memory size such as 512m, 1GiB, 100000KiB etc.
   if only number supplied, use it in KiB.
 * `gui` - boolean for starting VM with VNC enabled.
+* `vnc_port` - The port the VNC server listens to. Default is automatic port
+assignment.
+* `vnc_autoport` - if true, KVM will automatically assign a port for VNC
+to listen to. Defaults to false, but the default vnc_port is -1, which results
+in this flag being automatically turned on by KVM. 
+* `vnc_password ` - A password used to protect the VNC session.
 * `image_type` - an image format for vm disk: 'raw' or 'qcow2': default is "qcow2"
   When choosing 'raw', vagrant-kvm always convert box image into storage-pool,
   it requires disk space and duration to boot. Recommendation is 'qcow2'.
+* `machine_type` - The type of machine to boot. Default is pc-1.2.
 
 ## Specs
 
