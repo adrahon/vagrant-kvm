@@ -62,6 +62,11 @@ describe VagrantPlugins::ProviderKvm::Util::VmDefinition do
           doc.elements["//devices/interface/model"].should be_nil
         end
       end
+
+      it "sets the video type" do
+        should_default(:video_model, "cirrus")
+        should_set(:video_model, "vga")
+      end
     end
   end
 

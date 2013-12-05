@@ -26,6 +26,7 @@ module VagrantPlugins
           cpu_model = provider_config.cpu_model
           machine_type = provider_config.machine_type
           network_model = provider_config.network_model
+          video_model = provider_config.video_model
 
           # Import the virtual machine (ovf or libvirt) if a libvirt XML
           # definition is present we use it otherwise we convert the OVF
@@ -54,6 +55,7 @@ module VagrantPlugins
             cpu_model,
             machine_type,
             network_model,
+            video_model,
           )
 
           # If we got interrupted, then the import could have been

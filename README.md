@@ -131,6 +131,8 @@ in this flag being automatically turned on by KVM.
 * `network_model` - The model of the network adapter you want to use. Defaults
 to virtio. Can be set to `:default` if you want to use the KVM default setting.
 Possible values include: ne2k_isa i82551 i82557b i82559er ne2k_pci pcnet rtl8139 e1000 virtio.
+* `video_model` - The model of the video adapter. Default to cirrus. Can also be
+set to vga.
 
 ## Specs
 

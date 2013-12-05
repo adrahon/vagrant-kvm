@@ -11,7 +11,8 @@ module VagrantPlugins
 
         # Attributes of the VM
         attr_accessor :name, :image_type, :qemu_bin, :disk, :vnc_port, :vnc_autoport, 
-          :vnc_password, :gui, :cpus, :arch, :memory, :machine_type, :network_model
+          :vnc_password, :gui, :cpus, :arch, :memory, :machine_type, :network_model,
+          :video_model
 
         attr_reader :mac, :arch, :network
 
@@ -22,6 +23,7 @@ module VagrantPlugins
           @vnc_password = nil
           @network = 'default'
           @network_model = 'virtio'
+          @video_model = 'cirrus'
 
           if source_type == 'ovf'
             create_from_ovf(definition)
@@ -86,6 +88,7 @@ module VagrantPlugins
           @network_model = model_node ? model_node.attributes["type"] : :default
           @image_type = doc.elements["//devices/disk/driver"].attributes["type"]
           @qemu_bin = doc.elements["/domain/devices/emulator"].text
+          @video_model = doc.elements["/domain/devices/video/model"].attributes["type"]
 
           if doc.elements["//devices/graphics"]
             attrs = doc.elements["//devices/graphics"].attributes
@@ -134,6 +137,7 @@ module VagrantPlugins
             :vnc_password=> @vnc_password,
             :disk_bus => @disk_bus,
             :network_model => @network_model,
+            :video_model => @video_model,
           })
           xml
         end
