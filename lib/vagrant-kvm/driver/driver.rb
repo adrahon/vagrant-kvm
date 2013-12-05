@@ -110,6 +110,7 @@ module VagrantPlugins
             storage_vol_xml += <<-EOF
             <backingStore>
               <path>#{backing_vol}</path>
+              <format type='#{image_type}'/>
             </backingStore>
             EOF
           end
@@ -152,7 +153,7 @@ module VagrantPlugins
         # @param [String] image_type Image type of the imported the volume.
         # @param [String] qemu_bin Path of qemu binary.
         # @return [String] UUID of the imported VM.
-        def import(xml, box_type, volume_name, image_type, qemu_bin, cpus, memory_size, cpu_model, machine_type)
+        def import(xml, box_type, volume_name, image_type, qemu_bin, cpus, memory_size, cpu_model, machine_type, network_model, video_model)
           @logger.info("Importing VM #{@name}")
           # create vm definition from xml
           definition = File.open(xml) { |f| Util::VmDefinition.new(f.read, box_type) }
@@ -165,6 +166,8 @@ module VagrantPlugins
           definition.memory = memory_size if memory_size
           definition.cpus = cpus if cpus
           definition.machine_type = machine_type if machine_type
+          definition.network_model = network_model if network_model
+          definition.video_model = video_model if video_model
           # create vm
           @logger.info("Creating new VM")
           libvirt_xml = definition.as_libvirt
@@ -218,14 +221,6 @@ module VagrantPlugins
           end
           @pool.create unless @pool.active?
           @pool.refresh
-        end
-
-        # Returns a list of network interfaces of the VM.
-        #
-        # @return [Hash]
-        def read_network_interfaces
-          domain = @conn.lookup_domain_by_uuid(@uuid)
-          Util::VmDefinition.list_interfaces(domain.xml_desc)
         end
 
         def read_state

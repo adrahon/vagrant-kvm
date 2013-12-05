@@ -23,16 +23,16 @@ module VagrantPlugins
         error_key(:kvm_fail_image_conversion)
       end
 
-      class KvmFailedCommand < VagrantKVMError
-        error_key(:kvm_command_failed)
-      end
-
       class KvmImageUploadError < VagrantKVMError
         error_key(:kvm_fail_image_conversion)
       end
 
       class KvmBadBoxFormat < VagrantKVMError
         error_key(:kvm_fail_image_conversion)
+      end
+
+      class KvmFailedCommand < VagrantKVMError
+        error_key(:kvm_command_failed)
       end
     end
   end

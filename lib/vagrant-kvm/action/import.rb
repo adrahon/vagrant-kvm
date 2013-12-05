@@ -16,8 +16,8 @@ module VagrantPlugins
           provider_config = env[:machine].provider_config
 
           # Ignore unsupported image types
-          image_type = provider_config.image_type
-          image_type = 'raw' unless image_type == 'qcow2'
+          image_type = env[:machine].provider_config.image_type
+          image_type = 'qcow2' unless image_type == 'raw'
 
           qemu_bin = provider_config.qemu_bin
 
@@ -25,6 +25,8 @@ module VagrantPlugins
           memory_size = provider_config.memory_size
           cpu_model = provider_config.cpu_model
           machine_type = provider_config.machine_type
+          network_model = provider_config.network_model
+          video_model = provider_config.video_model
 
           # Import the virtual machine (ovf or libvirt) if a libvirt XML
           # definition is present we use it otherwise we convert the OVF
@@ -43,7 +45,18 @@ module VagrantPlugins
 
           # import the box to a new vm
           env[:machine].id = env[:machine].provider.driver.import(
-            box_file, box_type, volume_name, image_type, qemu_bin, cpus, memory_size, cpu_model, machine_type)
+            box_file,
+            box_type,
+            volume_name,
+            image_type,
+            qemu_bin,
+            cpus,
+            memory_size,
+            cpu_model,
+            machine_type,
+            network_model,
+            video_model,
+          )
 
           # If we got interrupted, then the import could have been
           # interrupted and its not a big deal. Just return out.
