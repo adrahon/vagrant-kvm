@@ -16,6 +16,28 @@ module VagrantPlugins
 
         attr_reader :mac, :arch, :network
 
+        def self.list_interfaces(definition)
+          nics = {}
+          ifcount = 0
+          doc = REXML::Document new definition
+          # look for user mode interfaces
+          doc.elements.each("//devices/interface[@type='user']") do |item|
+            ifcount += 1
+            adapter = ifcount
+            nics[adapter] ||= {}
+            nics[adapter][:type] = :user
+          end
+          # look for interfaces on virtual network
+          doc.elements.each("//devices/interface[@type='network']") do |item|
+            ifcount += 1
+            adapter = ifcount
+            nics[adapter] ||= {}
+            nics[adapter][:network] = item.elements["source"].attributes["network"]
+            nics[adapter][:type] = :network
+          end
+          nics
+        end
+
         def initialize(definition, source_type='libvirt')
           @uuid = nil
           @gui = nil

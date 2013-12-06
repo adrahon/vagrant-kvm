@@ -224,6 +224,14 @@ module VagrantPlugins
           @pool.refresh
         end
 
+        # Returns a list of network interfaces of the VM.
+        #
+        # @return [Hash]
+        def read_network_interfaces
+          domain = @conn.lookup_domain_by_uuid(@uuid)
+          Util::VmDefinition.list_interfaces(domain.xml_desc)
+        end
+
         def read_state
           domain = @conn.lookup_domain_by_uuid(@uuid)
           state, reason = domain.state
