@@ -26,7 +26,7 @@ module VagrantKvmHelper
   end
 
   def pool_files
-    Dir['/home/vagrant/.vagrant.d/tmp/storage-pool/*']
+    Dir["/home/#{ENV['USER']}/.vagrant.d/tmp/storage-pool/*"]
   end
 
   private
