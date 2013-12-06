@@ -117,6 +117,7 @@ module VagrantPlugins
           storage_vol_xml += <<-EOF
           </volume>
           EOF
+          @logger.debug "Creating volume with XML:\n#{storage_vol_xml}"
           vol = @pool.create_volume_xml(storage_vol_xml)
           @pool.refresh
         end
@@ -319,6 +320,7 @@ module VagrantPlugins
               end
             end
           rescue => e
+            @logger.error e.message
             raise Errors::KvmImageUploadError,
               :error_message => e.message
           end

@@ -70,6 +70,10 @@ module VagrantPlugins
         end
 
         def import_volume(storage_path, image_type, box_file, box_type, env)
+          @logger.debug "Importing volume. Storage path: #{storage_path} " + 
+            "Image Type: #{image_type} " +
+            "Box type: #{box_type} "
+
           box_disk = env[:machine].provider.driver.find_box_disk(box_file, box_type)
           new_disk = File.basename(box_disk, File.extname(box_disk)) + "-" +
             Time.now.to_i.to_s + ".img"
@@ -108,6 +112,8 @@ module VagrantPlugins
                 env[:ui].report_progress(progress, box_image_size, false)
               end
               env[:ui].clear_line
+          else
+            @logger.info "Image type #{image_type} is not supported"
           end
           # TODO cleanup if interupted
           new_disk
