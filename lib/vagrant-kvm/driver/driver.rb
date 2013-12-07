@@ -92,9 +92,9 @@ module VagrantPlugins
         end
 
         # create empty volume in storage pool
-        def create_volume(disk_name, capacity, path, image_type, backing_vol=nil)
+        def create_volume(disk_name, capacity, path, image_type, box_pool, box_path, backing=false)
           msg = "Creating volume #{disk_name}"
-          msg += " backed by volume #{backing_vol}" if backing_vol
+          msg += " backed by volume #{box_path}" if backing
           @logger.info(msg)
           storage_vol_xml = <<-EOF
           <volume>
@@ -106,10 +106,10 @@ module VagrantPlugins
               <format type='#{image_type}'/>
             </target>
           EOF
-          if backing_vol
+          if backing
             storage_vol_xml += <<-EOF
             <backingStore>
-              <path>#{backing_vol}</path>
+              <path>#{box_path}</path>
               <format type='#{image_type}'/>
             </backingStore>
             EOF
@@ -117,8 +117,16 @@ module VagrantPlugins
           storage_vol_xml += <<-EOF
           </volume>
           EOF
+
           @logger.debug "Creating volume with XML:\n#{storage_vol_xml}"
-          vol = @pool.create_volume_xml(storage_vol_xml)
+          if backing
+            vol = @pool.create_volume_xml(storage_vol_xml)
+          else
+            pool = @conn.lookup_storage_pool_by_name(box_pool)
+            clonevol = pool.lookup_volume_by_path(box_path)
+            # create_volume_xml_from() can convert disk image type automatically.
+            vol = @pool.create_volume_xml_from(storage_vol_xml, clonevol)
+          end
           @pool.refresh
         end
 
@@ -198,30 +206,45 @@ module VagrantPlugins
 
         # Initialize or create storage pool
         def init_storage(base_path)
+          # Storage pool doesn't exist so we create it
+          # create dir if it doesn't exist
+          # if we let libvirt create the dir it is owned by root
+          pool_path = base_path.join("storage-pool")
+          pool_path.mkpath unless Dir.exists?(pool_path)
+          @pool = init_storage_directory(pool_path, @pool_name)
+        end
+
+        def init_storage_directory(pool_path, pool_name)
           begin
             # Get the storage pool if it exists
-            @pool = @conn.lookup_storage_pool_by_name(@pool_name)
-            @logger.info("Init storage pool #{@pool_name}")
+            pool = @conn.lookup_storage_pool_by_name(pool_name)
+            @logger.info("Init storage pool #{pool_name}")
           rescue Libvirt::RetrieveError
-            # Storage pool doesn't exist so we create it
-            # create dir if it doesn't exist
-            # if we let libvirt create the dir it is owned by root
-            pool_path = base_path.join("storage-pool")
-            pool_path.mkpath unless Dir.exists?(pool_path)
             storage_pool_xml = <<-EOF
-          <pool type="dir">
-            <name>#{@pool_name}</name>
+            <pool type="dir">
+            <name>#{pool_name}</name>
             <target>
               <path>#{pool_path}</path>
             </target>
-          </pool>
+            </pool>
             EOF
-            @pool = @conn.define_storage_pool_xml(storage_pool_xml)
-            @pool.build
-            @logger.info("Creating storage pool #{@pool_name} in #{pool_path}")
+            pool = @conn.define_storage_pool_xml(storage_pool_xml)
+            pool.build
+            @logger.info("Creating storage pool #{pool_name} in #{pool_path}")
           end
-          @pool.create unless @pool.active?
-          @pool.refresh
+          pool.create unless pool.active?
+          pool.refresh
+          pool
+        end
+
+        def free_storage_pool(pool_name)
+          begin
+            pool = @conn.lookup_storage_pool_by_name(pool_name)
+            pool.free
+          rescue Libvirt::RetrieveError
+            @logger.info("fail to free storage pool #{pool_name}")
+          end
+          pool.refresh
         end
 
         # Returns a list of network interfaces of the VM.
@@ -309,36 +332,6 @@ module VagrantPlugins
         def suspend
           domain = @conn.lookup_domain_by_uuid(@uuid)
           domain.managed_save
-        end
-
-        def upload_image(source, volume_name, size)
-          begin
-            @logger.info("Copying box data to new volume")
-            volume = @pool.lookup_volume_by_name(volume_name)
-            stream = @conn.stream
-            volume.upload(stream, offset=0, length=size)
-
-            buf_size = 1024*250 # 250K
-            progress = 0
-            open(source, 'rb') do |io|
-              while (buff = io.read(buf_size)) do
-                sent = stream.send buff
-                progress += sent
-                yield progress
-              end
-            end
-          rescue => e
-            @logger.error e.message
-            raise Errors::KvmImageUploadError,
-              :error_message => e.message
-          end
-          @pool.refresh
-
-          if progress == size
-            return true
-          else
-            return false
-          end
         end
 
         # Export

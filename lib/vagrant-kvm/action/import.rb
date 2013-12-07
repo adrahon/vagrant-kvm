@@ -28,6 +28,7 @@ module VagrantPlugins
           machine_type = provider_config.machine_type
           network_model = provider_config.network_model
           video_model = provider_config.video_model
+          backing = provider_config.image_backing
 
           # Import the virtual machine (ovf or libvirt) if a libvirt XML
           # definition is present we use it otherwise we convert the OVF
@@ -42,7 +43,7 @@ module VagrantPlugins
           raise Errors::KvmBadBoxFormat unless File.file?(box_file)
 
           # import box volume
-          volume_name = import_volume(storage_path, image_type, box_file, box_type, env)
+          volume_name = import_volume(storage_path, image_type, box_file, box_type, backing, env)
 
           # import the box to a new vm
           env[:machine].id = env[:machine].provider.driver.import(
@@ -70,7 +71,7 @@ module VagrantPlugins
           @app.call(env)
         end
 
-        def import_volume(storage_path, image_type, box_file, box_type, env)
+        def import_volume(storage_path, image_type, box_file, box_type, backing, env)
           @logger.debug "Importing volume. Storage path: #{storage_path} " + 
             "Image Type: #{image_type} " +
             "Box type: #{box_type} "
@@ -98,21 +99,21 @@ module VagrantPlugins
             old_path = tmp_path
           end
 
+          # for backword compatibility, we handle both raw and qcow2 box format
           box = Util::DiskInfo.new(old_path)
-          if image_type == 'qcow2'
-            # create volume with box disk as backing volume
-            env[:machine].provider.driver.create_volume(new_disk, box.capacity, new_path, image_type, old_path)
-          elsif image_type == 'raw'
-            # create volume then upload box disk content
-            env[:machine].provider.driver.create_volume(new_disk, box.capacity, new_path, image_type)
-            # Upload box image content (taken from vagrant-libvirt)
-            box_image_size = Integer(box.capacity[:size])
-            result = env[:machine].provider.driver.upload_image(
-              old_path, new_disk, box_image_size) do |progress|
-                env[:ui].clear_line
-                env[:ui].report_progress(progress, box_image_size, false)
-              end
-              env[:ui].clear_line
+          if box.type == 'raw' || image_type == 'raw'
+            backing = false
+            @logger.info "Disable disk image with box image as backing file"
+          end
+
+          if image_type == 'qcow2' || image_type == 'raw'
+            # create volume
+            box_name = env[:machine].config.vm.box
+            driver = env[:machine].provider.driver
+            pool_name = 'vagrant-box_' + box_name
+            driver.init_storage_directory(File.dirname(old_path), pool_name)
+            driver.create_volume(new_disk, box.capacity, new_path, image_type, pool_name, old_path, backing)
+            driver.free_storage_pool(pool_name)
           else
             @logger.info "Image type #{image_type} is not supported"
           end
