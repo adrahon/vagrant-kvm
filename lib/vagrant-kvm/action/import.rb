@@ -2,6 +2,7 @@ module VagrantPlugins
   module ProviderKvm
     module Action
       class Import
+        include Util
         include Util::Commands
 
         def initialize(app, env)
@@ -97,15 +98,15 @@ module VagrantPlugins
             old_path = tmp_path
           end
 
-          capacity = volume_size(old_path)
+          box = Util::DiskInfo.new(old_path)
           if image_type == 'qcow2'
             # create volume with box disk as backing volume
-            env[:machine].provider.driver.create_volume(new_disk, capacity, new_path, image_type, old_path)
+            env[:machine].provider.driver.create_volume(new_disk, box.capacity, new_path, image_type, old_path)
           elsif image_type == 'raw'
             # create volume then upload box disk content
-            env[:machine].provider.driver.create_volume(new_disk, capacity, new_path, image_type)
+            env[:machine].provider.driver.create_volume(new_disk, box.capacity, new_path, image_type)
             # Upload box image content (taken from vagrant-libvirt)
-            box_image_size = Integer(capacity[:size])
+            box_image_size = Integer(box.capacity[:size])
             result = env[:machine].provider.driver.upload_image(
               old_path, new_disk, box_image_size) do |progress|
                 env[:ui].clear_line
@@ -117,28 +118,6 @@ module VagrantPlugins
           end
           # TODO cleanup if interupted
           new_disk
-        end
-
-        # returns volume virtual capacity
-        def volume_size(vol_path)
-          # default values
-          vol_vsize = {:size => 10, :unit => 'G'}
-          begin
-            vsize_regex = %r{virtual size:\s+(?<size>\d+(\.\d+)?)(?<unit>.)\s+\((?<bytesize>\d+)\sbytes\)}
-            diskinfo = %x[qemu-img info #{vol_path}]
-            diskinfo.each_line do |line|
-              result = line.match(vsize_regex)
-              if result
-                # always take the size in bytes to avoid conversion
-                vol_vsize = {:size => result[:bytesize], :unit => "B"}
-                break
-              end
-            end
-          rescue Errors::KvmFailedCommand => e
-            @logger.error 'Failed to find volume size. Using defaults.'
-            @logger.error e
-          end
-          vol_vsize
         end
 
         def recover(env)
