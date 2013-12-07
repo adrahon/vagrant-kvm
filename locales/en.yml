@@ -12,3 +12,5 @@ en:
         required.
       kvm_no_qemu_binary: |-
         Executable binary of qemu could not be found. Please re-examine %{cause}.
+      kvm_fail_image_conversion: |-
+        Failed to convert image to specified format.

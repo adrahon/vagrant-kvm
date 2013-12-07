@@ -25,6 +25,8 @@ module VagrantPlugins
           memory_size = provider_config.memory_size
           cpu_model = provider_config.cpu_model
           machine_type = provider_config.machine_type
+          network_model = provider_config.network_model
+          video_model = provider_config.video_model
 
           # Import the virtual machine (ovf or libvirt) if a libvirt XML
           # definition is present we use it otherwise we convert the OVF
@@ -43,7 +45,18 @@ module VagrantPlugins
 
           # import the box to a new vm
           env[:machine].id = env[:machine].provider.driver.import(
-            box_file, box_type, volume_name, image_type, qemu_bin, cpus, memory_size, cpu_model, machine_type)
+            box_file,
+            box_type,
+            volume_name,
+            image_type,
+            qemu_bin,
+            cpus,
+            memory_size,
+            cpu_model,
+            machine_type,
+            network_model,
+            video_model,
+          )
 
           # If we got interrupted, then the import could have been
           # interrupted and its not a big deal. Just return out.
@@ -57,6 +70,10 @@ module VagrantPlugins
         end
 
         def import_volume(storage_path, image_type, box_file, box_type, env)
+          @logger.debug "Importing volume. Storage path: #{storage_path} " + 
+            "Image Type: #{image_type} " +
+            "Box type: #{box_type} "
+
           box_disk = env[:machine].provider.driver.find_box_disk(box_file, box_type)
           new_disk = File.basename(box_disk, File.extname(box_disk)) + "-" +
             Time.now.to_i.to_s + ".img"
@@ -95,6 +112,8 @@ module VagrantPlugins
                 env[:ui].report_progress(progress, box_image_size, false)
               end
               env[:ui].clear_line
+          else
+            @logger.info "Image type #{image_type} is not supported"
           end
           # TODO cleanup if interupted
           new_disk
@@ -115,7 +134,7 @@ module VagrantPlugins
                 break
               end
             end
-          rescue Errors::KvmFailedCommand =>e
+          rescue Errors::KvmFailedCommand => e
             @logger.error 'Failed to find volume size. Using defaults.'
             @logger.error e
           end

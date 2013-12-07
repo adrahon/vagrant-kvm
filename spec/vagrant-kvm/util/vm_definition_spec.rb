@@ -50,6 +50,23 @@ describe VagrantPlugins::ProviderKvm::Util::VmDefinition do
         should_default(:machine_type, "pc-1.2")
         should_set(:machine_type, "pc-i440fx-1.4")
       end
+
+      it "sets the network driver type" do
+        should_default(:network_model, "virtio")
+        should_set(:network_model, "ne2k_pci")
+      end
+
+      it "doesn't set the network driver if network_mode=:default" do
+        should_set(:network_model, :default) do |xml|
+          doc = REXML::Document.new(xml)
+          doc.elements["//devices/interface/model"].should be_nil
+        end
+      end
+
+      it "sets the video type" do
+        should_default(:video_model, "cirrus")
+        should_set(:video_model, "vga")
+      end
     end
   end
 

@@ -117,6 +117,7 @@ module VagrantPlugins
           storage_vol_xml += <<-EOF
           </volume>
           EOF
+          @logger.debug "Creating volume with XML:\n#{storage_vol_xml}"
           vol = @pool.create_volume_xml(storage_vol_xml)
           @pool.refresh
         end
@@ -153,7 +154,7 @@ module VagrantPlugins
         # @param [String] image_type Image type of the imported the volume.
         # @param [String] qemu_bin Path of qemu binary.
         # @return [String] UUID of the imported VM.
-        def import(xml, box_type, volume_name, image_type, qemu_bin, cpus, memory_size, cpu_model, machine_type)
+        def import(xml, box_type, volume_name, image_type, qemu_bin, cpus, memory_size, cpu_model, machine_type, network_model, video_model)
           @logger.info("Importing VM #{@name}")
           # create vm definition from xml
           definition = File.open(xml) { |f| Util::VmDefinition.new(f.read, box_type) }
@@ -166,6 +167,8 @@ module VagrantPlugins
           definition.memory = memory_size if memory_size
           definition.cpus = cpus if cpus
           definition.machine_type = machine_type if machine_type
+          definition.network_model = network_model if network_model
+          definition.video_model = video_model if video_model
           # create vm
           @logger.info("Creating new VM")
           libvirt_xml = definition.as_libvirt
@@ -284,6 +287,7 @@ module VagrantPlugins
         end
 
         def set_gui(vnc_port, vnc_autoport, vnc_password)
+          @logger.debug("Enabling GUI")
           domain = @conn.lookup_domain_by_uuid(@uuid)
           definition = Util::VmDefinition.new(domain.xml_desc, 'libvirt')
           definition.gui = true
@@ -324,6 +328,7 @@ module VagrantPlugins
               end
             end
           rescue => e
+            @logger.error e.message
             raise Errors::KvmImageUploadError,
               :error_message => e.message
           end
