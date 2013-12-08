@@ -220,13 +220,20 @@ module VagrantPlugins
             pool = @conn.lookup_storage_pool_by_name(pool_name)
             @logger.info("Init storage pool #{pool_name}")
           rescue Libvirt::RetrieveError
+            owner = Process.uid
+            group = Process.gid
             storage_pool_xml = <<-EOF
-            <pool type="dir">
-            <name>#{pool_name}</name>
-            <target>
-              <path>#{pool_path}</path>
-            </target>
-            </pool>
+              <pool type="dir">
+              <name>#{pool_name}</name>
+              <target>
+                <path>#{pool_path}</path>
+                <permissions>
+                 <owner>#{owner}</owner>
+                 <group>#{group}</group>
+                 <mode>774</mode>
+                </permissions>
+              </target>
+              </pool>
             EOF
             pool = @conn.define_storage_pool_xml(storage_pool_xml)
             pool.build
