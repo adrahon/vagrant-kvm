@@ -247,11 +247,11 @@ module VagrantPlugins
         def free_storage_pool(pool_name)
           begin
             pool = @conn.lookup_storage_pool_by_name(pool_name)
+            pool.destroy
             pool.free
           rescue Libvirt::RetrieveError
             @logger.info("fail to free storage pool #{pool_name}")
           end
-          pool.refresh
         end
 
         # Returns a list of network interfaces of the VM.
