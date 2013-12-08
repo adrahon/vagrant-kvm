@@ -110,7 +110,7 @@ module VagrantPlugins
             # create volume
             box_name = env[:machine].config.vm.box
             driver = env[:machine].provider.driver
-            pool_name = 'vagrant-box_' + box_name
+            pool_name = 'vagrant_' + Process.uid + '_' + box_name
             driver.init_storage_directory(File.dirname(old_path), pool_name)
             driver.create_volume(new_disk, box.capacity, new_path, image_type, pool_name, old_path, backing)
             driver.free_storage_pool(pool_name)
