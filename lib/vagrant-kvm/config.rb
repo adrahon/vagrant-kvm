@@ -26,6 +26,11 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :image_type
 
+      # VM image mode(clone or COW with backing file)
+      #
+      # @return [Boolean]
+      attr_reader :image_backing
+
       # path of qemu binary
       #
       # @return [String]
@@ -58,6 +63,7 @@ module VagrantPlugins
         @name             = UNSET_VALUE
         @gui              = UNSET_VALUE
         @image_type       = UNSET_VALUE
+        @image_mode       = UNSET_VALUE
         @qemu_bin         = UNSET_VALUE
         @cpu_model        = UNSET_VALUE
         @memory_size      = UNSET_VALUE
@@ -79,6 +85,16 @@ module VagrantPlugins
         @gui = false if @gui == UNSET_VALUE
         # Default image type is a sparsed raw
         @image_type = 'qcow2' if @image_type == UNSET_VALUE
+        case @image_mode
+        when UNSET_VALUE
+          @image_backing = true
+        when 'clone'
+          @image_backing = false
+        when 'cow'
+          @image_backing = true
+        else
+          @image_backing = true
+        end
         # Search qemu binary with the default behavior
         @qemu_bin = nil if @qemu_bin == UNSET_VALUE
         # Default cpu model is x86_64, acceptable only x86_64/i686

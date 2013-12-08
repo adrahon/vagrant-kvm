@@ -8,6 +8,7 @@ module VagrantPlugins
       autoload :NetworkDefinition, util_root.join("network_definition")
       autoload :KvmTemplateRenderer, util_root.join("kvm_template_renderer")
       autoload :Commands, util_root.join("commands")
+      autoload :DiskInfo, util_root.join("disk_info")
     end
   end
 end
