@@ -38,7 +38,7 @@ module VagrantPlugins
           nics
         end
 
-        def initialize(definition, source_type='libvirt')
+        def initialize(definition)
           @uuid = nil
           @gui = nil
           @vnc_autoport = false 
@@ -47,53 +47,6 @@ module VagrantPlugins
           @network_model = 'virtio'
           @video_model = 'cirrus'
 
-          if source_type == 'ovf'
-            create_from_ovf(definition)
-          else
-            create_from_libvirt(definition)
-          end
-        end
-
-        def create_from_ovf(definition)
-          doc = REXML::Document.new definition
-          # we don't need no namespace
-          #doc.remove_namespaces!
-          @name = doc.elements["//VirtualSystemIdentifier"].text if doc.elements["//VirtualSystemIdentifier"]
-          doc.elements.each("//VirtualHardwareSection/Item") do |device|
-            case device.elements["rasd:ResourceType"].text
-              # CPU
-            when "3"
-              @cpus = device.elements["rasd:VirtualQuantity"].text
-              # Memory
-            when "4"
-              @memory = size_in_bytes(device.elements["rasd:VirtualQuantity"].text,
-                                      device.elements["rasd:AllocationUnits"].text)
-            end
-          end
-
-          # disk volume
-          diskref = doc.elements["//DiskSection/Disk"].attributes["ovf:fileRef"]
-          @disk = doc.elements["//References/File[@ovf:id='file1']"].attributes["ovf:href"]
-          @image_type = 'raw'
-          @disk_bus = 'virtio'
-          @machine_type = 'pc-1.2'
-
-          # mac address
-          # XXX we use only the first nic
-          doc.elements.each("//vbox:Machine/Hardware//Adapter") do |ele|
-            if ele.attributes['enabled'] == 'true'
-              @mac = format_mac( ele.attributes['MACAddress'])
-              break
-            end
-          end
-
-          # the architecture is not defined in the ovf file
-          # we try to guess from OSType
-          # see https://www.virtualbox.org/browser/vbox/trunk/src/VBox/Main/include/ovfreader.h
-          @arch = doc.elements["//vssd:VirtualSystemIdentifier"].text[-2..-1] == '64' ? "x86_64" : "i686"
-        end
-
-        def create_from_libvirt(definition)
           doc = REXML::Document.new definition
           @name = doc.elements["/domain/name"].text
           @uuid = doc.elements["/domain/uuid"].text if doc.elements["/domain/uuid"]
@@ -122,7 +75,7 @@ module VagrantPlugins
           @disk_bus = doc.elements["//devices/disk/target"].attributes["bus"]
         end
 
-        def as_libvirt
+        def as_xml
           if @qemu_bin
             # user specified path of qemu binary
             qemu_bin_list = [@qemu_bin]

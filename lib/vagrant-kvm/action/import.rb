@@ -30,25 +30,17 @@ module VagrantPlugins
           video_model = provider_config.video_model
           backing = provider_config.image_backing
 
-          # Import the virtual machine (ovf or libvirt) if a libvirt XML
-          # definition is present we use it otherwise we convert the OVF
+          # Import the virtual machine
           storage_path = File.join(env[:tmp_path],"/storage-pool")
           box_file = env[:machine].box.directory.join("box.xml").to_s
-          if File.file?(box_file)
-            box_type = "libvirt"
-          else
-            box_file = env[:machine].box.directory.join("box.ovf").to_s
-            box_type = "ovf"
-          end
           raise Errors::KvmBadBoxFormat unless File.file?(box_file)
 
           # import box volume
-          volume_name = import_volume(storage_path, image_type, box_file, box_type, backing, env)
+          volume_name = import_volume(storage_path, image_type, box_file, backing, env)
 
           # import the box to a new vm
           env[:machine].id = env[:machine].provider.driver.import(
             box_file,
-            box_type,
             volume_name,
             image_type,
             qemu_bin,
@@ -71,35 +63,17 @@ module VagrantPlugins
           @app.call(env)
         end
 
-        def import_volume(storage_path, image_type, box_file, box_type, backing, env)
+        def import_volume(storage_path, image_type, box_file, backing, env)
           @logger.debug "Importing volume. Storage path: #{storage_path} " + 
-            "Image Type: #{image_type} " +
-            "Box type: #{box_type} "
+            "Image Type: #{image_type}"
 
-          box_disk = env[:machine].provider.driver.find_box_disk(box_file, box_type)
+          box_disk = env[:machine].provider.driver.find_box_disk(box_file)
           new_disk = File.basename(box_disk, File.extname(box_disk)) + "-" +
             Time.now.to_i.to_s + ".img"
           old_path = File.join(File.dirname(box_file), box_disk)
           new_path = File.join(storage_path, new_disk)
 
-          # if ovf convert box volume
-          if box_type == 'ovf'
-            tmp_disk = File.basename(box_disk, File.extname(box_disk)) + ".img"
-            tmp_path = File.join(File.dirname(box_file), tmp_disk)
-            unless File.file?(tmp_path)
-              options = "-c -S 16k" if image_type == 'qcow2' # XXX is -S 16k necessary?
-              #env[:logger].info("Converting box image to #{image_type} volume #{tmp_disk}")
-              # no access to log?
-              if system("qemu-img convert -p #{old_path} #{options} -O #{image_type} #{tmp_path}")
-                File.unlink(old_path)
-              else
-                raise Errors::KvmFailImageConversion
-              end
-            end
-            old_path = tmp_path
-          end
-
-          # for backword compatibility, we handle both raw and qcow2 box format
+          # for backward compatibility, we handle both raw and qcow2 box format
           box = Util::DiskInfo.new(old_path)
           if box.type == 'raw' || image_type == 'raw'
             backing = false

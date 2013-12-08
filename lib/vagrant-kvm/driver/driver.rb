@@ -132,7 +132,7 @@ module VagrantPlugins
 
         def delete
           domain = @conn.lookup_domain_by_uuid(@uuid)
-          definition = Util::VmDefinition.new(domain.xml_desc, 'libvirt')
+          definition = Util::VmDefinition.new(domain.xml_desc)
           volume = @pool.lookup_volume_by_path(definition.disk)
           volume.delete
           # XXX remove pool if empty?
@@ -142,9 +142,9 @@ module VagrantPlugins
           domain.undefine
         end
 
-        def find_box_disk(xml, box_type)
+        def find_box_disk(xml)
           definition = File.open(xml) { |f|
-            Util::VmDefinition.new(f.read, box_type) }
+            Util::VmDefinition.new(f.read) }
           definition.disk
         end
 
@@ -157,15 +157,14 @@ module VagrantPlugins
         # Imports the VM
         #
         # @param [String] xml Path to the VM XML file.
-        # @param [String] box_type KVM or OVF.
         # @param [String] volume_name Name of the imported volume
         # @param [String] image_type Image type of the imported the volume.
         # @param [String] qemu_bin Path of qemu binary.
         # @return [String] UUID of the imported VM.
-        def import(xml, box_type, volume_name, image_type, qemu_bin, cpus, memory_size, cpu_model, machine_type, network_model, video_model)
+        def import(xml, volume_name, image_type, qemu_bin, cpus, memory_size, cpu_model, machine_type, network_model, video_model)
           @logger.info("Importing VM #{@name}")
           # create vm definition from xml
-          definition = File.open(xml) { |f| Util::VmDefinition.new(f.read, box_type) }
+          definition = File.open(xml) { |f| Util::VmDefinition.new(f.read) }
           volume = @pool.lookup_volume_by_name(volume_name)
           definition.disk = volume.path
           definition.name = @name
@@ -179,9 +178,9 @@ module VagrantPlugins
           definition.video_model = video_model if video_model
           # create vm
           @logger.info("Creating new VM")
-          libvirt_xml = definition.as_libvirt
-          @logger.debug("Creating new VM with XML config:\n#{libvirt_xml}")
-          domain = @conn.define_domain_xml(libvirt_xml)
+          xml_definition = definition.as_xml
+          @logger.debug("Creating new VM with XML config:\n#{xml_definition}")
+          domain = @conn.define_domain_xml(xml_definition)
           domain.uuid
         end
 
@@ -291,7 +290,7 @@ module VagrantPlugins
 
         def read_mac_address
           domain = @conn.lookup_domain_by_uuid(@uuid)
-          definition = Util::VmDefinition.new(domain.xml_desc, 'libvirt')
+          definition = Util::VmDefinition.new(domain.xml_desc)
           definition.mac
         end
 
@@ -310,22 +309,22 @@ module VagrantPlugins
         def set_mac_address(mac)
           @logger.debug("Setting mac address to #{mac}")
           domain = @conn.lookup_domain_by_uuid(@uuid)
-          definition = Util::VmDefinition.new(domain.xml_desc, 'libvirt')
+          definition = Util::VmDefinition.new(domain.xml_desc)
           definition.set_mac(mac)
           domain.undefine
-          @conn.define_domain_xml(definition.as_libvirt)
+          @conn.define_domain_xml(definition.as_xml)
         end
 
         def set_gui(vnc_port, vnc_autoport, vnc_password)
           @logger.debug("Enabling GUI")
           domain = @conn.lookup_domain_by_uuid(@uuid)
-          definition = Util::VmDefinition.new(domain.xml_desc, 'libvirt')
+          definition = Util::VmDefinition.new(domain.xml_desc)
           definition.gui = true
           definition.vnc_port = vnc_port
           definition.vnc_autoport = vnc_autoport
           definition.vnc_password = vnc_password
           domain.undefine
-          @conn.define_domain_xml(definition.as_libvirt)
+          @conn.define_domain_xml(definition.as_xml)
         end
 
         # Starts the virtual machine.
@@ -347,7 +346,7 @@ module VagrantPlugins
           new_disk = 'disk.img'
           # create new_disk
           domain = @conn.lookup_domain_by_uuid(@uuid)
-          definition = Util::VmDefinition.new(domain.xml_desc, 'libvirt')
+          definition = Util::VmDefinition.new(domain.xml_desc)
           disk_image = definition.disk
           to_path = File.dirname(xml_path)
           new_path = File.join(to_path, new_disk)
@@ -358,7 +357,7 @@ module VagrantPlugins
           definition.gui = false
           definition.unset_uuid
           File.open(xml_path,'w') do |f|
-            f.puts(definition.as_libvirt)
+            f.puts(definition.as_xml)
           end
           # write metadata.json
           json_path=File.join(to_path, 'metadata.json')
