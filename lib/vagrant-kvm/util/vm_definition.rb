@@ -82,9 +82,9 @@ module VagrantPlugins
           else
             # RedHat and Debian-based systems have different executable names
             # depending on version/architectures
-            qemu_bin_list = [ '/usr/bin/qemu-kvm', '/usr/bin/kvm' ]
-            qemu_bin_list << '/usr/bin/qemu-system-x86_64' if @arch.match(/64$/)
-            qemu_bin_list << '/usr/bin/qemu-system-i386'   if @arch.match(/^i.86$/)
+            qemu_bin_list = ['/usr/bin/qemu-system-x86_64'] if @arch.match(/64$/)
+            qemu_bin_list = ['/usr/bin/qemu-system-i386']   if @arch.match(/^i.86$/)
+            qemu_bin_list += [ '/usr/bin/qemu-kvm', '/usr/bin/kvm' ]
           end
 
           qemu_bin = qemu_bin_list.detect { |binary| File.exists? binary }
