@@ -17,18 +17,8 @@ module VagrantPlugins
           provider_config = env[:machine].provider_config
 
           # Ignore unsupported image types
-          image_type = env[:machine].provider_config.image_type
-          image_type = 'qcow2' unless image_type == 'raw'
-
-          qemu_bin = provider_config.qemu_bin
-
-          cpus = provider_config.core_number
-          memory_size = provider_config.memory_size
-          cpu_model = provider_config.cpu_model
-          machine_type = provider_config.machine_type
-          network_model = provider_config.network_model
-          video_model = provider_config.video_model
-          backing = provider_config.image_backing
+          args={:image_type => provider_config.image_type}
+          args[:image_type] = 'qcow2' unless args[:image_type] == 'raw'
 
           # Import the virtual machine
           storage_path = File.join(env[:tmp_path],"/storage-pool")
@@ -38,19 +28,19 @@ module VagrantPlugins
           # import box volume
           volume_name = import_volume(storage_path, image_type, box_file, backing, env)
 
+          # import arguments
+          args = {
+            :box_type    => box_type,
+            :qemu_bin      => provider_config.qemu_bin,
+            :cpus          => provider_config.core_number,
+            :memory_size   => provider_config.memory_size,
+            :cpu_model     => provider_config.cpu_model,
+            :machine_type  => provider_config.machine_type,
+            :network_model => provider_config.network_model,
+            :video_model   => provider_config.video_model
+          }.merge(args)
           # import the box to a new vm
-          env[:machine].id = env[:machine].provider.driver.import(
-            box_file,
-            volume_name,
-            image_type,
-            qemu_bin,
-            cpus,
-            memory_size,
-            cpu_model,
-            machine_type,
-            network_model,
-            video_model,
-          )
+          env[:machine].id = env[:machine].provider.driver.import(box_file, volume_name, args)
 
           # If we got interrupted, then the import could have been
           # interrupted and its not a big deal. Just return out.

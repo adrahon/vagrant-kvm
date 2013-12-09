@@ -133,7 +133,7 @@ module VagrantPlugins
         def delete
           domain = @conn.lookup_domain_by_uuid(@uuid)
           definition = Util::VmDefinition.new(domain.xml_desc)
-          volume = @pool.lookup_volume_by_path(definition.disk)
+          volume = @pool.lookup_volume_by_path(definition.attributes[:disk])
           volume.delete
           # XXX remove pool if empty?
           @pool.refresh
@@ -145,7 +145,7 @@ module VagrantPlugins
         def find_box_disk(xml)
           definition = File.open(xml) { |f|
             Util::VmDefinition.new(f.read) }
-          definition.disk
+          definition.attributes[:disk]
         end
 
         # Halts the virtual machine
@@ -156,26 +156,22 @@ module VagrantPlugins
 
         # Imports the VM
         #
-        # @param [String] xml Path to the VM XML file.
+        # @param [String] definition Path to the VM XML file.
         # @param [String] volume_name Name of the imported volume
-        # @param [String] image_type Image type of the imported the volume.
-        # @param [String] qemu_bin Path of qemu binary.
-        # @return [String] UUID of the imported VM.
-        def import(xml, volume_name, image_type, qemu_bin, cpus, memory_size, cpu_model, machine_type, network_model, video_model)
+        # @param [Hash]   attributes
+        def import(definition, volume_name, args={})
           @logger.info("Importing VM #{@name}")
           # create vm definition from xml
-          definition = File.open(xml) { |f| Util::VmDefinition.new(f.read) }
+          definition = File.open(definition) { |f| Util::VmDefinition.new(f.read) }
           volume = @pool.lookup_volume_by_name(volume_name)
-          definition.disk = volume.path
-          definition.name = @name
-          definition.image_type = image_type
-          definition.qemu_bin = qemu_bin
-          definition.arch = cpu_model if cpu_model
-          definition.memory = memory_size if memory_size
-          definition.cpus = cpus if cpus
-          definition.machine_type = machine_type if machine_type
-          definition.network_model = network_model if network_model
-          definition.video_model = video_model if video_model
+          args = {
+            :box_type => "kvm",
+            :image_type => "qcow2",
+            :qemu_bin => "/usr/bin/qemu",
+            :disk => volume.path,
+            :name => @name
+          }.merge(args)
+          definition.update(args)
           # create vm
           @logger.info("Creating new VM")
           xml_definition = definition.as_xml
@@ -291,7 +287,7 @@ module VagrantPlugins
         def read_mac_address
           domain = @conn.lookup_domain_by_uuid(@uuid)
           definition = Util::VmDefinition.new(domain.xml_desc)
-          definition.mac
+          definition.attributes[:mac]
         end
 
         # Resumes the previously paused virtual machine.
@@ -310,7 +306,7 @@ module VagrantPlugins
           @logger.debug("Setting mac address to #{mac}")
           domain = @conn.lookup_domain_by_uuid(@uuid)
           definition = Util::VmDefinition.new(domain.xml_desc)
-          definition.set_mac(mac)
+          definition.update(:mac => mac)
           domain.undefine
           @conn.define_domain_xml(definition.as_xml)
         end
@@ -319,10 +315,11 @@ module VagrantPlugins
           @logger.debug("Enabling GUI")
           domain = @conn.lookup_domain_by_uuid(@uuid)
           definition = Util::VmDefinition.new(domain.xml_desc)
-          definition.gui = true
-          definition.vnc_port = vnc_port
-          definition.vnc_autoport = vnc_autoport
-          definition.vnc_password = vnc_password
+          definition.update(
+            :gui => true,
+            :vnc_port => vnc_port,
+            :vnc_autoport => vnc_autoport,
+            :vnc_password => vnc_password)
           domain.undefine
           @conn.define_domain_xml(definition.as_xml)
         end
@@ -347,15 +344,13 @@ module VagrantPlugins
           # create new_disk
           domain = @conn.lookup_domain_by_uuid(@uuid)
           definition = Util::VmDefinition.new(domain.xml_desc)
-          disk_image = definition.disk
+          disk_image = definition.attributes[:disk]
           to_path = File.dirname(xml_path)
           new_path = File.join(to_path, new_disk)
           @logger.info("create disk image #{new_path}")
           run_command("qemu-img convert -S 16k -O qcow2 #{disk_image} #{new_path}")
           # write out box.xml
-          definition.disk = new_disk
-          definition.gui = false
-          definition.unset_uuid
+          definition.update(:disk => new_disk,:gui  => false,:uuid => nil)
           File.open(xml_path,'w') do |f|
             f.puts(definition.as_xml)
           end

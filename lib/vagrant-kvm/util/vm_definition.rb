@@ -10,11 +10,8 @@ module VagrantPlugins
         include Errors
 
         # Attributes of the VM
-        attr_accessor :name, :image_type, :qemu_bin, :disk, :vnc_port, :vnc_autoport, 
-          :vnc_password, :gui, :cpus, :arch, :memory, :machine_type, :network_model,
-          :video_model
-
-        attr_reader :mac, :arch, :network
+        attr_accessor :memory
+        attr_reader :attributes
 
         def self.list_interfaces(definition)
           nics = {}
@@ -39,94 +36,85 @@ module VagrantPlugins
         end
 
         def initialize(definition)
-          @uuid = nil
-          @gui = nil
-          @vnc_autoport = false 
-          @vnc_password = nil
-          @network = 'default'
-          @network_model = 'virtio'
-          @video_model = 'cirrus'
-
+          @attributes = {
+            :uuid         => nil,
+            :gui          => nil,
+            :vnc_autoport => false,
+            :vnc_password => nil,
+            :network      => 'default',
+            :network_model => 'virtio',
+            :video_model  => 'cirrus'
+          }
           doc = REXML::Document.new definition
-          @name = doc.elements["/domain/name"].text
-          @uuid = doc.elements["/domain/uuid"].text if doc.elements["/domain/uuid"]
           memory_unit = doc.elements["/domain/memory"].attributes["unit"]
           @memory = size_in_bytes(doc.elements["/domain/memory"].text,
                                   memory_unit)
-          @cpus = doc.elements["/domain/vcpu"].text
-          @arch = doc.elements["/domain/os/type"].attributes["arch"]
-          @machine_type = doc.elements["/domain/os/type"].attributes["machine"]
-          @disk = doc.elements["//devices/disk/source"].attributes["file"]
-          @mac = doc.elements["//devices/interface/mac"].attributes["address"]
-          @network = doc.elements["//devices/interface/source"].attributes["network"]
-          model_node = doc.elements["//devices/interface/model"]
-          @network_model = model_node ? model_node.attributes["type"] : :default
-          @image_type = doc.elements["//devices/disk/driver"].attributes["type"]
-          @qemu_bin = doc.elements["/domain/devices/emulator"].text
-          @video_model = doc.elements["/domain/devices/video/model"].attributes["type"]
 
+          @attributes.merge!({
+            :name => doc.elements["/domain/name"].text,
+            :cpus => doc.elements["/domain/vcpu"].text,
+            :arch => doc.elements["/domain/os/type"].attributes["arch"],
+            :machine_type => doc.elements["/domain/os/type"].attributes["machine"],
+            :disk => doc.elements["//devices/disk/source"].attributes["file"],
+            :network => doc.elements["//devices/interface/source"].attributes["network"],
+            :mac => format_mac(doc.elements["//devices/interface/mac"].attributes["address"]),
+            :model_node => doc.elements["//devices/interface/model"],
+            :network_model => model_node ? model_node.attributes["type"] : :default,
+            :image_type => doc.elements["//devices/disk/driver"].attributes["type"],
+            :qemu_bin => doc.elements["/domain/devices/emulator"].text,
+            :video_model => doc.elements["/domain/devices/video/model"].attributes["type"],
+            :disk_bus = doc.elements["//devices/disk/target"].attributes["bus"]
+          })
+          if doc.elements["/domain/uuid"]
+            @attributes.merge!({:uuid => doc.elements["/domain/uuid"].text})
+          end
           if doc.elements["//devices/graphics"]
             attrs = doc.elements["//devices/graphics"].attributes
-            @gui = attrs["type"] == 'vnc'
-            @vnc_port = attrs['port'].to_i
-            @vnc_autoport = attrs['autoport'] == 'yes'
-            @vnc_password = attrs['passwd']
+            @attributes.merge!({
+              :gui          => attrs["type"] == 'vnc',
+              :vnc_port     => attrs['port'].to_i,
+              :vnc_autoport => attrs['autoport'] == 'yes',
+              :vnc_password => attrs['passwd']
+            })
           end
-          @disk_bus = doc.elements["//devices/disk/target"].attributes["bus"]
         end
 
         def as_xml
-          if @qemu_bin
+          if @attributes[:qemu_bin]
             # user specified path of qemu binary
-            qemu_bin_list = [@qemu_bin]
+            qemu_bin_list = [@attributes[:qemu_bin]]
           else
             # RedHat and Debian-based systems have different executable names
             # depending on version/architectures
-            qemu_bin_list = ['/usr/bin/qemu-system-x86_64'] if @arch.match(/64$/)
-            qemu_bin_list = ['/usr/bin/qemu-system-i386']   if @arch.match(/^i.86$/)
+            qemu_bin_list = '/usr/bin/qemu-system-x86_64' if @attributes[:arch].match(/64$/)
+            qemu_bin_list = '/usr/bin/qemu-system-i386'   if @attributes[:arch].match(/^i.86$/)
             qemu_bin_list += [ '/usr/bin/qemu-kvm', '/usr/bin/kvm' ]
           end
 
           qemu_bin = qemu_bin_list.detect { |binary| File.exists? binary }
           if not qemu_bin
             raise Errors::KvmNoQEMUBinary,
-            :cause => @qemu_bin ?
-            "Vagrantfile (specified binary: #{@qemu_bin})" : "QEMU installation"
+            :cause => @attributes[:qemu_bin] ?
+            "Vagrantfile (specified binary: #{@attributes[:qemu_bin]})" : "QEMU installation"
           end
 
-          xml = KvmTemplateRenderer.render("libvirt_domain", {
-            :name => @name,
-            :uuid => @uuid,
-            :memory => size_from_bytes(@memory, "KiB"),
-            :cpus => @cpus,
-            :arch => @arch,
-            :disk => @disk,
-            :mac => format_mac(@mac),
-            :network => @network,
-            :gui => @gui,
-            :machine_type => @machine_type,
-            :image_type => @image_type,
-            :qemu_bin => qemu_bin,
-            :vnc_port => @vnc_port,
-            :vnc_autoport => format_bool(@vnc_autoport),
-            :vnc_password=> @vnc_password,
-            :disk_bus => @disk_bus,
-            :network_model => @network_model,
-            :video_model => @video_model,
-          })
+          xml = KvmTemplateRenderer.render("libvirt_domain", @attributes.merge({
+                 :memory => size_from_bytes(@memory, "KiB")}))
           xml
         end
 
         def get_memory(unit="bytes")
-          size_from_bytes(@memory, unit)
+          size_from_bytes(@attributes[:memory], unit)
         end
 
-        def set_mac(mac)
-          @mac = format_mac(mac)
-        end
-
-        def unset_uuid
-          @uuid = nil
+        def update(args={})
+          args.each {|k,v|
+            case k
+            when :mac
+              args[:mac] = format_mac(args[:mac])
+            end
+          }
+          @attributes.merge!(args)
         end
 
         # Takes a quantity and a unit
