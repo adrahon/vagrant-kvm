@@ -2,6 +2,30 @@ require 'spec_helper'
 require "vagrant-kvm/config"
 
 describe  VagrantPlugins::ProviderKvm::Config do
+  describe "#image_type" do
+    it "defaults to qcow2" do
+      should_default(:image_type, 'qcow2')
+    end
+  end
+
+  describe "#image_backing" do
+    it "default to true" do
+      should_default(:image_backing, true)
+    end
+  end
+
+  describe "#cpu_model" do
+    it "default to x86-64" do
+      should_default(:cpu_model, 'x86_64')
+    end
+  end
+
+  describe "#core_number" do
+    it "default to 1" do
+      should_default(:core_number, 1)
+    end
+  end
+
   describe "#machine_type" do
     it "defaults to pc-1.2" do
       should_default(:machine_type, "pc-1.2")
