@@ -11,26 +11,19 @@ module VagrantPlugins
         end
 
         def call(env)
-          env[:ui].info I18n.t("vagrant.actions.vm.import.importing",
+          @env = env
+          @env[:ui].info I18n.t("vagrant.actions.vm.import.importing",
                                :name => env[:machine].box.name)
 
-          provider_config = env[:machine].provider_config
+          provider_config = @env[:machine].provider_config
 
           # Ignore unsupported image types
           args={:image_type => provider_config.image_type}
           args[:image_type] = 'qcow2' unless args[:image_type] == 'raw'
 
-          # Import the virtual machine
-          storage_path = File.join(env[:tmp_path],"/storage-pool")
-          box_file = env[:machine].box.directory.join("box.xml").to_s
-          raise Errors::KvmBadBoxFormat unless File.file?(box_file)
-
-          # import box volume
-          volume_name = import_volume(storage_path, image_type, box_file, backing, env)
-
           # import arguments
           args = {
-            :box_type    => box_type,
+            :image_backing => provider_config.image_backing,
             :qemu_bin      => provider_config.qemu_bin,
             :cpus          => provider_config.core_number,
             :memory_size   => provider_config.memory_size,
@@ -39,25 +32,34 @@ module VagrantPlugins
             :network_model => provider_config.network_model,
             :video_model   => provider_config.video_model
           }.merge(args)
+
+          # Import the virtual machine
+          storage_path = File.join(@env[:tmp_path],"/storage-pool")
+          box_file = @env[:machine].box.directory.join("box.xml").to_s
+          raise Errors::KvmBadBoxFormat unless File.file?(box_file)
+
+          # import box volume
+          volume_name = import_volume(storage_path, box_file, args)
+
           # import the box to a new vm
-          env[:machine].id = env[:machine].provider.driver.import(box_file, volume_name, args)
+          env[:machine].id = @env[:machine].provider.driver.import(box_file, volume_name, args)
 
           # If we got interrupted, then the import could have been
           # interrupted and its not a big deal. Just return out.
-          return if env[:interrupted]
+          return if @env[:interrupted]
 
           # Flag as erroneous and return if import failed
-          raise Vagrant::Errors::VMImportFailure if !env[:machine].id
+          raise Vagrant::Errors::VMImportFailure if !@env[:machine].id
 
           # Import completed successfully. Continue the chain
           @app.call(env)
         end
 
-        def import_volume(storage_path, image_type, box_file, backing, env)
+        def import_volume(storage_path, box_file, args)
           @logger.debug "Importing volume. Storage path: #{storage_path} " + 
-            "Image Type: #{image_type}"
+            "Image Type: #{args[:image_type]}"
 
-          box_disk = env[:machine].provider.driver.find_box_disk(box_file)
+          box_disk = @env[:machine].provider.driver.find_box_disk(box_file)
           new_disk = File.basename(box_disk, File.extname(box_disk)) + "-" +
             Time.now.to_i.to_s + ".img"
           old_path = File.join(File.dirname(box_file), box_disk)
@@ -65,21 +67,21 @@ module VagrantPlugins
 
           # for backward compatibility, we handle both raw and qcow2 box format
           box = Util::DiskInfo.new(old_path)
-          if box.type == 'raw' || image_type == 'raw'
-            backing = false
+          if box.type == 'raw' || args[:image_type] == 'raw'
+            args[:image_baking] = false
             @logger.info "Disable disk image with box image as backing file"
           end
 
-          if image_type == 'qcow2' || image_type == 'raw'
+          if args[:image_type] == 'qcow2' || args[:image_type] == 'raw'
             # create volume
-            box_name = env[:machine].config.vm.box
-            driver = env[:machine].provider.driver
+            box_name = @env[:machine].config.vm.box
+            driver = @env[:machine].provider.driver
             pool_name = 'vagrant_' + Process.uid.to_s + '_' + box_name
             driver.init_storage_directory(File.dirname(old_path), pool_name)
-            driver.create_volume(new_disk, box.capacity, new_path, image_type, pool_name, old_path, backing)
+            driver.create_volume(new_disk, box.capacity, new_path, args[:image_type], pool_name, old_path, args[:image_backing])
             driver.free_storage_pool(pool_name)
           else
-            @logger.info "Image type #{image_type} is not supported"
+            @logger.info "Image type #{args[:image_type]} is not supported"
           end
           # TODO cleanup if interupted
           new_disk

@@ -51,20 +51,26 @@ module VagrantPlugins
                                   memory_unit)
 
           @attributes.merge!({
-            :name => doc.elements["/domain/name"].text,
-            :cpus => doc.elements["/domain/vcpu"].text,
-            :arch => doc.elements["/domain/os/type"].attributes["arch"],
+            :name        => doc.elements["/domain/name"].text,
+            :cpus        => doc.elements["/domain/vcpu"].text,
+            :arch        => doc.elements["/domain/os/type"].attributes["arch"],
             :machine_type => doc.elements["/domain/os/type"].attributes["machine"],
-            :disk => doc.elements["//devices/disk/source"].attributes["file"],
-            :network => doc.elements["//devices/interface/source"].attributes["network"],
-            :mac => format_mac(doc.elements["//devices/interface/mac"].attributes["address"]),
-            :model_node => doc.elements["//devices/interface/model"],
-            :network_model => model_node ? model_node.attributes["type"] : :default,
-            :image_type => doc.elements["//devices/disk/driver"].attributes["type"],
-            :qemu_bin => doc.elements["/domain/devices/emulator"].text,
+            :disk        => doc.elements["//devices/disk/source"].attributes["file"],
+            :network     => doc.elements["//devices/interface/source"].attributes["network"],
+            :network_model => :default,
+            :mac         => format_mac(doc.elements["//devices/interface/mac"].attributes["address"]),
+            :image_type  => doc.elements["//devices/disk/driver"].attributes["type"],
+            :qemu_bin    => doc.elements["/domain/devices/emulator"].text,
             :video_model => doc.elements["/domain/devices/video/model"].attributes["type"],
-            :disk_bus = doc.elements["//devices/disk/target"].attributes["bus"]
+            :disk_bus    => doc.elements["//devices/disk/target"].attributes["bus"]
           })
+          model_node = doc.elements["//devices/interface/model"]
+          if model_node
+            @attributes.merge!({
+            :model_node  => model_node,
+            :network_model => model_node.attributes["type"]
+            })
+          end
           if doc.elements["/domain/uuid"]
             @attributes.merge!({:uuid => doc.elements["/domain/uuid"].text})
           end
@@ -86,8 +92,8 @@ module VagrantPlugins
           else
             # RedHat and Debian-based systems have different executable names
             # depending on version/architectures
-            qemu_bin_list = '/usr/bin/qemu-system-x86_64' if @attributes[:arch].match(/64$/)
-            qemu_bin_list = '/usr/bin/qemu-system-i386'   if @attributes[:arch].match(/^i.86$/)
+            qemu_bin_list = ['/usr/bin/qemu-system-x86_64'] if @attributes[:arch].match(/64$/)
+            qemu_bin_list = ['/usr/bin/qemu-system-i386']   if @attributes[:arch].match(/^i.86$/)
             qemu_bin_list += [ '/usr/bin/qemu-kvm', '/usr/bin/kvm' ]
           end
 

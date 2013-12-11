@@ -165,7 +165,6 @@ module VagrantPlugins
           definition = File.open(definition) { |f| Util::VmDefinition.new(f.read) }
           volume = @pool.lookup_volume_by_name(volume_name)
           args = {
-            :box_type => "kvm",
             :image_type => "qcow2",
             :qemu_bin => "/usr/bin/qemu",
             :disk => volume.path,
