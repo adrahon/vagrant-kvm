@@ -19,8 +19,8 @@ describe VagrantPlugins::ProviderKvm::Util::VmDefinition do
     let(:path) { test_file("box.ovf") }
     let(:source_type) { 'ovf' }
 
-    describe "#as_libvirt" do
-      subject { definition.as_libvirt }
+    describe "#as_xml" do
+      subject { definition.as_xml }
 
       it "sets the CPU count properly" do
         subject.should include("<vcpu placement='static'>1</vcpu>")
