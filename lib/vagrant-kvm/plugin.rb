@@ -34,6 +34,11 @@ module VagrantPlugins
         Provider
       end
 
+      synced_folder("p9", 20) do
+        require_relative "synced_folder"
+        SyncedFolder
+      end
+
       # This initializes the internationalization strings.
       def self.setup_i18n
         I18n.load_path << File.expand_path("locales/en.yml", ProviderKvm.source_root)

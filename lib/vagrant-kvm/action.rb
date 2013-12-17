@@ -16,17 +16,10 @@ module VagrantPlugins
           b.use Network
           b.use Provision
           b.use Vagrant::Action::Builtin::HandleForwardedPortCollisions
-          if Vagrant::VERSION < "1.4.0"
-            b.use PruneNFSExports
-            b.use NFS
-            b.use PrepareNFSSettings
-          else
-            #FIXME
-            b.use PrepareNFSValidIds
-            b.use SyncedFolderCleanup
-            b.use SyncedFolders
-            b.use PrepareNFSSettings
-          end
+          b.use PrepareNFSValidIds
+          b.use SyncedFolderCleanup
+          b.use SyncedFolders
+          b.use PrepareNFSSettings
           b.use SetHostname
           #b.use Customize
           b.use ForwardPorts
