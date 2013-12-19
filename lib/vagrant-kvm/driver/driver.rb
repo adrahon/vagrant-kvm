@@ -312,6 +312,7 @@ module VagrantPlugins
 
         def set_gui(vnc_port, vnc_autoport, vnc_password)
           @logger.debug("Enabling GUI")
+
           domain = @conn.lookup_domain_by_uuid(@uuid)
           definition = Util::VmDefinition.new(domain.xml_desc)
           definition.update(
@@ -320,7 +321,10 @@ module VagrantPlugins
             :vnc_autoport => vnc_autoport,
             :vnc_password => vnc_password)
           domain.undefine
-          @conn.define_domain_xml(definition.as_xml)
+
+          xml = definition.as_xml
+          @logger.debug xml
+          @conn.define_domain_xml(xml)
         end
 
         # Starts the virtual machine.

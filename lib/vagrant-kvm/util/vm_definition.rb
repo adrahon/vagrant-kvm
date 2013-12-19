@@ -123,6 +123,10 @@ module VagrantPlugins
           @attributes.merge!(args)
         end
 
+        def get(key)
+          @attributes[key]
+        end
+
         # Takes a quantity and a unit
         # returns quantity in bytes
         # mib = true to use mebibytes, etc
