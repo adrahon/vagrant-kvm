@@ -5,4 +5,4 @@ before_install:
 rvm:
   - 1.9.3
   - 2.0.0
-script: "bundle exec spec/vagrant-kvm/"
+script: "bundle exec rspec spec/vagrant-kvm/"
