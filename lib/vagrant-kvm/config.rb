@@ -31,6 +31,11 @@ module VagrantPlugins
       # @return [Boolean]
       attr_reader :image_backing
 
+      # VM image mode(clone or COW with backing file)
+      #
+      # @return [Boolean]
+      attr_accessor :image_mode
+
       # path of qemu binary
       #
       # @return [String]
