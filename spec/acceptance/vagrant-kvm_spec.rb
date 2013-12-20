@@ -6,7 +6,7 @@ describe 'vagrant-kvm' do
   end
 
   before(:all) do
-    @old_domains = @libvirt.domains.count
+    @old_domains = libvirt.domains.count
     @old_pool_files = pool_files.count
   end
 
@@ -20,11 +20,11 @@ describe 'vagrant-kvm' do
     end
 
     it'creates new libvirt domain' do
-      (@libvirt.domains.count - @old_domains).should == 1
+      (libvirt.domains.count - @old_domains).should == 1
     end
 
     it 'starts created libvirt domain' do
-      expect(@libvirt.domain).to be_active
+      expect(libvirt.domain).to be_active
     end
 
     it 'creates disk image file' do
@@ -32,11 +32,11 @@ describe 'vagrant-kvm' do
     end
 
     it 'creates new pool' do
-      expect(@libvirt.storage_pools).to include('vagrant')
+      expect(libvirt.storage_pools).to include('vagrant')
     end
 
     it 'creates new network' do
-      expect(@libvirt.networks).to include('vagrant')
+      expect(libvirt.networks).to include('vagrant')
     end
   end
 
@@ -51,7 +51,7 @@ describe 'vagrant-kvm' do
     end
 
     it 'shutdowns domain' do
-      expect(@libvirt.domain).not_to be_active
+      expect(libvirt.domain).not_to be_active
     end
   end
 
@@ -62,7 +62,7 @@ describe 'vagrant-kvm' do
     end
 
     it 'undefines domain' do
-      @libvirt.domains.count.should == @old_domains
+      libvirt.domains.count.should == @old_domains
     end
 
     it 'removes disk image file' do
@@ -70,11 +70,11 @@ describe 'vagrant-kvm' do
     end
 
     it 'does not undefine storage pool' do
-      expect(@libvirt.storage_pools).to include('vagrant')
+      expect(libvirt.storage_pools).to include('vagrant')
     end
 
     it 'does not undefine new network' do
-      expect(@libvirt.networks).to include('vagrant')
+      expect(libvirt.networks).to include('vagrant')
     end
   end
 end

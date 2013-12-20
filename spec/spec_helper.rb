@@ -3,18 +3,21 @@ require 'support/libvirt_helper'
 require 'support/vagrant_kvm_helper'
 require 'pry'
 
+def libvirt
+  @libvirt ||= LibvirtHelper.new
+end
+
 RSpec.configure do |spec|
   spec.include VagrantKvmHelper
 
   spec.before(:all) do
-    @libvirt = LibvirtHelper.new
 
     # make sure everything is run in tmp
     Dir.chdir '/tmp'
   end
 
   spec.after(:all) do
-    @libvirt.connection.close
+    libvirt.connection.close
   end
 
   at_exit do
