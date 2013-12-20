@@ -1,7 +1,7 @@
 language: ruby
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq libvirt-dev
+  - sudo apt-get install -qq libvirt-dev libvirt-bin
 rvm:
   - 1.9.3
   - 2.0.0
