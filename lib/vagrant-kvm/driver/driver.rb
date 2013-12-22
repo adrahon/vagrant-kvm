@@ -302,25 +302,32 @@ module VagrantPlugins
         end
 
         def set_mac_address(mac)
-          @logger.debug("Setting mac address to #{mac}")
-          domain = @conn.lookup_domain_by_uuid(@uuid)
-          definition = Util::VmDefinition.new(domain.xml_desc)
-          definition.update(:mac => mac)
-          domain.undefine
-          @conn.define_domain_xml(definition.as_xml)
+          update_domain_xml(:mac => mac)
         end
 
         def set_gui(vnc_port, vnc_autoport, vnc_password)
           @logger.debug("Enabling GUI")
-          domain = @conn.lookup_domain_by_uuid(@uuid)
-          definition = Util::VmDefinition.new(domain.xml_desc)
-          definition.update(
+          update_domain_xml(
             :gui => true,
             :vnc_port => vnc_port,
             :vnc_autoport => vnc_autoport,
             :vnc_password => vnc_password)
+        end
+
+        def set_diskbus(disk_bus)
+          update_domain_xml(:disk_bus => disk_bus)
+        end
+
+        def update_domain_xml(options)
+          domain = @conn.lookup_domain_by_uuid(@uuid)
+          # Use DOMAIN_XML_SECURE to dump ALL options (including VNC password)
+          original_xml = domain.xml_desc(Libvirt::Domain::DOMAIN_XML_SECURE)
+          definition = Util::VmDefinition.new(original_xml)
+          definition.update(options)
           domain.undefine
-          @conn.define_domain_xml(definition.as_xml)
+          xml = definition.as_xml
+          @logger.debug("Updating domain xml\nFrom: #{original_xml}\nTo: #{xml}")
+          @conn.define_domain_xml(xml)
         end
 
         # Starts the virtual machine.
