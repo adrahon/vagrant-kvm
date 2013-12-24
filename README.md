@@ -91,6 +91,9 @@ to virtio. Can be set to `:default` if you want to use the KVM default setting.
 Possible values include: ne2k_isa i82551 i82557b i82559er ne2k_pci pcnet rtl8139 e1000 virtio.
 * `video_model` - The model of the video adapter. Default to cirrus. Can also be
 set to vga.
+* `image_mode` - Possible value are `clone` or `cow`, defaults to `cow`. If set
+to `clone`, the image disk will be copied rather than use the original box
+image. This is slower but allows multiple VMs to be booted at the same time.
 
 ## Specs
 

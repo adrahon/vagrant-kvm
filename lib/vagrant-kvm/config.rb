@@ -2,7 +2,7 @@ module VagrantPlugins
   module ProviderKvm
     class Config < Vagrant.plugin("2", :config)
       # An array of customizations to make on the VM prior to booting it.
-      #
+
       # @return [Array]
       attr_reader :customizations
 
@@ -30,6 +30,11 @@ module VagrantPlugins
       #
       # @return [Boolean]
       attr_reader :image_backing
+
+      # VM image mode(clone or COW with backing file)
+      #
+      # @return [String]
+      attr_accessor :image_mode
 
       # path of qemu binary
       #

@@ -32,6 +32,20 @@ describe  VagrantPlugins::ProviderKvm::Config do
     end
   end
 
+  describe "#image_mode" do
+    it "sets image_backing to false if clone" do
+      subject.image_mode = 'clone'
+      subject.finalize!
+      subject.image_backing.should be_false
+    end
+
+    it "sets image_backing to true if cow" do
+      subject.image_mode = 'cow'
+      subject.finalize!
+      subject.image_backing.should be_true
+    end
+  end
+
   private
   def should_default(field, default_value)
     instance = described_class.new
