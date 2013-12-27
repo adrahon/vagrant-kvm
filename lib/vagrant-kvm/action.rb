@@ -234,6 +234,7 @@ module VagrantPlugins
             # If the VM is NOT created yet, then do the setup steps
             if !env[:result]
               b2.use CheckBox
+              b2.use SetName
               b2.use Import
               b2.use MatchMACAddress
             end
