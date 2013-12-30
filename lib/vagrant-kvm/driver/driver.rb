@@ -186,16 +186,30 @@ module VagrantPlugins
             @network = @conn.lookup_network_by_name(@network_name)
             definition = Util::NetworkDefinition.new(@network_name,
                                                      @network.xml_desc)
-            @network.destroy if @network.active?
-            @network.undefine
           rescue Libvirt::RetrieveError
             # Network doesn't exist, create with defaults
             definition = Util::NetworkDefinition.new(@network_name)
           end
           definition.update(config)
-          @network = @conn.define_network_xml(definition.as_xml)
-          @logger.info("Creating network #{@network_name}")
-          @network.create
+          if @network.nil?
+            @network = @conn.define_network_xml(definition.as_xml)
+            @logger.info("Creating network #{@network_name}")
+            @network.create
+          else
+            # Only destroy existing network if config has changed. This is
+            # necessary because other VM could be currently using this network
+            # and will loose connectivity if the network is destroyed.
+            old_def = Util::NetworkDefinition.new(@network_name, @network.xml_desc)
+            if old_def == definition
+              @logger.info "Reusing existing configuration for #{@network_name}"
+            else
+              @logger.info "Recreating network config for #{@network_name}"
+              @network.destroy if @network.active?
+              @network.undefine
+              @network = @conn.define_network_xml(definition.as_xml)
+              @network.create
+            end
+          end
         end
 
         # Initialize or create storage pool
