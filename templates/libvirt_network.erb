@@ -1,0 +1,13 @@
+<network>
+  <name><%= name %></name>
+  <forward mode='<%= forward %>'/>
+  <domain name='<%= domain_name %>'/>
+  <ip address='<%= base_ip %>' netmask='<%= netmask %>'>
+    <dhcp>
+    <range start='<%= range[:start] %>' end='<%= range[:end] %>' />
+    <% for host in hosts %>
+      <host mac='<%= host[:mac] %>' name='<%= host[:name] %>' ip='<%= host[:ip] %>' />
+    <% end %>
+    </dhcp>
+  </ip>
+</network>

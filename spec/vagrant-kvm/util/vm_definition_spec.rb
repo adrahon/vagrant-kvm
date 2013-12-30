@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe VagrantPlugins::ProviderKvm::Util::VmDefinition do
-  let(:definition) { VagrantPlugins::ProviderKvm::Util::VmDefinition.new(File.read(path)) }
+  let(:definition) { described_class.new(File.read(path)) }
   subject { definition }
 
   context "with an simple definition" do
@@ -66,7 +66,7 @@ describe VagrantPlugins::ProviderKvm::Util::VmDefinition do
     yield subject if block_given?
 
     # Validates that it's symetrical
-    new_definition = VagrantPlugins::ProviderKvm::Util::VmDefinition.new(subject)
+    new_definition = described_class.new(subject)
     new_definition.get(key).should == value
   end
 

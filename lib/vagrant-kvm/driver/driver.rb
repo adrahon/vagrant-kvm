@@ -192,7 +192,7 @@ module VagrantPlugins
             # Network doesn't exist, create with defaults
             definition = Util::NetworkDefinition.new(@network_name)
           end
-          definition.configure(config)
+          definition.update(config)
           @network = @conn.define_network_xml(definition.as_xml)
           @logger.info("Creating network #{@network_name}")
           @network.create
