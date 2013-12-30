@@ -192,9 +192,8 @@ module VagrantPlugins
           end
           definition.update(config)
           if @network.nil?
-            @network = @conn.define_network_xml(definition.as_xml)
             @logger.info("Creating network #{@network_name}")
-            @network.create
+            @network = define_network(definition) 
           else
             # Only destroy existing network if config has changed. This is
             # necessary because other VM could be currently using this network
@@ -204,12 +203,20 @@ module VagrantPlugins
               @logger.info "Reusing existing configuration for #{@network_name}"
             else
               @logger.info "Recreating network config for #{@network_name}"
+              @logger.debug "Old definition was:\n#{@network.xml_desc}"
               @network.destroy if @network.active?
               @network.undefine
-              @network = @conn.define_network_xml(definition.as_xml)
-              @network.create
+              @network = define_network(definition) 
             end
           end
+        end
+
+        def define_network(definition)
+          xml = definition.as_xml
+          @logger.debug "Defining new network with XML:\n#{xml}"
+          network = @conn.define_network_xml(xml)
+          network.create
+          network
         end
 
         # Initialize or create storage pool

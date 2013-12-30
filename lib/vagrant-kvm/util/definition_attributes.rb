@@ -22,10 +22,6 @@ module VagrantPlugins
           def update(args={})
             attributes.merge!(args)
           end
-
-          def ==(other)
-            self.attributes == other.attributes
-          end
         end
 
         def self.included(receiver)

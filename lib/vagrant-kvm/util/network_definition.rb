@@ -50,6 +50,13 @@ module VagrantPlugins
           end
         end
 
+        def ==(other)
+          # Don't compare the hosts
+          [:forward, :domain_name, :base_ip, :netmask, :range,].all? do |key|
+            get(key) == other.get(key)
+          end
+        end
+
         def as_xml
           KvmTemplateRenderer.render("libvirt_network", attributes.dup)
         end
