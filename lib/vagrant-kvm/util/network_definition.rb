@@ -8,7 +8,21 @@ module VagrantPlugins
         include DefinitionAttributes
 
         def initialize(name, definition=nil)
-          set(:name, name)
+          # create with defaults
+          # XXX defaults should move to config
+          self.attributes = {
+            :forward => "nat",
+            :domain_name => "vagrant.local",
+            :base_ip => "192.168.192.1",
+            :netmask => "255.255.255.0",
+            :range => {
+              :start => "192.168.192.100",
+              :end => "192.168.192.200",
+            },
+            :hosts => [],
+            name: name,
+          }
+
           if definition
             doc = REXML::Document.new definition
             if doc.elements["/network/forward"]
@@ -33,20 +47,6 @@ module VagrantPlugins
               }
             end
             set(:hosts, hosts)
-          else
-            # create with defaults
-            # XXX defaults should move to config
-            self.attributes = {
-              :forward => "nat",
-              :domain_name => "vagrant.local",
-              :base_ip => "192.168.192.1",
-              :netmask => "255.255.255.0",
-              :range => {
-                :start => "192.168.192.100",
-                :end => "192.168.192.200",
-              },
-              :hosts => [],
-            }
           end
         end
 
@@ -58,6 +58,7 @@ module VagrantPlugins
         end
 
         def as_xml
+          raise 'fuck' unless attributes[:name]
           KvmTemplateRenderer.render("libvirt_network", attributes.dup)
         end
       end
