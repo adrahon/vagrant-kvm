@@ -199,7 +199,7 @@ module VagrantPlugins
             # necessary because other VM could be currently using this network
             # and will loose connectivity if the network is destroyed.
             old_def = Util::NetworkDefinition.new(@network_name, @network.xml_desc)
-            if old_def == definition
+            if old_def == definition && @network.active?
               @logger.info "Reusing existing configuration for #{@network_name}"
             else
               @logger.info "Recreating network config for #{@network_name}"
