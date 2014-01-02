@@ -58,7 +58,6 @@ module VagrantPlugins
         end
 
         def as_xml
-          raise 'fuck' unless attributes[:name]
           KvmTemplateRenderer.render("libvirt_network", attributes.dup)
         end
       end
