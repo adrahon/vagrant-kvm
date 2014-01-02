@@ -7,6 +7,10 @@ module VagrantPlugins
         let(:xml) { test_file "box.xml" }
         let(:volume_name) { "" }
 
+        before do
+          described_class.any_instance.stub(:load_kvm_module!) { true }
+        end
+
         describe "#import" do
           # FIXME All of these required stubs are a symptom of bad design in the
           # driver class. 

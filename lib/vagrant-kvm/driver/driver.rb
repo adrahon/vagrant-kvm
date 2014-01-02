@@ -43,20 +43,7 @@ module VagrantPlugins
           @pool_name = "vagrant"
           @network_name = "vagrant"
 
-          @logger.info("Check KVM kernel modules")
-          @kvm = File.readlines('/proc/modules').any? { |line| line =~ /kvm_(intel|amd)/ }
-          unless @kvm
-            case File.read('/proc/cpuinfo')
-            when /vmx/
-              @kvm = true if run_command("sudo /sbin/modprobe kvm-intel")
-            when /svm/
-              @kvm = true if run_command("sudo /sbin/modprobe kvm-amd")
-            else
-              # looks like virtualization is not supported
-            end
-          end
-          # FIXME: see KVM/ARM project
-          raise Errors::VagrantKVMError, "KVM is unavailable" unless @kvm
+          load_kvm_module!
 
           # Open a connection to the qemu driver
           begin
@@ -386,6 +373,25 @@ module VagrantPlugins
           rescue Libvirt::RetrieveError
             false
           end
+        end
+
+        private
+        def load_kvm_module!
+          @logger.info("Check KVM kernel modules")
+          kvm = File.readlines('/proc/modules').any? { |line| line =~ /kvm_(intel|amd)/ }
+          unless kvm
+            case File.read('/proc/cpuinfo')
+            when /vmx/
+              kvm = true if run_command("sudo /sbin/modprobe kvm-intel")
+            when /svm/
+              kvm = true if run_command("sudo /sbin/modprobe kvm-amd")
+            else
+              # looks like virtualization is not supported
+            end
+          end
+          # FIXME: see KVM/ARM project
+          raise Errors::VagrantKVMError, "KVM is unavailable" unless kvm
+          true
         end
       end
     end
