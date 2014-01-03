@@ -14,3 +14,7 @@ en:
         Executable binary of qemu could not be found. Please re-examine %{cause}.
       kvm_fail_image_conversion: |-
         Failed to convert image to specified format.
+      kvm_failed_command: |-
+        System command %{cmd} returned with error code %{res}.
+      kvm_bad_box_format: |-
+        Unsupported box format.
