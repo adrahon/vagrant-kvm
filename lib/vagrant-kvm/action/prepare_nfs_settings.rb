@@ -40,7 +40,8 @@ module VagrantPlugins
             return base_ip.join(".")
           end
 
-          nil
+          # If no private network configuration, return default ip
+          "192.168.123.1"
         end
 
         # Returns the IP address of the guest by looking at the first
