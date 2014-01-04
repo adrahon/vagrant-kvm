@@ -44,13 +44,9 @@ module VagrantPlugins
                 b3.use ConfigValidate
                 b3.use EnvSet, :force_halt => true
                 b3.use action_halt
-                if Vagrant::VERSION < "1.4.0"
-                  b3.use PruneNFSExports
-                else
-                  b3.use PrepareNFSSettings
-                  b3.use PrepareNFSValidIds
-                  b3.use SyncedFolderCleanup
-                end
+                b3.use PrepareNFSSettings
+                b3.use PrepareNFSValidIds
+                b3.use SyncedFolderCleanup
                 b3.use Destroy
               else
                 b3.use MessageWillNotDestroy
@@ -97,13 +93,9 @@ module VagrantPlugins
 
             b2.use SetupPackageFiles
             b2.use action_halt
-            if Vagrant::VERSION < "1.4.0"
-              b2.use PruneNFSExports
-            else
-              b2.use PrepareNFSSettings
-              b2.use PrepareNFSValidIds
-              b2.use SyncedFolderCleanup
-            end
+            b2.use PrepareNFSSettings
+            b2.use PrepareNFSValidIds
+            b2.use SyncedFolderCleanup
             b2.use Export
             b2.use PackageVagrantfile
             b2.use Package
