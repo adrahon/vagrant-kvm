@@ -16,10 +16,10 @@ module VagrantPlugins
           b.use Network
           b.use Provision
           b.use Vagrant::Action::Builtin::HandleForwardedPortCollisions
-          b.use PrepareNFSSettings
           b.use PrepareNFSValidIds
           b.use SyncedFolderCleanup
           b.use SyncedFolders
+          b.use PrepareNFSSettings
           b.use SetHostname
           #b.use Customize
           b.use ForwardPorts
@@ -47,6 +47,7 @@ module VagrantPlugins
                 b3.use PrepareNFSSettings
                 b3.use PrepareNFSValidIds
                 b3.use SyncedFolderCleanup
+                b3.use PrepareNFSSettings
                 b3.use Destroy
               else
                 b3.use MessageWillNotDestroy
@@ -96,6 +97,7 @@ module VagrantPlugins
             b2.use PrepareNFSSettings
             b2.use PrepareNFSValidIds
             b2.use SyncedFolderCleanup
+            b2.use PrepareNFSSettings
             b2.use Export
             b2.use PackageVagrantfile
             b2.use Package
