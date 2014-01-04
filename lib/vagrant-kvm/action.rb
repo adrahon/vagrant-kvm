@@ -22,10 +22,10 @@ module VagrantPlugins
             b.use PrepareNFSSettings
           else
             #FIXME
-            b.use PrepareNFSSettings
             b.use PrepareNFSValidIds
             b.use SyncedFolderCleanup
             b.use SyncedFolders
+            b.use PrepareNFSSettings
           end
           b.use SetHostname
           #b.use Customize
@@ -54,6 +54,7 @@ module VagrantPlugins
                 if Vagrant::VERSION < "1.4.0"
                   b3.use PruneNFSExports
                 else
+                  b3.use PrepareNFSSettings
                   b3.use PrepareNFSValidIds
                   b3.use SyncedFolderCleanup
                 end
@@ -106,6 +107,7 @@ module VagrantPlugins
             if Vagrant::VERSION < "1.4.0"
               b2.use PruneNFSExports
             else
+              b2.use PrepareNFSSettings
               b2.use PrepareNFSValidIds
               b2.use SyncedFolderCleanup
             end
