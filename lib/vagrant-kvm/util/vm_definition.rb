@@ -8,10 +8,10 @@ module VagrantPlugins
     module Util
       class VmDefinition
         include Errors
+        include DefinitionAttributes
 
         # Attributes of the VM
         attr_accessor :memory
-        attr_reader :attributes
 
         def self.list_interfaces(definition)
           nics = {}
@@ -36,7 +36,7 @@ module VagrantPlugins
         end
 
         def initialize(definition)
-          @attributes = {
+          self.attributes = {
             :uuid         => nil,
             :gui          => nil,
             :vnc_autoport => false,
@@ -50,7 +50,7 @@ module VagrantPlugins
           @memory = size_in_bytes(doc.elements["/domain/memory"].text,
                                   memory_unit)
 
-          @attributes.merge!({
+          update({
             :name        => doc.elements["/domain/name"].text,
             :cpus        => doc.elements["/domain/vcpu"].text,
             :arch        => doc.elements["/domain/os/type"].attributes["arch"],
@@ -66,17 +66,17 @@ module VagrantPlugins
           })
           model_node = doc.elements["//devices/interface/model"]
           if model_node
-            @attributes.merge!({
-            :model_node  => model_node,
-            :network_model => model_node.attributes["type"]
+            update({
+              :model_node  => model_node,
+              :network_model => model_node.attributes["type"]
             })
           end
           if doc.elements["/domain/uuid"]
-            @attributes.merge!({:uuid => doc.elements["/domain/uuid"].text})
+            update({:uuid => doc.elements["/domain/uuid"].text})
           end
           if doc.elements["//devices/graphics"]
             attrs = doc.elements["//devices/graphics"].attributes
-            @attributes.merge!({
+            update({
               :gui          => attrs["type"] == 'vnc',
               :vnc_port     => attrs['port'].to_i,
               :vnc_autoport => attrs['autoport'] == 'yes',
@@ -86,31 +86,31 @@ module VagrantPlugins
         end
 
         def as_xml
-          if @attributes[:qemu_bin]
+          if attributes[:qemu_bin]
             # user specified path of qemu binary
-            qemu_bin_list = [@attributes[:qemu_bin]]
+            qemu_bin_list = [attributes[:qemu_bin]]
           else
             # RedHat and Debian-based systems have different executable names
             # depending on version/architectures
-            qemu_bin_list = ['/usr/bin/qemu-system-x86_64'] if @attributes[:arch].match(/64$/)
-            qemu_bin_list = ['/usr/bin/qemu-system-i386']   if @attributes[:arch].match(/^i.86$/)
+            qemu_bin_list = ['/usr/bin/qemu-system-x86_64'] if get(:arch).match(/64$/)
+            qemu_bin_list = ['/usr/bin/qemu-system-i386']   if get(:arch).match(/^i.86$/)
             qemu_bin_list += [ '/usr/bin/qemu-kvm', '/usr/bin/kvm' ]
           end
 
           qemu_bin = qemu_bin_list.detect { |binary| File.exists? binary }
           if not qemu_bin
             raise Errors::KvmNoQEMUBinary,
-            :cause => @attributes[:qemu_bin] ?
-            "Vagrantfile (specified binary: #{@attributes[:qemu_bin]})" : "QEMU installation"
+            :cause => attributes[:qemu_bin] ?
+            "Vagrantfile (specified binary: #{attributes[:qemu_bin]})" : "QEMU installation"
           end
 
-          xml = KvmTemplateRenderer.render("libvirt_domain", @attributes.merge({
+          xml = KvmTemplateRenderer.render("libvirt_domain", attributes.merge({
                  :memory => size_from_bytes(@memory, "KiB")}))
           xml
         end
 
         def get_memory(unit="bytes")
-          size_from_bytes(@attributes[:memory], unit)
+          size_from_bytes(get(:memory), unit)
         end
 
         def update(args={})
@@ -120,11 +120,7 @@ module VagrantPlugins
               args[:mac] = format_mac(args[:mac])
             end
           }
-          @attributes.merge!(args)
-        end
-
-        def get(key)
-          @attributes[key]
+          super(args)
         end
 
         # Takes a quantity and a unit
