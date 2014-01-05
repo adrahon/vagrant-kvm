@@ -33,8 +33,6 @@ module VagrantPlugins
           b.use Boot
           if Vagrant::VERSION >= "1.3.0"
             b.use WaitForCommunicator, [:running]
-	  else
-	    sleep 1
           end
           b.use ShareFolders
         end
