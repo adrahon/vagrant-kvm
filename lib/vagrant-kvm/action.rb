@@ -15,10 +15,18 @@ module VagrantPlugins
         Vagrant::Action::Builder.new.tap do |b|
           b.use Network
           b.use Provision
-          b.use PruneNFSExports
           b.use Vagrant::Action::Builtin::HandleForwardedPortCollisions
-          b.use NFS
-          b.use PrepareNFSSettings
+          if Vagrant::VERSION < "1.4.0"
+            b.use PruneNFSExports
+            b.use NFS
+            b.use PrepareNFSSettings
+          else
+            #FIXME
+            b.use PrepareNFSValidIds
+            b.use SyncedFolderCleanup
+            b.use SyncedFolders
+            b.use PrepareNFSSettings
+          end
           b.use SetHostname
           #b.use Customize
           b.use ForwardPorts
@@ -43,7 +51,13 @@ module VagrantPlugins
                 b3.use ConfigValidate
                 b3.use EnvSet, :force_halt => true
                 b3.use action_halt
-                b3.use PruneNFSExports
+                if Vagrant::VERSION < "1.4.0"
+                  b3.use PruneNFSExports
+                else
+                  b3.use PrepareNFSSettings
+                  b3.use PrepareNFSValidIds
+                  b3.use SyncedFolderCleanup
+                end
                 b3.use Destroy
               else
                 b3.use MessageWillNotDestroy
@@ -90,6 +104,13 @@ module VagrantPlugins
 
             b2.use SetupPackageFiles
             b2.use action_halt
+            if Vagrant::VERSION < "1.4.0"
+              b2.use PruneNFSExports
+            else
+              b2.use PrepareNFSSettings
+              b2.use PrepareNFSValidIds
+              b2.use SyncedFolderCleanup
+            end
             b2.use Export
             b2.use PackageVagrantfile
             b2.use Package
@@ -270,6 +291,7 @@ module VagrantPlugins
       autoload :Package, action_root.join("package")
       autoload :PrepareGui, action_root.join("prepare_gui")
       autoload :PrepareNFSSettings, action_root.join("prepare_nfs_settings")
+      autoload :PrepareNFSValidIds, action_root.join("prepare_nfs_valid_ids")
       autoload :PruneNFSExports, action_root.join("prune_nfs_exports")
       autoload :Resume, action_root.join("resume")
       autoload :SetName, action_root.join("set_name")
