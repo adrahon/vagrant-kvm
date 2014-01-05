@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/adrahon/vagrant-kvm.png)](https://travis-ci.org/adrahon/vagrant-kvm)
+
 # Vagrant KVM Provider
 
 This is a [Vagrant](http://www.vagrantup.com) 1.1+ plugin that adds a KVM
