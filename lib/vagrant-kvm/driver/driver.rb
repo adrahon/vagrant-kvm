@@ -216,27 +216,37 @@ module VagrantPlugins
           @pool = init_storage_directory(pool_path, @pool_name)
         end
 
-        def init_storage_directory(pool_path, pool_name)
+        def init_storage_directory(pool_path, pool_name, permission={})
           begin
             # Get the storage pool if it exists
             pool = @conn.lookup_storage_pool_by_name(pool_name)
             @logger.info("Init storage pool #{pool_name}")
           rescue Libvirt::RetrieveError
-            owner = Process.uid
-            group = Process.gid
-            storage_pool_xml = <<-EOF
+            if permission.empty?
+             storage_pool_xml = <<-EOF
+              <pool type="dir">
+              <name>#{pool_name}</name>
+              <target>
+                <path>#{pool_path}</path>
+              </target>
+              </pool>
+             EOF
+            else
+             @logger.info("Init storage pool with owner: #{permission[:owner]}")
+             storage_pool_xml = <<-EOF
               <pool type="dir">
               <name>#{pool_name}</name>
               <target>
                 <path>#{pool_path}</path>
                 <permissions>
-                 <owner>#{owner}</owner>
-                 <group>#{group}</group>
-                 <mode>774</mode>
+                 <owner>#{permission[:owner]}</owner>
+                 <group>#{permission[:group]}</group>
+                 <mode>#{permission[:mode]}</mode>
                 </permissions>
               </target>
               </pool>
-            EOF
+             EOF
+            end
             pool = @conn.define_storage_pool_xml(storage_pool_xml)
             pool.build
             @logger.info("Creating storage pool #{pool_name} in #{pool_path}")
