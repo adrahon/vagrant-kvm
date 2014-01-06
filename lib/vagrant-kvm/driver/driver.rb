@@ -264,6 +264,24 @@ module VagrantPlugins
           Util::VmDefinition.list_interfaces(domain.xml_desc)
         end
 
+        def network_state?(network_name)
+          begin
+            network = @conn.lookup_network_by_name(network_name)
+            network.active?
+          rescue Libvirt::RetrieveError
+            false
+          end
+        end
+
+        def start_network(network_name)
+          begin
+            network = @conn.lookup_network_by_name(network_name)
+            network.create unless network.active?
+          rescue Libvirt::RetrieveError
+            false
+          end
+        end
+
         def read_state
           domain = @conn.lookup_domain_by_uuid(@uuid)
           state, reason = domain.state
