@@ -170,6 +170,7 @@ module VagrantPlugins
           b.use CheckKvm
           b.use Call, Created do |env, b2|
             if env[:result]
+              b2.use ResumeNetwork
               b2.use Resume
             else
               b2.use MessageNotCreated
@@ -217,6 +218,7 @@ module VagrantPlugins
 
               b3.use Call, IsPaused do |env3, b4|
                 if env3[:result]
+                  b4.use ResumeNetwork
                   b4.use Resume
                   next
                 end
@@ -297,6 +299,7 @@ module VagrantPlugins
       autoload :PrepareNFSValidIds, action_root.join("prepare_nfs_valid_ids")
       autoload :PruneNFSExports, action_root.join("prune_nfs_exports")
       autoload :Resume, action_root.join("resume")
+      autoload :ResumeNetwork, action_root.join("resume_network")
       autoload :SetName, action_root.join("set_name")
       autoload :SetupPackageFiles, action_root.join("setup_package_files")
       autoload :ShareFolders, action_root.join("share_folders")

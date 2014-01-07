@@ -14,23 +14,18 @@ module VagrantPlugins
         attr_accessor :memory
 
         def self.list_interfaces(definition)
-          nics = {}
-          ifcount = 0
-          doc = REXML::Document new definition
+          nics = []
+          doc = REXML::Document.new definition
           # look for user mode interfaces
           doc.elements.each("//devices/interface[@type='user']") do |item|
-            ifcount += 1
-            adapter = ifcount
-            nics[adapter] ||= {}
-            nics[adapter][:type] = :user
+            nics << {:type => :user, :network => nil }
           end
           # look for interfaces on virtual network
           doc.elements.each("//devices/interface[@type='network']") do |item|
-            ifcount += 1
-            adapter = ifcount
-            nics[adapter] ||= {}
-            nics[adapter][:network] = item.elements["source"].attributes["network"]
-            nics[adapter][:type] = :network
+            nics << {
+              :type => :network,
+              :network => item.elements["source"].attributes["network"].to_s
+            }
           end
           nics
         end
