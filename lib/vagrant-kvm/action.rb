@@ -31,6 +31,9 @@ module VagrantPlugins
           #b.use Customize
           b.use ForwardPorts
           b.use Boot
+          if Vagrant::VERSION >= "1.3.0"
+            b.use WaitForCommunicator, [:running]
+          end
           b.use ShareFolders
         end
       end
