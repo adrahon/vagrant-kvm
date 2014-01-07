@@ -76,9 +76,13 @@ module VagrantPlugins
             # create volume
             box_name = @env[:machine].config.vm.box
             driver = @env[:machine].provider.driver
-            pool_name = 'vagrant_' + Process.uid.to_s + '_' + box_name
-            driver.init_storage_directory(File.dirname(old_path), pool_name)
-            driver.create_volume(new_disk, box.capacity, new_path, args[:image_type], pool_name, old_path, args[:image_backing])
+            userid = Process.uid.to_s
+            groupid = Process.gid.to_s
+            pool_name = 'vagrant_' + userid + '_' + box_name
+            driver.init_storage_directory(File.dirname(old_path), pool_name,
+                {:owner=>userid, :group=>groupid, :mode=> "775"})
+            driver.create_volume(new_disk, box.capacity, new_path,
+                args[:image_type], pool_name, old_path, args[:image_backing])
             driver.free_storage_pool(pool_name)
           else
             @logger.info "Image type #{args[:image_type]} is not supported"
