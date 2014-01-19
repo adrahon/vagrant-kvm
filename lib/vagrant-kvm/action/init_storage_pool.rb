@@ -9,7 +9,9 @@ module VagrantPlugins
 
         def call(env)
           # Create a storage pool in tmp_path if it doesn't exist
-          Driver::Driver.new.init_storage(env[:tmp_path])
+          userid = Process.uid.to_s
+          groupid = Process.gid.to_s
+          Driver::Driver.new.init_storage(env[:tmp_path], userid, groupid)
 
           @app.call(env)
         end
