@@ -390,7 +390,7 @@ module VagrantPlugins
           to_path = File.dirname(xml_path)
           new_path = File.join(to_path, new_disk)
           @logger.info("create disk image #{new_path}")
-          run_command("qemu-img convert -S 16k -O qcow2 #{disk_image} #{new_path}")
+          run_command("qemu-img convert -c -S 16k -O qcow2 #{disk_image} #{new_path}")
           # write out box.xml
           definition.update(:disk => new_disk,:gui  => false,:uuid => nil)
           File.open(xml_path,'w') do |f|
