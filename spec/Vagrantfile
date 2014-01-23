@@ -1,11 +1,22 @@
 Vagrant.configure('2') do |config|
-  # You should use VMware (Workstation or Fusion) to run this box
+  # You should use VMware (Workstation or Fusion) or KVM(intel) to run this box
   # because VirtualBox doesn't support nested virtualization, which
   # is required to run KVM (https://www.virtualbox.org/ticket/4032)
   config.vm.provider :vmware_fusion do |vmware, override|
     override.vm.box = 'vagrant-kvm'
     override.vm.box_url = 'https://s3.amazonaws.com/life360-vagrant/raring64.box'
     vmware.vmx['vhv.enable'] = true # nested virtualization
+  end
+
+  # Please add /etc/modprobe.d/kvm.conf that contains
+  #
+  #   options kvm-intel nested=1
+  #   options kvm-amd   nested=1
+  #
+  # to use KVM with nested virtulization support.
+  config.vm.provider :kvm do |kvm, override|
+    override.vm.box     = 'vagrant-kvm'
+    override.vm.box_url = 'https://downloads.da-cha.jp/public_file/vagrant-kvm.box'
   end
 
   config.vm.provision :shell, inline: <<-SH
