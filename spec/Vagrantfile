@@ -22,6 +22,12 @@ Vagrant.configure('2') do |config|
   config.vm.provision :shell, inline: <<-SH
     set -x
 
+    export DEBIAN_FRONTEND=noninteractive
+
+    ## when use apt-cacher
+    #echo 'Acquire::http::Proxy "http://192.168.123.1:3142";' > /tmp/01proxy
+    #sudo mv /tmp/01proxy /etc/apt/apt.conf.d/01proxy
+
     sudo apt-get update
 
     sudo apt-get install -y ruby1.9.1-dev
