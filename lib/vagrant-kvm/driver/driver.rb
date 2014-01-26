@@ -57,6 +57,7 @@ module VagrantPlugins
             end
           end
 
+          @conn.capabilities
           @version = read_version
           if @version < "1.2.0"
             raise Errors::KvmInvalidVersion,
