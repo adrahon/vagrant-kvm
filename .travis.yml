@@ -5,6 +5,5 @@ before_install:
   - sudo apt-get install -qq libvirt-dev libvirt-bin qemu-kvm qemu
   - sudo usermod -G kvm,libvirtd $USER
 rvm:
-  - 1.9.3
   - 2.0.0
 script: "bundle exec rspec spec/vagrant-kvm/"
