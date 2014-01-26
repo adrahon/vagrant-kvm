@@ -6,6 +6,5 @@ before_install:
   - sudo usermod -G kvm,libvirtd $USER
   - gem install --version '~> 1.5.2' bundler
 rvm:
-  - 1.9.3
   - 2.0.0
 script: "bundle exec rspec spec/vagrant-kvm/"
