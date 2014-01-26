@@ -119,3 +119,4 @@ $ bundle exec rake box:remove
 ```
 
 If you're Mac user and you have Vagrant and VMware Fusion, you can use bundled box for development. See `spec/Vagrantfile` for details.
+If you're Linux user(of cource, you try to use KVM), You are lucky to run development version of vagrant-kvm on Vagrant, QEMU/KVM and vagrant-kvm itself. You can use bundled box for development. See `spec/Vagrantfile` for details.
