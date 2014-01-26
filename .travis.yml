@@ -4,6 +4,7 @@ before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq libvirt-dev libvirt-bin qemu-kvm qemu
   - sudo usermod -G kvm,libvirtd $USER
+  - gem install --version '~> 1.5.2' bundler
 rvm:
   - 1.9.3
   - 2.0.0
