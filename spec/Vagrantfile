@@ -31,14 +31,16 @@ Vagrant.configure('2') do |config|
 
     sudo apt-get update
 
-    sudo apt-get install -y ruby1.9.1-dev
-    sudo apt-get install -y libvirt-dev libvirt-bin
+    sudo apt-get install -y ruby2.0-dev
+    ## NOTE qemu-bin should be installed before libvirt-bin
     sudo apt-get install -y qemu qemu-kvm
+    sudo apt-get install -y libvirt-dev libvirt-bin
     sudo apt-get install -y git
     sudo apt-get install -y nfs-kernel-server
     sudo apt-get install -y bsdtar
     sudo apt-get install -y libxml2-dev libxslt-dev
+    sudo apt-get install -qq redir
 
-    [[ `sudo gem list | grep bundler` ]] || sudo gem install bundler
+    [[ `sudo gem list | grep bundler` ]] || sudo gem install --version '~> 1.5.2' bundler
   SH
 end
