@@ -109,7 +109,7 @@ $ bundle exec rake box:prepare
 Once box is added and prepared, you can run specs:
 
 ```bash
-$ bundle exec rake spec
+$ bundle exec rspec spec/vagrnt-kvm/
 ```
 
 When you're done, feel free to remove the box.
@@ -118,5 +118,6 @@ When you're done, feel free to remove the box.
 $ bundle exec rake box:remove
 ```
 
+Supported ruby version is 2.0.x on vagrant 1.4.0 and later. You may need to use a recent OS version for development base such as Ubuntu Saucy(13.10), Trusy(14.04) or Fedora 19,20.
 If you're Mac user and you have Vagrant and VMware Fusion, you can use bundled box for development. See `spec/Vagrantfile` for details.
 If you're Linux user(of cource, you try to use KVM), You are lucky to run development version of vagrant-kvm on Vagrant, QEMU/KVM and vagrant-kvm itself. You can use bundled box for development. See `spec/Vagrantfile` for details.
