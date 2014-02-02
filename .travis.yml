@@ -3,8 +3,12 @@ before_install:
   - sudo add-apt-repository -y ppa:miurahr/vagrant
   - sudo apt-get update -qq
   - sudo apt-get install -qq libvirt-dev libvirt-bin qemu-kvm qemu
-  - sudo usermod -G kvm,libvirtd $USER
   - gem install --version '~> 1.5.2' bundler
 rvm:
   - 2.0.0
-script: "bundle exec rspec spec/vagrant-kvm/"
+script:
+  - export rvmsudo_secure_path=1
+  - rvmsudo ruby --version
+  - rvmsudo gem --version
+  - rvmsudo bundle --version
+  - rvmsudo bundle exec rspec spec/vagrant-kvm/
