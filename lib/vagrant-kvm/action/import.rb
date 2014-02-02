@@ -80,7 +80,7 @@ module VagrantPlugins
             driver = @env[:machine].provider.driver
             userid = Process.uid.to_s
             groupid = Process.gid.to_s
-            modes = {:dir => '0770', :file => '0660'}
+            modes = {:dir => '0775', :file => '0664'}
             label = 'virt_image_t'
             if driver.host_redhat?
               # on Redhat/Fedora, permission is controlled
@@ -111,7 +111,7 @@ module VagrantPlugins
           else
             @logger.info "Image type #{args[:image_type]} is not supported"
           end
-          # TODO cleanup if interupted
+          # TODO cleanup if interrupted
           new_disk
         end
 
