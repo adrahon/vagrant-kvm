@@ -16,7 +16,7 @@ Vagrant.configure('2') do |config|
   # to use KVM with nested virtulization support.
   config.vm.provider :kvm do |kvm, override|
     override.vm.box     = 'vagrant-kvm'
-    override.vm.box_url = 'https://s3-ap-northeast-1.amazonaws.com/miurahr-public/vagrant-kvm.box'
+    override.vm.box_url = 'https://vagrant-kvm-boxes.s3.amazonaws.com/vagrant-kvm.box'
   end
 
   config.vm.provision :shell, inline: <<-SH
