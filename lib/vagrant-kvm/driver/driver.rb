@@ -143,11 +143,11 @@ module VagrantPlugins
           @logger.info("Importing VM #{@name}")
           # create vm definition from xml
           definition = File.open(definition) { |f| Util::VmDefinition.new(f.read) }
-          volume = @pool.lookup_volume_by_name(volume_name)
+          volume_path = lookup_volume_path_by_name(volume_name)
           args = {
             :image_type => "qcow2",
             :qemu_bin => "/usr/bin/qemu",
-            :disk => volume.path,
+            :disk => volume_path,
             :name => @name
           }.merge(args)
           definition.update(args)
@@ -249,6 +249,11 @@ module VagrantPlugins
           rescue Libvirt::RetrieveError
             @logger.info("fail to free storage pool #{pool_name}")
           end
+        end
+
+        def lookup_volume_path_by_name(volume_name)
+          volume = @pool.lookup_volume_by_name(volume_name)
+          volume.path
         end
 
         # Returns a list of network interfaces of the VM.
