@@ -29,14 +29,7 @@ module VagrantPlugins
         # The UUID of the virtual machine we represent
         attr_reader :uuid
 
-        # The QEMU version
-        # XXX sufficient or have to check kvm and libvirt versions?
-        attr_reader :version
-
-        # KVM support status
-        attr_reader :kvm
-
-        def initialize(uuid=nil, conn=nil)
+        def initialize(uuid=nil)
           @logger = Log4r::Logger.new("vagrant::provider::kvm::driver")
           @uuid = uuid
           # This should be configurable
@@ -44,32 +37,8 @@ module VagrantPlugins
           @network_name = "vagrant"
 
           load_kvm_module!
-
-          # Open a connection to the qemu driver
-          begin
-            @conn = conn || Libvirt::open('qemu:///system')
-          rescue Libvirt::Error => e
-            if e.libvirt_code == 5
-              # can't connect to hypervisor
-              raise Vagrant::Errors::KvmNoConnection
-            else
-              raise e
-            end
-          end
-
-          @version = read_version
-          if @version < "1.2.0"
-            raise Errors::KvmInvalidVersion,
-              :actual => @version, :required => ">= 1.2.0"
-          end
-
-          # Get storage pool if it exists
-          begin
-            @pool = @conn.lookup_storage_pool_by_name(@pool_name)
-            @logger.info("Init storage pool #{@pool_name}")
-          rescue Libvirt::RetrieveError
-            # storage pool doesn't exist yet
-          end
+          connect_libvirt_qemu!
+          init_storage_pool!
 
           if @uuid
             # Verify the VM exists, and if it doesn't, then don't worry
@@ -324,17 +293,6 @@ module VagrantPlugins
           VM_STATE[state]
         end
 
-        # Return the qemu version
-        #
-        # @return [String] of the form "1.2.2"
-        def read_version
-          # libvirt returns a number like 1002002 for version 1.2.2
-          maj = @conn.version / 1000000
-          min = (@conn.version - maj*1000000) / 1000
-          rel = @conn.version % 1000
-          "#{maj}.#{min}.#{rel}"
-        end
-
         def read_mac_address
           domain = @conn.lookup_domain_by_uuid(@uuid)
           definition = Util::VmDefinition.new(domain.xml_desc)
@@ -481,6 +439,18 @@ module VagrantPlugins
         end
 
         private
+
+        # Return the qemu version
+        #
+        # @return [String] of the form "1.2.2"
+        def read_version
+          # libvirt returns a number like 1002002 for version 1.2.2
+          maj = @conn.version / 1000000
+          min = (@conn.version - maj*1000000) / 1000
+          rel = @conn.version % 1000
+          "#{maj}.#{min}.#{rel}"
+        end
+
         def load_kvm_module!
           @logger.info("Check KVM kernel modules")
           kvm = File.readlines('/proc/modules').any? { |line| line =~ /kvm_(intel|amd)/ }
@@ -497,6 +467,36 @@ module VagrantPlugins
           # FIXME: see KVM/ARM project
           raise Errors::VagrantKVMError, "KVM is unavailable" unless kvm
           true
+        end
+
+        def connect_libvirt_qemu!
+          # Open a connection to the qemu driver
+          begin
+            @conn = Libvirt::open('qemu:///system')
+            @conn.capabilities
+          rescue Libvirt::Error => e
+            if e.libvirt_code == 5
+              # can't connect to hypervisor
+              raise Vagrant::Errors::KvmNoConnection
+            else
+              raise e
+            end
+          end
+          version = read_version
+          if version < "1.2.0"
+            raise Errors::KvmInvalidVersion,
+              :actual => version, :required => ">= 1.2.0"
+          end
+        end
+
+        def init_storage_pool!
+          # Get storage pool if it exists
+          begin
+            @pool = @conn.lookup_storage_pool_by_name(@pool_name)
+            @logger.info("Init storage pool #{@pool_name}")
+          rescue Libvirt::RetrieveError
+            # storage pool doesn't exist yet
+          end
         end
       end
     end

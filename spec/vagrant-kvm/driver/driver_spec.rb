@@ -9,6 +9,7 @@ module VagrantPlugins
 
         before do
           described_class.any_instance.stub(:load_kvm_module!) { true }
+          described_class.any_instance.stub(:init_storage_pool!) { true }
         end
 
         describe "#import" do
@@ -17,11 +18,11 @@ module VagrantPlugins
           let(:volume) { double(path: "foo") }
           let(:pool) { double(refresh: nil, lookup_volume_by_name: volume) }
           let(:domain) { double(uuid: "abc") }
-          let(:conn) { double(version: 1000000000, 
-                              lookup_storage_pool_by_name: pool, 
+          let(:conn) { double(version: 1000000000,
+                              lookup_storage_pool_by_name: pool,
                               define_domain_xml: domain) }
           subject do
-            described_class.new(nil, conn)
+            described_class.new(nil)
           end
 
           it "does not raise exception" do
