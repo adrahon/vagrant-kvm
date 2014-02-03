@@ -26,7 +26,7 @@ module VagrantPlugins
             :image_backing => provider_config.image_backing,
             :qemu_bin      => provider_config.qemu_bin,
             :cpus          => provider_config.core_number,
-            :memory_size   => provider_config.memory_size,
+            :memory        => provider_config.memory_size,
             :cpu_model     => provider_config.cpu_model,
             :machine_type  => provider_config.machine_type,
             :network_model => provider_config.network_model,
