@@ -20,13 +20,16 @@ module VagrantPlugins
           # Ignore unsupported image types
           args={:image_type => provider_config.image_type}
           args[:image_type] = 'qcow2' unless args[:image_type] == 'raw'
+          # Add memory attribute when specified
+          if provider_config.memory_size
+            args[:memory] = provider_config.memory_size
+          end
 
           # import arguments
           args = {
             :image_backing => provider_config.image_backing,
             :qemu_bin      => provider_config.qemu_bin,
             :cpus          => provider_config.core_number,
-            :memory        => provider_config.memory_size,
             :cpu_model     => provider_config.cpu_model,
             :machine_type  => provider_config.machine_type,
             :network_model => provider_config.network_model,
