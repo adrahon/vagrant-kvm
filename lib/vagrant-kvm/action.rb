@@ -290,6 +290,7 @@ module VagrantPlugins
       autoload :IsSaved, action_root.join("is_saved")
       autoload :MatchMACAddress, action_root.join("match_mac_address")
       autoload :MessageNotCreated, action_root.join("message_not_created")
+      autoload :MessageNotRunning, action_root.join("message_not_running")
       autoload :MessageWillNotDestroy, action_root.join("message_will_not_destroy")
       autoload :Network, action_root.join("network")
       autoload :PackageVagrantfile, action_root.join("package_vagrantfile")
