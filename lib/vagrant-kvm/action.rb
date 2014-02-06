@@ -87,6 +87,7 @@ module VagrantPlugins
                 if !env2[:result]
                   b3.use ForcedHalt
                 end
+                b3.use ResetImagePermission
               end
             else
               b2.use MessageNotCreated
@@ -299,6 +300,7 @@ module VagrantPlugins
       autoload :PrepareNFSSettings, action_root.join("prepare_nfs_settings")
       autoload :PrepareNFSValidIds, action_root.join("prepare_nfs_valid_ids")
       autoload :PruneNFSExports, action_root.join("prune_nfs_exports")
+      autoload :ResetImagePermission, action_root.join("reset_image_permission")
       autoload :Resume, action_root.join("resume")
       autoload :ResumeNetwork, action_root.join("resume_network")
       autoload :SetName, action_root.join("set_name")
