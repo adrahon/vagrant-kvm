@@ -24,8 +24,9 @@ namespace :box do
 
   desc 'Prepares VirtualBox box for usage with KVM.'
   task :prepare do
-    system 'mv ~/.vagrant.d/boxes/vagrant-kvm-specs/virtualbox/ ~/.vagrant.d/boxes/vagrant-kvm-specs/kvm'
-    system %{echo '{"provider":"kvm"}' > ~/.vagrant.d/boxes/vagrant-kvm-specs/kvm/metadata.json}
+    system 'bundle exec vagrant plugin install vagrant-mutate'
+    system 'bundle exec vagrant mutate vagrant-kvm-specs kvm'
+    system 'bundle exec vagrant box remove vagrant-kvm-specs virtualbox'
   end
 
   desc 'Removes testing vagrant box.'
