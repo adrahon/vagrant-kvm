@@ -122,8 +122,8 @@ module VagrantPlugins
           domain = @conn.lookup_domain_by_uuid(@uuid)
           definition = Util::VmDefinition.new(domain.xml_desc)
           volume_path = definition.attributes[:disk]
-          run_command("sudo chown #{userid}:#{groupid} " + volume_path)
-          run_command("sudo chmod 660 " + volume_path)
+          run_root_command("chown #{userid}:#{groupid} " + volume_path)
+          run_root_command("chmod 660 " + volume_path)
         end
 
         def delete
