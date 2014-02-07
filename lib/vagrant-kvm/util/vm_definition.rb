@@ -10,9 +10,6 @@ module VagrantPlugins
         include Errors
         include DefinitionAttributes
 
-        # Attributes of the VM
-        attr_accessor :memory
-
         def self.list_interfaces(definition)
           nics = []
           doc = REXML::Document.new definition
@@ -42,12 +39,11 @@ module VagrantPlugins
           }
           doc = REXML::Document.new definition
           memory_unit = doc.elements["/domain/memory"].attributes["unit"]
-          @memory = size_in_bytes(doc.elements["/domain/memory"].text,
-                                  memory_unit)
-
           update({
             :name        => doc.elements["/domain/name"].text,
             :cpus        => doc.elements["/domain/vcpu"].text,
+            :memory      => size_in_bytes(doc.elements["/domain/memory"].text,
+                                  memory_unit), # always :memory is in bytes
             :arch        => doc.elements["/domain/os/type"].attributes["arch"],
             :machine_type => doc.elements["/domain/os/type"].attributes["machine"],
             :disk        => doc.elements["//devices/disk/source"].attributes["file"],
@@ -99,8 +95,10 @@ module VagrantPlugins
             "Vagrantfile (specified binary: #{attributes[:qemu_bin]})" : "QEMU installation"
           end
 
-          xml = KvmTemplateRenderer.render("libvirt_domain", attributes.merge({
-                 :memory => size_from_bytes(@memory, "KiB")}))
+          xml = KvmTemplateRenderer.render("libvirt_domain",
+                attributes.merge!(:memory_size => get_memory("KiB"),
+                                  :memory_unit => "KiB")
+                )
           xml
         end
 

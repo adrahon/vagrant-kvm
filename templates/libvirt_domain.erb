@@ -3,8 +3,8 @@
   <% if uuid %>
   <uuid><%= uuid %></uuid>
   <% end %>
-  <memory unit='KiB'><%= memory %></memory>
-  <currentMemory unit='KiB'><%= memory%></currentMemory>
+  <memory unit='<%= memory_unit %>'><%= memory_size %></memory>
+  <currentMemory unit='<%= memory_unit %>'><%= memory_size %></currentMemory>
   <vcpu placement='static'><%= cpus %></vcpu>
   <os>
     <type arch='<%= arch %>' machine='<%= machine_type %>'>hvm</type>
