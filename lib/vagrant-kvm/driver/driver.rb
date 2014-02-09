@@ -79,38 +79,53 @@ module VagrantPlugins
         end
 
         # create empty volume in storage pool
-        def create_volume(disk_name, capacity, path, image_type, box_pool, box_path, backing=false)
-          msg = "Creating volume #{disk_name}"
-          msg += " backed by volume #{box_path}" if backing
+        # args: disk_name, capacity, path, image_type, box_pool, box_path,
+        #       backing, owner, group, mode, label
+        def create_volume(args={})
+          args = { # default values
+            :owner => '-1',
+            :group => '-1',
+            :mode  => '0744',
+            :label => 'virt_image_t',
+            :backing => false
+          }.merge(args)
+          msg = "Creating volume #{args[:disk_name]}"
+          msg += " backed by volume #{args[:box_path]}" if args[:backing]
+          capacity = args[:capacity]
           @logger.info(msg)
           storage_vol_xml = <<-EOF
           <volume>
-            <name>#{disk_name}</name>
+            <name>#{args[:disk_name]}</name>
             <allocation>0</allocation>
             <capacity unit="#{capacity[:unit]}">#{capacity[:size]}</capacity>
             <target>
-              <path>#{path}</path>
-              <format type='#{image_type}'/>
+              <path>#{args[:path]}</path>
+              <format type='#{args[:image_type]}'/>
+              <permissions>
+                <owner>#{args[:owner]}</owner>
+                <group>#{args[:group]}</group>
+                <mode>#{args[:mode]}</mode>
+                <label>#{args[:label]}</label>
+              </permissions>
             </target>
-          EOF
-          if backing
+            EOF
+
+          if args[:backing]
             storage_vol_xml += <<-EOF
             <backingStore>
-              <path>#{box_path}</path>
-              <format type='#{image_type}'/>
+              <path>#{args[:box_path]}</path>
+              <format type='#{args[:image_type]}'/>
             </backingStore>
-            EOF
+           EOF
           end
-          storage_vol_xml += <<-EOF
-          </volume>
-          EOF
+          storage_vol_xml += "</volume>"
 
           @logger.debug "Creating volume with XML:\n#{storage_vol_xml}"
-          if backing
+          if args[:backing]
             vol = @pool.create_volume_xml(storage_vol_xml)
           else
-            pool = @conn.lookup_storage_pool_by_name(box_pool)
-            clonevol = pool.lookup_volume_by_path(box_path)
+            pool = @conn.lookup_storage_pool_by_name(args[:box_pool])
+            clonevol = pool.lookup_volume_by_path(args[:box_path])
             # create_volume_xml_from() can convert disk image type automatically.
             vol = @pool.create_volume_xml_from(storage_vol_xml, clonevol)
           end
@@ -216,49 +231,41 @@ module VagrantPlugins
         end
 
         # Initialize or create storage pool
-        def init_storage(base_path)
+        def init_storage(base_path, uid, gid)
           # Storage pool doesn't exist so we create it
           # create dir if it doesn't exist
           # if we let libvirt create the dir it is owned by root
           pool_path = base_path.join("storage-pool")
           pool_path.mkpath unless Dir.exists?(pool_path)
-          @pool = init_storage_directory(pool_path, @pool_name)
+          @pool = init_storage_directory(
+                     :pool_path => pool_path,
+                     :pool_name => @pool_name,
+                     :owner => uid, :group=>gid, :mode=>'755')
         end
 
-        def init_storage_directory(pool_path, pool_name, permission={})
+        def init_storage_directory(args={})
           begin
             # Get the storage pool if it exists
-            pool = @conn.lookup_storage_pool_by_name(pool_name)
-            @logger.info("Init storage pool #{pool_name}")
+            pool = @conn.lookup_storage_pool_by_name(args[:pool_name])
+            @logger.info("Init storage pool #{args[:pool_name]}")
           rescue Libvirt::RetrieveError
-            if permission.empty?
+             @logger.info("Init storage pool with owner: #{args[:owner]}")
              storage_pool_xml = <<-EOF
               <pool type="dir">
-              <name>#{pool_name}</name>
+              <name>#{args[:pool_name]}</name>
               <target>
-                <path>#{pool_path}</path>
-              </target>
-              </pool>
-             EOF
-            else
-             @logger.info("Init storage pool with owner: #{permission[:owner]}")
-             storage_pool_xml = <<-EOF
-              <pool type="dir">
-              <name>#{pool_name}</name>
-              <target>
-                <path>#{pool_path}</path>
+                <path>#{args[:pool_path]}</path>
                 <permissions>
-                 <owner>#{permission[:owner]}</owner>
-                 <group>#{permission[:group]}</group>
-                 <mode>#{permission[:mode]}</mode>
+                 <owner>#{args[:owner]}</owner>
+                 <group>#{args[:group]}</group>
+                 <mode>#{args[:mode]}</mode>
                 </permissions>
               </target>
               </pool>
              EOF
-            end
             pool = @conn.define_storage_pool_xml(storage_pool_xml)
             pool.build
-            @logger.info("Creating storage pool #{pool_name} in #{pool_path}")
+            @logger.info("Creating storage pool #{args[:pool_name]} in #{args[:pool_path]}")
           end
           pool.create unless pool.active?
           pool.refresh
@@ -431,6 +438,46 @@ module VagrantPlugins
           rescue Libvirt::RetrieveError
             false
           end
+        end
+
+        # Checks which Linux OS variants
+        #
+        # host_redhat?
+        # host_debian?
+        # host_gentoo?
+        # host_arch?
+        # @return [Boolean]
+        def host_redhat?
+          release_file = Pathname.new("/etc/redhat-release")
+
+          if release_file.exist?
+            release_file.open("r:ISO-8859-1:UTF-8") do |f|
+              contents = f.gets
+              return true if contents =~ /^CentOS/ # CentOS
+              return true if contents =~ /^Fedora/ # Fedora
+              return true if contents =~ /^Korora/ # Korora
+
+              # Oracle Linux < 5.3
+              return true if contents =~ /^Enterprise Linux Enterprise Linux/
+
+              # Red Hat Enterprise Linux and Oracle Linux >= 5.3
+              return true if contents =~ /^Red Hat Enterprise Linux/
+            end
+          end
+
+          false
+        end
+
+        def host_debian?
+          File.exists?("/etc/debian_version")
+        end
+
+        def host_gentoo?
+          File.exists?("/etc/gentoo-release")
+        end
+
+        def host_arch?
+          File.exist?("/etc/arch-release")
         end
 
         private

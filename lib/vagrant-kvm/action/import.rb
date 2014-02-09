@@ -1,3 +1,5 @@
+require 'etc'
+
 module VagrantPlugins
   module ProviderKvm
     module Action
@@ -81,16 +83,38 @@ module VagrantPlugins
             driver = @env[:machine].provider.driver
             userid = Process.uid.to_s
             groupid = Process.gid.to_s
+            modes = {:dir => '0775', :file => '0664'}
+            label = 'virt_image_t'
+            if driver.host_redhat?
+              # on Redhat/Fedora, permission is controlled
+              # with only SELinux
+              modes = {:dir => '0777',:file => '0666'}
+            elsif driver.host_debian?
+              groupid = Etc.getgrnam('kvm').gid.to_s
+            else
+              # XXX: default
+            end
             pool_name = 'vagrant_' + userid + '_' + box_name
-            driver.init_storage_directory(File.dirname(old_path), pool_name,
-                {:owner=>userid, :group=>groupid, :mode=> "775"})
-            driver.create_volume(new_disk, box.capacity, new_path,
-                args[:image_type], pool_name, old_path, args[:image_backing])
+            driver.init_storage_directory(
+                :pool_path => File.dirname(old_path), :pool_name => pool_name,
+                :owner => userid, :group => groupid, :mode => modes[:dir])
+            driver.create_volume(
+                :disk_name => new_disk,
+                :capacity => box.capacity,
+                :path => new_path,
+                :image_type => args[:image_type],
+                :box_pool => pool_name,
+                :box_path => old_path,
+                :backing => args[:image_backing],
+                :owner => userid,
+                :group => groupid,
+                :mode => modes[:file],
+                :label => label)
             driver.free_storage_pool(pool_name)
           else
             @logger.info "Image type #{args[:image_type]} is not supported"
           end
-          # TODO cleanup if interupted
+          # TODO cleanup if interrupted
           new_disk
         end
 
