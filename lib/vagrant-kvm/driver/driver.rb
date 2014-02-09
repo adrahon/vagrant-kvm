@@ -117,6 +117,15 @@ module VagrantPlugins
           @pool.refresh
         end
 
+        def reset_volume_permission(userid, groupid)
+          @logger.info("Revert image owner to #{userid}:#{groupid}")
+          domain = @conn.lookup_domain_by_uuid(@uuid)
+          definition = Util::VmDefinition.new(domain.xml_desc)
+          volume_path = definition.attributes[:disk]
+          run_root_command("chown #{userid}:#{groupid} " + volume_path)
+          run_root_command("chmod 660 " + volume_path)
+        end
+
         def delete
           domain = @conn.lookup_domain_by_uuid(@uuid)
           definition = Util::VmDefinition.new(domain.xml_desc)
