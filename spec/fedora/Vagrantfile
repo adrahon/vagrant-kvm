@@ -1,0 +1,51 @@
+Vagrant.configure('2') do |config|
+  config.vm.provider :kvm do |kvm, override|
+    kvm.gui = true
+    override.vm.box = 'fedora19'
+    override.vm.box_url = 'https://vagrant-kvm-boxes.s3.amazonaws.com/fedora19-amd64-kvm.box'
+  end
+
+  config.vm.provision :shell, inline: <<-SH
+    set -x
+
+    sudo yum install -y libvirt-daemon-kvm.x86_64
+    sudo yum install -y git
+    sudo yum install -y nfs-utils
+    sudo yum install -y bsdtar
+    sudo yum install -y redir
+
+    # for ruby-libvirt
+    sudo yum install -y gcc make
+    sudo yum install -y ruby-devel libvirt-devel
+    sudo yum install -y libxml2-devel libxslt-devel
+
+    # start libvirt daemons
+    sudo systemctl enable libvirt
+    sudo systemctl start libvirt
+    sudo systemctl enable libvirt-guests
+    sudo systemctl start libvirt-guests
+
+    # polkit
+    sudo groupadd virt
+    sudo usermod -a -G virt vagrant
+
+    ## fedora18 and after
+    sudo cp /vagrant/10.virt.rules /etc/polkit-1/rules.d/
+
+    ## polkit local authority compat configuration
+    # sudo yum install -y polkit-pkla-compat
+    # sudo cp /vagrant/50-vagrant-libvirt-access.pkla /etc/polkit-1/localauthority/50-local.d/
+
+    ## SELinux label
+    # sudo yum install -y policycoreutils-python
+    # sudo semanage login -a -s staff_u vagrant
+
+    [[ `sudo gem list | grep bundler` ]] || sudo gem install bundler
+
+    ## Now you can do
+    #cd /vagrant
+    #bundle exec rake box:add
+    #bundle exec rake box:prepare
+
+  SH
+end

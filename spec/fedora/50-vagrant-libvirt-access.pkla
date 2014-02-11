@@ -1,0 +1,6 @@
+[libvirt Management Access]
+Identity=unix-group:virt
+Action=org.libvirt.unix.manage;org.libvirt.unix.monitor
+ResultAny=yes
+ResultInactive=yes
+ResultActive=yes
