@@ -1,0 +1,10 @@
+polkit.addRule(function(action, subject) {
+  polkit.log("action=" + action);
+  polkit.log("subject=" + subject);
+  var now = new Date();
+  polkit.log("now=" + now)
+  if ((action.id == "org.libvirt.unix.manage" || action.id == "org.libvirt.unix.monitor") && subject.isInGroup("virt")) {
+    return polkit.Result.YES;
+  }
+  return null;
+});
