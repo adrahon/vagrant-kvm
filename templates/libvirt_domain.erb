@@ -37,12 +37,16 @@
     <controller type='usb' index='0'>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x2'/>
     </controller>
+  <% if disk_bus == 'sata' %>
     <controller type='sata' index='0'>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x08' function='0x0'/>
     </controller>
+  <% end %>
+  <% if disk_bus == 'scsi' %>
     <controller type='scsi' index='0'>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x09' function='0x0'/>
     </controller>
+  <% end %>
     <controller type='virtio-serial' index='0'>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x05' function='0x0'/>
     </controller>
