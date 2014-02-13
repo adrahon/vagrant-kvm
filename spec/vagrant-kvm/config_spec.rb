@@ -46,6 +46,12 @@ describe  VagrantPlugins::ProviderKvm::Config do
     end
   end
 
+  describe "#disk_bus" do
+    it "defaults to 'virtio'" do
+      should_default(:disk_bus, 'virtio')
+    end
+  end
+
   private
   def should_default(field, default_value)
     instance = described_class.new
