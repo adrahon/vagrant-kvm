@@ -25,12 +25,9 @@ module VagrantPlugins
         def shared_folders
           {}.tap do |result|
             @env[:machine].config.vm.synced_folders.each do |id, data|
-              # Ignore NFS shared folders 
-              #next if data[:nfs]
+              next if data[:disabled]
 
-              unless data[:disabled]
-                # convert to NFS share
-                data[:nfs] = true
+              if data[:nfs]
                 # This to prevent overwriting the actual shared folders data
                 result[id] = data.dup
               end

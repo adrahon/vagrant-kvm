@@ -370,6 +370,14 @@ module VagrantPlugins
           update_domain_xml(:disk_bus => disk_bus)
         end
 
+        def share_folders(folders)
+          update_domain_xml(:p9 => folders)
+        end
+
+        def clear_shared_folders
+          #stub
+        end
+
         def update_domain_xml(options)
           domain = @conn.lookup_domain_by_uuid(@uuid)
           # Use DOMAIN_XML_SECURE to dump ALL options (including VNC password)

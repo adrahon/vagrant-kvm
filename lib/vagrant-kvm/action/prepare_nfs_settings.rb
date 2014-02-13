@@ -11,25 +11,25 @@ module VagrantPlugins
           @app.call(env)
           @machine = env[:machine]
 
-          env[:nfs_host_ip]    = read_host_ip(env[:machine])
-          env[:nfs_machine_ip] = read_machine_ip(env[:machine])
-
+          if using_nfs?
+            env[:nfs_host_ip]    = read_host_ip(env[:machine])
+            env[:nfs_machine_ip] = read_machine_ip(env[:machine])
+          end
         end
 
-        # Returns the IP address of the first host only network adapter
+        def using_nfs?
+            @machine.config.vm.synced_folders.any? { |_, opts| opts[:type] == :nfs }
+        end
+
+        # Returns the IP address of the host
         #
         # @param [Machine] machine
         # @return [String]
         def read_host_ip(machine)
           ip = read_machine_ip(machine)
-          if ip
-            base_ip = ip.split(".")
-            base_ip[3] = "1"
-            return base_ip.join(".")
-          end
-
-          # If no private network configuration, return default ip
-          "192.168.123.1"
+          base_ip = ip.split(".")
+          base_ip[3] = "1"
+          base_ip.join(".")
         end
 
         # Returns the IP address of the guest by looking at the first

@@ -2,7 +2,7 @@
 
 # Vagrant KVM Provider
 
-This is a [Vagrant](http://www.vagrantup.com) 1.1+ plugin that adds a KVM
+This is a [Vagrant](http://www.vagrantup.com) 1.4+ plugin that adds a KVM
 provider to Vagrant, allowing Vagrant to control and provision KVM/QEMU VM.
 
 ## Requirements
@@ -24,6 +24,11 @@ a lot faster. In most cases you want to use qcow2.
 
 OVF boxes conversion as been removed, you should use `vagrant-mutate` instead.
 
+Synced folders are now provided by QEMU/KVM p9fs share feature in default.
+You can also use NFS for file share using :nfs option.
+Ubuntu host got libvirt bug
+https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/943680
+
 ## Features/Limitations
 
 * Provides the same workflow as the Vagrant VirtualBox provider.
@@ -35,7 +40,7 @@ OVF boxes conversion as been removed, you should use `vagrant-mutate` instead.
 
 ## Usage
 
-Install using standard Vagrant 1.1+ plugin installation methods. After
+Install using standard Vagrant 1.4+ plugin installation methods. After
 installing, `vagrant up` and specify the `kvm` provider. An example is
 shown below.
 
