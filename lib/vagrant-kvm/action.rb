@@ -21,13 +21,14 @@ module VagrantPlugins
           b.use SyncedFolders
           b.use PrepareNFSSettings
           b.use SetHostname
-          #b.use Customize
+          b.use Customize, "pre-boot"
           b.use ForwardPorts
           b.use Boot
           if Vagrant::VERSION >= "1.3.0"
             b.use WaitForCommunicator, [:running]
           end
           b.use ShareFolders
+          b.use Customize, "post-boot"
         end
       end
 
@@ -249,6 +250,7 @@ module VagrantPlugins
             if !env[:result]
               b2.use CheckBox
               b2.use SetName
+              b2.use Customize, "pre-import"
               b2.use Import
               b2.use MatchMACAddress
             end
@@ -265,6 +267,7 @@ module VagrantPlugins
       autoload :CheckKvm, action_root.join("check_kvm")
       autoload :CheckRunning, action_root.join("check_running")
       autoload :ClearForwardedPorts, action_root.join("clear_forwarded_ports")
+      autoload :Customize, action_root.join("customize")
       autoload :Created, action_root.join("created")
       autoload :Destroy, action_root.join("destroy")
       autoload :DestroyConfirm, action_root.join("destroy_confirm")
