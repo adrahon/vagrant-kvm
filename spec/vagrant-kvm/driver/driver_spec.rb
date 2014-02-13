@@ -18,6 +18,8 @@ module VagrantPlugins
           let(:pool) { double(refresh: nil, lookup_volume_by_name: volume) }
           let(:domain) { double(uuid: "abc") }
           let(:conn) { double(version: 1000000000, 
+                              capabilities: '<xml></xml>',
+                              type: "QEMU", 
                               lookup_storage_pool_by_name: pool, 
                               define_domain_xml: domain) }
           subject do

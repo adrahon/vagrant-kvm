@@ -49,6 +49,7 @@ module VagrantPlugins
           # Open a connection to the qemu driver
           begin
             @conn = conn || Libvirt::open('qemu:///system')
+            cap_xml = @conn.capabilities
           rescue Libvirt::Error => e
             if e.libvirt_code == 5
               # can't connect to hypervisor
@@ -56,6 +57,12 @@ module VagrantPlugins
             else
               raise e
             end
+          end
+
+          hv_type = @conn.type.to_s
+          unless hv_type == "QEMU"
+            raise Errors::KvmUnsupportedHypervisor,
+              :actual => hv_type, :required => "QEMU"
           end
 
           @version = read_version
