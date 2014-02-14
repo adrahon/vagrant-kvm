@@ -81,11 +81,11 @@
       <address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x0'/>
     </memballoon>
    <% if p9 %>
-     <% p9.each do |p| %>
+     <% p9.each_with_index do |p, index| %>
      <filesystem type='mount' accessmode='squash'>
        <source dir='<%= p[:hostpath] %>'/>
        <target dir='<%= p[:mount_tag] %>'/>
-       <address type='pci' domain='0x0000' bus='0x00' slot='0x08' function='0x0' />
+       <address type='pci' domain='0x0000' bus='0x00' slot='<%= "0x%02x"%(16+index) %>' function='0x0' />
      </filesystem>
      <% end %>
    <% end %>
