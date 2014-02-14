@@ -31,8 +31,9 @@ module VagrantPlugins
             :machine_type  => provider_config.machine_type,
             :network_model => provider_config.network_model,
             :video_model   => provider_config.video_model,
-            :disk_bus      => provider_config.disk_bus
           }.merge(args)
+
+          args[:disk_bus]   = provider_config.disk_bus if provider_config.disk_bus
 
           # Import the virtual machine
           storage_path = File.join(@env[:tmp_path],"/storage-pool")
