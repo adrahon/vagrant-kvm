@@ -71,8 +71,8 @@ describe  VagrantPlugins::ProviderKvm::Config do
   end
 
   describe "#disk_bus" do
-    it "defaults to 'virtio'" do
-      should_default(:disk_bus, 'virtio')
+    it "defaults to nil" do
+      should_default(:disk_bus, nil)
     end
   end
 

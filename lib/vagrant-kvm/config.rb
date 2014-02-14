@@ -164,7 +164,7 @@ module VagrantPlugins
         @machine_type = "pc-1.2" if @machine_type == UNSET_VALUE
         @network_model = "virtio" if @network_model == UNSET_VALUE
         @video_model = "cirrus" if @video_model == UNSET_VALUE
-        @disk_bus = 'virtio' if @disk_bus == UNSET_VALUE
+        @disk_bus = nil if @disk_bus == UNSET_VALUE
       end
 
       def validate(machine)
