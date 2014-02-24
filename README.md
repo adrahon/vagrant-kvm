@@ -7,7 +7,7 @@ provider to Vagrant, allowing Vagrant to control and provision KVM/QEMU VM.
 
 ## Requirements
 
-This plugin requires QEMU 1.2+, it has only been tested on Fedora 18+,
+This plugin requires QEMU 1.1+, it has only been tested on Fedora 18+,
 Debian Wheezy, Ubuntu 12.04(LTS) Precise and Ubuntu 13.04 Raring at the moment.
 
 This plugin requires redir package, and `libvirt-dev` (Debian/Ubuntu) or

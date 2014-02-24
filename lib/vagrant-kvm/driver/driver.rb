@@ -58,9 +58,9 @@ module VagrantPlugins
           end
 
           @version = read_version
-          if @version < "1.2.0"
+          if @version < "1.1.0"
             raise Errors::KvmInvalidVersion,
-              :actual => @version, :required => ">= 1.2.0"
+              :actual => @version, :required => ">= 1.1.0"
           end
 
           # Get storage pool if it exists
