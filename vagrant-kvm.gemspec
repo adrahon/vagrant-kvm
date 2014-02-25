@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
   s.license       = 'MIT'
 
   s.required_rubygems_version = ">= 1.3.6"
-  s.requirements << 'KVM/QEMU, v1.2.0 or greater'
+  s.requirements << 'KVM/QEMU, v1.1.0 or greater'
 
   s.add_runtime_dependency "ruby-libvirt", "~> 0.4.0"
 
