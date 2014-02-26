@@ -35,13 +35,15 @@ OVF boxes conversion as been removed, you should use `vagrant-mutate` instead.
 
 ## Known issues
 
-* Some versions of Ubuntu has a bug not to work vagrant-kvm on disk image.
-  Here is work around about this. It is a bug on AppArmor OS security framework.
+* Some versions of Ubuntu kernel has a bug that vagrant-kvm fails
+  to do `vagrant up` with permission error.
+  If you catch it, please run following command to work around.
+  It is a kernel bug on AppArmor security framework,
+  the command disables access control for libvirt helper.
 
 ```bash
 sudo aa-complain /usr/lib/libvirt/virt-aa-helper
 ```
-
 
 ## Usage
 
