@@ -33,6 +33,16 @@ OVF boxes conversion as been removed, you should use `vagrant-mutate` instead.
 * Requires backporting qemu and libvirt from experimental (Debian) or raring (Ubuntu)
 * Use qcow2 backing image by default, which should make VM creation very fast
 
+## Known issues
+
+* Some versions of Ubuntu has a bug not to work vagrant-kvm on disk image.
+  Here is work around about this. It is a bug on AppArmor OS security framework.
+
+```bash
+sudo aa-complain /usr/lib/libvirt/virt-aa-helper
+```
+
+
 ## Usage
 
 Install using standard Vagrant 1.1+ plugin installation methods. After
