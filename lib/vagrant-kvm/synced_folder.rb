@@ -9,9 +9,13 @@ module VagrantPlugins
       def prepare(machine, folders, _opts)
         defs = []
         folders.each do |id, data|
+          # access_mode can be squash, mapped, or passthrough
+          accessmode = data.has_key?(:access_mode)? data[:access_mode] : 'squash'
+          accessmode = 'squash' unless accessmode == 'mapped' || accessmode == 'passthrough'
           defs << {
             :mount_tag => id,
-            :hostpath => data[:hostpath].to_s
+            :hostpath => data[:hostpath].to_s,
+            :accessmode => accessmode
           }
         end
 
@@ -21,7 +25,7 @@ module VagrantPlugins
       def enable(machine, folders, _opts)
         # Go through each folder and mount
         machine.ui.info("mounting p9 share in guest")
-	# Only mount folders that have a guest path specified.
+        # Only mount folders that have a guest path specified.
         mount_folders = {}
         folders.each do |id, opts|
           mount_folders[id] = opts.dup if opts[:guestpath]
