@@ -23,7 +23,7 @@ This plugin requires
  * `redir` `dnsmasq-base` `bridge-utils`
 
 - For `ruby-libvirt` gems installation dependency:
- * `build-essential`, `libvirt-dev`
+ * `build-essential` `ruby2.0-dev` `libvirt-dev` `libxslt1-dev` `libxml2-dev`
 
 Some kernel version has a bug that causes a permission error on image.
 You are strongly recommended to upgrade a `linux-image` up-to-date.
@@ -47,7 +47,7 @@ for Ubuntu 12.04(LTS) at https://launchpad.net/~miurahr/+archive/vagrant
  * `redir`
 
 - For `ruby-libvirt` gems installation dependency:
- * `libvirt-devel`
+ * `libvirt-devel` `libxslt-devel` `libxml2-devel`
 
 ### ArchLinux requirements
 
