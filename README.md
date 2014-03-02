@@ -10,11 +10,8 @@ provider to Vagrant, allowing Vagrant to control and provision KVM/QEMU VM.
 This plugin requires QEMU 1.1+, it has only been tested on Fedora 18+,
 Debian Wheezy, Ubuntu 12.04(LTS) Precise and Ubuntu 13.04 Raring at the moment.
 
-This plugin requires redir package, and `libvirt-dev` (Debian/Ubuntu) or
-`libvirt-devel` (openSUSE)
-
-You can use a backported KVM/QEMU 1.4 with Private Package Archive(PPA)
-for Ubuntu 12.04(LTS) at https://launchpad.net/~miurahr/+archive/vagrant
+This plugin requires several library and helper utils packages.
+Consult the [Requirements section in INSTALL.md](https://github.com/adrahon/vagrant-kvm/blob/master/INSTALL.md)
 
 ## Recent changes
 
@@ -109,27 +106,24 @@ set to vga.
 to `clone`, the image disk will be copied rather than use the original box
 image. This is slower but allows multiple VMs to be booted at the same time.
 
-## Specs
 
-To run specs, you first need to add and prepare the Vagrant box which will be used.
+## Comparison with [Vagrant-libvirt](https://github.com/pradels/vagrant-libvirt)
 
-```bash
-$ bundle exec rake box:add
-$ bundle exec rake box:prepare
-```
+Vagrant-kvm is a KVM/Qemu provider for single local host.
+Vagrant-kvm is simple, local host only, qemu/kvm only provider that is
+intend to alternate VirtualBox with KVM/Qemu in same work flow.
 
-Once box is added and prepared, you can run specs:
+Vagrant-libvirt is a libvirt provider to control machines via libvirt toolkit.
+Vagrant-libvirt is, in design, for local and remote hosts and multiple hypervisors,
+such as Xen, LXC and KVM/qemu.
 
-```bash
-$ bundle exec rspec spec/vagrnt-kvm/
-```
+In early 2014, Varant-libvirt only support kvm/qemu in local host,
+there is no big feature difference.
 
-When you're done, feel free to remove the box.
+In technical view, vagrant-kvm control kvm/qemu via ruby-libvirt,libvirt and qemu.
 
-```bash
-$ bundle exec rake box:remove
-```
+In contrast, vagrant-libvirt control machines via fog, a cloud abstraction
+library in ruby, that is also used by vagrant-aws.
+A fog library control virtual machines on supported platforms and provide
+control of qemu/kvm machines through ruby-libvirt and libvirt.
 
-Supported ruby version is 2.0.x on vagrant 1.4.0 and later. You may need to use a recent OS version for development base such as Ubuntu Saucy(13.10), Trusy(14.04) or Fedora 19,20.
-If you're Mac user and you have Vagrant and VMware Fusion, you can use bundled box for development. See `spec/Vagrantfile` for details.
-If you're Linux user(of cource, you try to use KVM), You are lucky to run development version of vagrant-kvm on Vagrant, QEMU/KVM and vagrant-kvm itself. You can use bundled box for development. See `spec/Vagrantfile` for details.
