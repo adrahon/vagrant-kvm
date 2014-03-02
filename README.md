@@ -106,3 +106,24 @@ set to vga.
 to `clone`, the image disk will be copied rather than use the original box
 image. This is slower but allows multiple VMs to be booted at the same time.
 
+
+## Comparison with [Vagrant-libvirt](https://github.com/pradels/vagrant-libvirt)
+
+Vagrant-kvm is a KVM/Qemu provider for single local host.
+Vagrant-kvm is simple, local host only, qemu/kvm only provider that is
+intend to alternate VirtualBox with KVM/Qemu in same work flow.
+
+Vagrant-libvirt is a libvirt provider to control machines via libvirt toolkit.
+Vagrant-libvirt is, in design, for local and remote hosts and multiple hypervisors,
+such as Xen, LXC and KVM/qemu.
+
+In early 2014, Varant-libvirt only support kvm/qemu in local host,
+there is no big feature difference.
+
+In technical view, vagrant-kvm control kvm/qemu via ruby-libvirt,libvirt and qemu.
+
+In contrast, vagrant-libvirt control machines via fog, a cloud abstraction
+library in ruby, that is also used by vagrant-aws.
+A fog library control virtual machines on supported platforms and provide
+control of qemu/kvm machines through ruby-libvirt and libvirt.
+
