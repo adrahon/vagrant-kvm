@@ -60,15 +60,15 @@ $ sudo usermod -G libvirtd  -a ~~usrname~~
  * `redir`
 
 - For `ruby-libvirt` gems installation dependency:
- * `gcc` `make` `ruby-devel` `libvirt-devel` `libxslt-devel` `libxml2-devel`
+ * `gcc` `make` `rubygem-rake` `ruby-devel` `libvirt-devel` `libxslt-devel` `libxml2-devel`
 
 ### Fedora preparation
 
 To start libvirt:
 
 ```bash
-$ sudo systemctl enable libvirt
-$ sudo systemctl start libvirt
+$ sudo systemctl enable libvirtd
+$ sudo systemctl start libvirtd
 $ sudo systemctl enable libvirt-guests
 $ sudo systemctl start libvirt-guests
 ```

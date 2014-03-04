@@ -5,6 +5,10 @@ Vagrant.configure('2') do |config|
     override.vm.box_url = 'https://vagrant-kvm-boxes.s3.amazonaws.com/fedora19-amd64-kvm.box'
   end
 
+  if Vagrant.has_plugin?("vagrant-cachier")
+    config.cache.auto_detect = true
+  end
+
   config.vm.provision :shell, inline: <<-SH
     set -x
 
@@ -16,12 +20,12 @@ Vagrant.configure('2') do |config|
 
     # for ruby-libvirt
     sudo yum install -y gcc make
-    sudo yum install -y ruby-devel libvirt-devel
+    sudo yum install -y rubygem-rake ruby-devel libvirt-devel
     sudo yum install -y libxml2-devel libxslt-devel
 
     # start libvirt daemons
-    sudo systemctl enable libvirt
-    sudo systemctl start libvirt
+    sudo systemctl enable libvirtd
+    sudo systemctl start libvirtd
     sudo systemctl enable libvirt-guests
     sudo systemctl start libvirt-guests
 
