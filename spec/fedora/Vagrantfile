@@ -1,6 +1,7 @@
 Vagrant.configure('2') do |config|
   config.vm.provider :kvm do |kvm, override|
     kvm.gui = true
+    kvm.memory = '512MB'
     override.vm.box = 'fedora19'
     override.vm.box_url = 'https://vagrant-kvm-boxes.s3.amazonaws.com/fedora19-amd64-kvm.box'
   end
@@ -41,8 +42,27 @@ Vagrant.configure('2') do |config|
     # sudo cp /vagrant/50-vagrant-libvirt-access.pkla /etc/polkit-1/localauthority/50-local.d/
 
     ## SELinux label
-    # sudo yum install -y policycoreutils-python
+    sudo yum install -y policycoreutils-python
     # sudo semanage login -a -s staff_u vagrant
+
+    mkdir -p /home/vagrant/.vagrant.d/tmp/storage-pool
+    mkdir -p /home/vagrant/.vagrant.d/boxes
+    chown -R vagrant.vagrant /home/vagrant/.vagrant.d/
+    sudo semanage fcontext -a -t virt_image_t "/home/vagrant/.vagrant.d/tmp/storage-pool(/.*)?"
+    sudo restorecon -R /home/vagrant/.vagrant.d/tmp/storage-pool
+    sudo semanage fcontext -a -t virt_image_t "/home/vagrant/.vagrant.d/boxes(/.*)?"
+    sudo restorecon -R /home/vagrant/.vagrant.d/boxes
+
+    # Get debug log
+    cp /etc/libvirt/libvirtd.conf /tmp/libvirtd.conf
+    echo 'log_filters="1:libvirt 1:util 1:qemu"' >> /tmp/libvirtd.conf
+    echo 'log_outputs="1:file:/var/log/libvirt/libvirtd.log"' >> /tmp/libvirtd.conf
+    sudo mv /etc/libvirt/libvirtd.conf /etc/libvirt/libvirtd.conf.orig
+    sudo cp /tmp/libvirtd.conf /etc/libvirt/libvirtd.conf
+
+    # Work around vagrant-cachier bug
+    mkdir -p /home/vagrant/.gem || echo "already exist ~/.gem, changing owner"
+    sudo chown -R vagrant.vagrant /home/vagrant/.gem
 
     [[ `sudo gem list | grep bundler` ]] || sudo gem install bundler
 
