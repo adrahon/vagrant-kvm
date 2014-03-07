@@ -148,6 +148,8 @@ image. This is slower but allows multiple VMs to be booted at the same time.
   It keeps resource online but execution is stopped.
   When VM has a device that is not supported `hibernate`, automatically use
   `pause` regardless of this.
+* `virtio_rng` - boolean for optional virtio device of random number generator.
+  QEMU 1.3.0 and after support this device. default `false`
 
 
 ## Comparison with [Vagrant-libvirt](https://github.com/pradels/vagrant-libvirt)

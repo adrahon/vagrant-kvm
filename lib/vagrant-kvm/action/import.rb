@@ -36,6 +36,7 @@ module VagrantPlugins
             :machine_type  => provider_config.machine_type,
             :network_model => provider_config.network_model,
             :video_model   => provider_config.video_model,
+            :virtio_rng    => provider_config.virtio_rng
           }.merge(args)
 
           args[:disk_bus]   = provider_config.disk_bus if provider_config.disk_bus
