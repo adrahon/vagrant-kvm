@@ -24,18 +24,20 @@ a lot faster. In most cases you want to use qcow2.
 
 OVF boxes conversion as been removed, you should use `vagrant-mutate` instead.
 
-Synced folders are now provided by QEMU/KVM p9fs share feature in default.
-You can also use NFS for file share using :nfs option.
-Ubuntu host got libvirt bug
+Synced folders are now provided by a QEMU/KVM Virtfs in default.
+You can also use NFS for file share using `type: "nfs"` option.
+
+There was a known libvirt bug in Ubuntu host:
 https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/943680
+It was solved in Ubuntu 14.04(Trusty) and a backported libvirt provided by PPA above.
 
 ## Features/Limitations
 
 * Provides the same workflow as the Vagrant VirtualBox provider.
-* Uses NFS for sync folders
+* Uses Virtfs for sync folders
 * Only works with 1 VM per Vagrantfile for now
 * Requires "libvirtd" group membership to run Vagrant (Debian/Ubuntu only)
-* Requires backporting qemu and libvirt from experimental (Debian) or raring (Ubuntu)
+* Requires backporting qemu and libvirt from experimental (Debian) or trusty (Ubuntu)
 * Use qcow2 backing image by default, which should make VM creation very fast
 
 ## Usage
