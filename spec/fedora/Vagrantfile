@@ -30,9 +30,10 @@ Vagrant.configure('2') do |config|
     sudo systemctl enable libvirt-guests
     sudo systemctl start libvirt-guests
 
-    # polkit
+    # polkit and permissions
     sudo groupadd virt
     sudo usermod -a -G virt vagrant
+    chmod go+x /home/vagrant
 
     ## fedora18 and after
     sudo cp /vagrant/10.virt.rules /etc/polkit-1/rules.d/
