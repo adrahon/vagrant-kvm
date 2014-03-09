@@ -1,5 +1,6 @@
 require 'libvirt'
 require 'log4r'
+require 'pathname'
 
 module VagrantPlugins
   module ProviderKvm
@@ -474,41 +475,41 @@ module VagrantPlugins
         # Checks which Linux OS variants
         #
         # host_redhat?
+        # host_ubuntu?
         # host_debian?
         # host_gentoo?
         # host_arch?
         # @return [Boolean]
         def host_redhat?
-          release_file = Pathname.new("/etc/redhat-release")
+          # Check also Korora, CentOS, Fedora,
+          #   Oracle Linux < 5.3 and
+          #   Red Hat Enterprise Linux and Oracle Linux >= 5.3
+          return true if check_os_release?("/etc/redhat-release",
+            ["CentOS","Fedora","Korora","Enterprise Linux Enterprise Linux","Red Hat Enterprise Linux"])
+          false
+        end
 
-          if release_file.exist?
-            release_file.open("r:ISO-8859-1:UTF-8") do |f|
-              contents = f.gets
-              return true if contents =~ /^CentOS/ # CentOS
-              return true if contents =~ /^Fedora/ # Fedora
-              return true if contents =~ /^Korora/ # Korora
+        def host_suse?
+          check_os_release?("/etc/SuSE-release")
+        end
 
-              # Oracle Linux < 5.3
-              return true if contents =~ /^Enterprise Linux Enterprise Linux/
-
-              # Red Hat Enterprise Linux and Oracle Linux >= 5.3
-              return true if contents =~ /^Red Hat Enterprise Linux/
-            end
+        def host_ubuntu?
+          if rel = check_lsb_release?
+            return true if rel == "Ubuntu"
           end
-
           false
         end
 
         def host_debian?
-          File.exists?("/etc/debian_version")
+          check_os_release?("/etc/debian_version")
         end
 
         def host_gentoo?
-          File.exists?("/etc/gentoo-release")
+          check_os_release?("/etc/gentoo-release")
         end
 
         def host_arch?
-          File.exist?("/etc/arch-release")
+          check_os_release?("/etc/arch-release")
         end
 
         private
@@ -522,6 +523,30 @@ module VagrantPlugins
           min = (@conn.version - maj*1000000) / 1000
           rel = @conn.version % 1000
           "#{maj}.#{min}.#{rel}"
+        end
+
+        # Check contents of release file
+        #
+        # filename: release file path
+        # criteria: ["CentOS","Fedora",...]
+        def check_os_release?(filename, criteria=nil)
+          return File.exists?(filename) unless criteria
+
+          release_file = Pathname.new(filename)
+          if release_file.exist?
+            release_file.open("r:ISO-8859-1:UTF-8") do |f|
+              contents = f.gets
+              criteria.each do |c|
+                return true if contents =~ /^#{c}/
+              end
+            end
+          end
+          false
+        end
+
+        def check_lsb_release?
+          return false unless File.exists?("/usr/bin/lsb_release")
+          IO.popen('/usr/bin/lsb_release -i') { |o| o.read.chomp.split("\t") }[1]
         end
 
         def load_kvm_module!

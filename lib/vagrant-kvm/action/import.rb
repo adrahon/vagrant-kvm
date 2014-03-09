@@ -91,10 +91,20 @@ module VagrantPlugins
               # on Redhat/Fedora, permission is controlled
               # with only SELinux
               modes = {:dir => '0777',:file => '0666'}
-            elsif driver.host_debian?
+              secmodel = 'selinux'
+            elsif driver.host_arch?
+              # XXX: should be configurable
+              secmodel = 'dac'
+            elsif driver.host_ubuntu?
               groupid = Etc.getgrnam('kvm').gid.to_s
+              secmodel='apparmor'
+            elsif driver.host_debian?
+              # XXX: should be configurable
+              groupid = Etc.getgrnam('kvm').gid.to_s
+              secmodel='dac'
             else
-              # XXX: default
+              # default
+              secmodel='dac'
             end
             pool_name = 'vagrant_' + userid + '_' + box_name
             driver.init_storage_directory(
@@ -111,7 +121,8 @@ module VagrantPlugins
                 :owner => userid,
                 :group => groupid,
                 :mode => modes[:file],
-                :label => label)
+                :label => label,
+                :secmodel => secmodel)
             driver.free_storage_pool(pool_name)
           else
             @logger.info "Image type #{args[:image_type]} is not supported"

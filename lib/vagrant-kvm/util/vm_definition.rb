@@ -35,7 +35,8 @@ module VagrantPlugins
             :vnc_password => nil,
             :network      => 'default',
             :network_model => 'virtio',
-            :video_model  => 'cirrus'
+            :video_model  => 'cirrus',
+            :secmodel => 'dac'
           }
           doc = REXML::Document.new definition
           memory_unit = doc.elements["/domain/memory"].attributes["unit"]
