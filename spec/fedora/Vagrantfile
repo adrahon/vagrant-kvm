@@ -1,8 +1,13 @@
 Vagrant.configure('2') do |config|
   config.vm.provider :kvm do |kvm, override|
     kvm.gui = true
+    kvm.memory = '512MB'
     override.vm.box = 'fedora19'
     override.vm.box_url = 'https://vagrant-kvm-boxes.s3.amazonaws.com/fedora19-amd64-kvm.box'
+  end
+
+  if Vagrant.has_plugin?("vagrant-cachier")
+    config.cache.auto_detect = true
   end
 
   config.vm.provision :shell, inline: <<-SH
@@ -16,12 +21,12 @@ Vagrant.configure('2') do |config|
 
     # for ruby-libvirt
     sudo yum install -y gcc make
-    sudo yum install -y ruby-devel libvirt-devel
+    sudo yum install -y rubygem-rake ruby-devel libvirt-devel
     sudo yum install -y libxml2-devel libxslt-devel
 
     # start libvirt daemons
-    sudo systemctl enable libvirt
-    sudo systemctl start libvirt
+    sudo systemctl enable libvirtd
+    sudo systemctl start libvirtd
     sudo systemctl enable libvirt-guests
     sudo systemctl start libvirt-guests
 
@@ -37,8 +42,27 @@ Vagrant.configure('2') do |config|
     # sudo cp /vagrant/50-vagrant-libvirt-access.pkla /etc/polkit-1/localauthority/50-local.d/
 
     ## SELinux label
-    # sudo yum install -y policycoreutils-python
+    sudo yum install -y policycoreutils-python
     # sudo semanage login -a -s staff_u vagrant
+
+    mkdir -p /home/vagrant/.vagrant.d/tmp/storage-pool
+    mkdir -p /home/vagrant/.vagrant.d/boxes
+    chown -R vagrant.vagrant /home/vagrant/.vagrant.d/
+    sudo semanage fcontext -a -t virt_image_t "/home/vagrant/.vagrant.d/tmp/storage-pool(/.*)?"
+    sudo restorecon -R /home/vagrant/.vagrant.d/tmp/storage-pool
+    sudo semanage fcontext -a -t virt_image_t "/home/vagrant/.vagrant.d/boxes(/.*)?"
+    sudo restorecon -R /home/vagrant/.vagrant.d/boxes
+
+    # Get debug log: /var/log/libvirtd-debug.log
+    cp /etc/libvirt/libvirtd.conf /tmp/libvirtd.conf
+    echo 'log_filters="1:libvirt 1:security 1:qemu"' >> /tmp/libvirtd.conf
+    echo 'log_outputs="1:file:/var/log/libvirt/libvirtd-debug.log"' >> /tmp/libvirtd.conf
+    sudo mv /etc/libvirt/libvirtd.conf /etc/libvirt/libvirtd.conf.orig
+    sudo cp /tmp/libvirtd.conf /etc/libvirt/libvirtd.conf
+
+    # Work around vagrant-cachier bug
+    mkdir -p /home/vagrant/.gem || echo "already exist ~/.gem, changing owner"
+    sudo chown -R vagrant.vagrant /home/vagrant/.gem
 
     [[ `sudo gem list | grep bundler` ]] || sudo gem install bundler
 

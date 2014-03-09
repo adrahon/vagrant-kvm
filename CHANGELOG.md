@@ -1,4 +1,4 @@
-# 0.1.5 (,2013)
+# 0.1.5 (,2014)
 
 * Change default box format to qcow2 [GH-63]
 * Add support for configuration for memory/cpu [GH-54][GH-51][GH-68]
@@ -14,6 +14,17 @@
 * Respect disabled directive on synced_folder configuration [GH-65]
 * Improve error handling [GH-50]
 * Expanded/Fixes Readme file [GH-55]
+* Add spec test and TravisCI test[GH-82]
+* Configuration options for video and networks[GH-101]
+* Configuration option for disk_bus[GH-80]
+* Remove VMDK conversion. It is now supported by vagrant-mutate[GH-105]
+* Fixes storage pool permission issue.[GH-130][GH-154]
+* Support Vagrant 1.4.0+[GH-126]
+* VNC port/auth configuration[GH-116][GH-84]
+* Resume network when resume from suspend[GH-134]
+* SATA/IDE disk support[GH-110]
+* Configuration on Memory/CPU number/machine type
+* Search qemu/kvm binary in new qemu-system-* filename[GH-109]
 
 # 0.1.4 (August 20, 2013)
 
