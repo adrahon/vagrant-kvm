@@ -53,10 +53,10 @@ Vagrant.configure('2') do |config|
     sudo semanage fcontext -a -t virt_image_t "/home/vagrant/.vagrant.d/boxes(/.*)?"
     sudo restorecon -R /home/vagrant/.vagrant.d/boxes
 
-    # Get debug log
+    # Get debug log: /var/log/libvirtd-debug.log
     cp /etc/libvirt/libvirtd.conf /tmp/libvirtd.conf
-    echo 'log_filters="1:libvirt 1:util 1:qemu"' >> /tmp/libvirtd.conf
-    echo 'log_outputs="1:file:/var/log/libvirt/libvirtd.log"' >> /tmp/libvirtd.conf
+    echo 'log_filters="1:libvirt 1:security 1:qemu"' >> /tmp/libvirtd.conf
+    echo 'log_outputs="1:file:/var/log/libvirt/libvirtd-debug.log"' >> /tmp/libvirtd.conf
     sudo mv /etc/libvirt/libvirtd.conf /etc/libvirt/libvirtd.conf.orig
     sudo cp /tmp/libvirtd.conf /etc/libvirt/libvirtd.conf
 
