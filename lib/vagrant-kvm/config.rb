@@ -63,6 +63,7 @@ module VagrantPlugins
       attr_accessor :machine_type
       attr_accessor :network_model
       attr_accessor :video_model
+      attr_accessor :sound
 
       # disk bus type
       # sata/virtio
@@ -88,6 +89,7 @@ module VagrantPlugins
         @network_model    = UNSET_VALUE
         @video_model      = UNSET_VALUE
         @disk_bus         = UNSET_VALUE
+        @sound            = UNSET_VALUE
       end
 
       # Customize the VM by predefined actions.
@@ -165,6 +167,7 @@ module VagrantPlugins
         @network_model = "virtio" if @network_model == UNSET_VALUE
         @video_model = "cirrus" if @video_model == UNSET_VALUE
         @disk_bus = nil if @disk_bus == UNSET_VALUE
+        @sound = false if @sound == UNSET_VALUE
       end
 
       def validate(machine)
