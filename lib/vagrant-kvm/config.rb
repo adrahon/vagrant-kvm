@@ -63,6 +63,7 @@ module VagrantPlugins
       attr_accessor :machine_type
       attr_accessor :network_model
       attr_accessor :video_model
+      attr_accessor :force_suspend
 
       def initialize
         @name             = UNSET_VALUE
@@ -79,6 +80,7 @@ module VagrantPlugins
         @machine_type     = UNSET_VALUE
         @network_model    = UNSET_VALUE
         @video_model      = UNSET_VALUE
+        @force_suspend    = UNSET_VALUE
       end
 
       # This is the hook that is called to finalize the object before it
@@ -139,6 +141,7 @@ module VagrantPlugins
         @machine_type = "pc-1.2" if @machine_type == UNSET_VALUE
         @network_model = "virtio" if @network_model == UNSET_VALUE
         @video_model = "cirrus" if @video_model == UNSET_VALUE
+        @force_suspend = false if @force_suspend == UNSET_VALUE
       end
     end
   end

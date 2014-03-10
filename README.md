@@ -105,6 +105,10 @@ set to vga.
 * `image_mode` - Possible value are `clone` or `cow`, defaults to `cow`. If set
 to `clone`, the image disk will be copied rather than use the original box
 image. This is slower but allows multiple VMs to be booted at the same time.
+* `force_suspend` - use `suspend` for `vagrant suspend` instead of `hibernate`.
+  It keeps resource online but execution is stopped.
+  When VM has a device that is not supported `hibernate`, automatically use
+  `suspend` regardless of this.
 
 
 ## Comparison with [Vagrant-libvirt](https://github.com/pradels/vagrant-libvirt)
