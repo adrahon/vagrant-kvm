@@ -47,28 +47,11 @@ module VagrantPlugins
         # we return nil.
         return nil if state == :not_created
 
-        #ip_addr = @driver.read_ip(@machine.config.vm.base_mac)
+        ip_addr = @driver.read_machine_ip
         return {
-          :host => read_machine_ip,
+          :host => ip_addr,
           :port => "22" # XXX should be somewhere in default config
         }
-      end
-
-      # XXX duplicated from prepare_nfs_settings
-      # Returns the IP address of the guest by looking at the first
-      # enabled host only network.
-      #
-      # @return [String]
-      def read_machine_ip
-        @machine.config.vm.networks.each do |type, options|
-          if type == :private_network && options[:ip].is_a?(String)
-            return options[:ip]
-          end
-        end
-
-        # XXX duplicated with network.rb default
-        # If no private network configuration, return default ip
-        "192.168.123.10"
       end
 
       # Return the state of the VM

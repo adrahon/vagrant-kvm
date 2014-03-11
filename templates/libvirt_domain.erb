@@ -59,10 +59,9 @@
     </controller>
     <interface type='network'>
       <mac address='<%= mac %>'/>
-      <source network='vagrant'/>
-      <% unless network_model == :default %>
+      <source network='<%= network %>'/>
       <model type='<%= network_model %>'/>
-      <% end %>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0' />
     </interface>
     <serial type='pty'>
       <target port='0'/>

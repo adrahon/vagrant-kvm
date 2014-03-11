@@ -35,7 +35,6 @@ module VagrantPlugins
           @uuid = uuid
           # This should be configurable
           @pool_name = "vagrant"
-          @network_name = "vagrant"
           @virsh_path = "virsh"
 
           load_kvm_module!
@@ -164,33 +163,58 @@ module VagrantPlugins
 
         # Create network
         def create_network(config)
+          # Get the network if it exists
+          network_name = config[:name]
+          hosts = config[:hosts]
+          @logger.info("empty host!") unless hosts
           begin
-            # Get the network if it exists
-            @network = @conn.lookup_network_by_name(@network_name)
-            definition = Util::NetworkDefinition.new(@network_name,
-                                                     @network.xml_desc)
-          rescue Libvirt::RetrieveError
-            # Network doesn't exist, create with defaults
-            definition = Util::NetworkDefinition.new(@network_name)
-          end
-          definition.update(config)
-          if @network.nil?
-            @logger.info("Creating network #{@network_name}")
-            @network = define_network(definition) 
-          else
+            network = @conn.lookup_network_by_name(network_name)
+            definition = Util::NetworkDefinition.new(network_name,
+                                                     network.xml_desc)
+            old_def    = Util::NetworkDefinition.new(network_name,
+                                                     network.xml_desc)
+            definition.update(config)
+            @logger.info("Update network #{network_name}")
+            @logger.debug("From:\n#{old_def.as_xml}")
+            @logger.debug("TO:\n#{definition.as_xml}")
+
             # Only destroy existing network if config has changed. This is
             # necessary because other VM could be currently using this network
             # and will loose connectivity if the network is destroyed.
-            old_def = Util::NetworkDefinition.new(@network_name, @network.xml_desc)
-            if old_def == definition && @network.active?
-              @logger.info "Reusing existing configuration for #{@network_name}"
-            else
-              @logger.info "Recreating network config for #{@network_name}"
-              @logger.debug "Old definition was:\n#{@network.xml_desc}"
-              @network.destroy if @network.active?
-              @network.undefine
-              @network = define_network(definition) 
+            if network.active?
+              @logger.info "Reusing existing configuration for #{network_name}"
+              update_command = Libvirt::Network::NETWORK_UPDATE_COMMAND_ADD_LAST
+              hosts.each do |host|
+                if old_def.already_exist_host?(host)
+                  update_command = Libvirt::Network::NETWORK_UPDATE_COMMAND_MODIFY
+                end
+              end
+              if update_command == Libvirt::Network::NETWORK_UPDATE_COMMAND_MODIFY
+                  @logger.info ("Updating network #{network_name} using UPDATE_COMMAND_MODIFY")
+              else
+                  @logger.info ("Updating network #{network_name} using UPDATE_COMMAND_ADD_LAST")
+             end
+
+             network.update(update_command,
+              Libvirt::Network::NETWORK_SECTION_IP_DHCP_HOST,
+              -1,
+              definition.as_host_xml,
+              Libvirt::Network::NETWORK_UPDATE_AFFECT_CURRENT
+              )
+             network.create unless network.active?
+            else # network is not active
+              @logger.info "Recreating network config for #{network_name}"
+              network.undefine
+              network = define_network(definition)
             end
+
+          rescue Libvirt::RetrieveError
+            # Network doesn't exist, create with defaults
+            definition = Util::NetworkDefinition.new(network_name)
+            definition.update(config)
+            @logger.info("Creating network #{network_name}")
+            @logger.debug("with\n#{definition.as_xml}")
+            network = define_network(definition)
           end
         end
 
@@ -200,6 +224,32 @@ module VagrantPlugins
           network = @conn.define_network_xml(xml)
           network.create
           network
+        end
+
+        def get_default_ip
+          "192.168.123.10"
+        end
+
+        def read_machine_ip
+          if @uuid && vm_exists?(@uuid)
+            begin
+              domain = @conn.lookup_domain_by_uuid(@uuid)
+              definition = Util::VmDefinition.new(domain.xml_desc)
+              mac_address = definition.get(:mac)
+              network_name = definition.get(:network)
+              network = @conn.lookup_network_by_name(network_name)
+              network_definition = Util::NetworkDefinition.new(network_name,
+                                                     network.xml_desc)
+              network_definition.get(:hosts).each do |host|
+                return host[:ip] if mac_address == host[:mac]
+              end
+            rescue Libvirt::RetrieveError
+              @logger.info("cannot get definition og #{@uuid}")
+            end
+          else
+            @logger.debug("missing uuid? #{@uuid}")
+          end
+          get_default_ip
         end
 
         # Initialize or create storage pool
@@ -257,6 +307,35 @@ module VagrantPlugins
         def lookup_volume_path_by_name(volume_name)
           volume = @pool.lookup_volume_by_name(volume_name)
           volume.path
+        end
+
+        def list_all_network_ips
+          interfaces = read_network_interfaces
+          ips = []
+          interfaces.each do |interface|
+            next if interface.type == :user
+            ips << list_network_ips(interface.name)
+          end
+          ips
+        end
+
+        def list_default_network_ips
+          list_network_ips('vagrant')
+        end
+
+        def list_network_ips(network_name)
+          begin
+            network = @conn.lookup_network_by_name(network_name)
+            network_definition = Util::NetworkDefinition.new(network_name, network.xml_desc)
+            ips = []
+            if network_definition
+              ips = network_definition.hosts.map {|host| host[:ip]}
+            end
+            ips
+          rescue Libvirt::RetrieveError
+            @logger.info("error when getting network xml")
+            []
+          end
         end
 
         # Returns a list of network interfaces of the VM.
@@ -323,6 +402,10 @@ module VagrantPlugins
           definition.attributes[:mac]
         end
 
+        def read_ip(mac)
+          # implement me
+        end
+
         # Resumes the previously paused virtual machine.
         def resume
           @logger.debug("Resuming paused VM...")
@@ -337,6 +420,7 @@ module VagrantPlugins
 
         def set_mac_address(mac)
           update_domain_xml(:mac => mac)
+          @logger.debug("set mac: #{mac}")
         end
 
         def set_gui(vnc_port, vnc_autoport, vnc_password)
@@ -369,6 +453,18 @@ module VagrantPlugins
           domain.undefine
           xml = definition.as_xml
           @logger.debug("Updating domain xml\nFrom: #{original_xml}\nTo: #{xml}")
+          @conn.define_domain_xml(xml)
+        end
+
+        def add_nic(nic)
+          domain = @conn.lookup_domain_by_uuid(@uuid)
+          # Use DOMAIN_XML_SECURE to dump ALL options (including VNC password)
+          original_xml = domain.xml_desc(Libvirt::Domain::DOMAIN_XML_SECURE)
+          definition = Util::VmDefinition.new(original_xml)
+          definition.add_nic(nic)
+          domain.undefine
+          xml = definition.as_xml
+          @logger.debug("add nic\nFrom #{original_xml} \nTo: #{xml}")
           @conn.define_domain_xml(xml)
         end
 

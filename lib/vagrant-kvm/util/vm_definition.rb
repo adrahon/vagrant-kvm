@@ -33,13 +33,16 @@ module VagrantPlugins
             :gui          => nil,
             :vnc_autoport => false,
             :vnc_password => nil,
-            :network      => 'default',
+            :network      => 'vagrant',
             :network_model => 'virtio',
             :video_model  => 'cirrus',
-            :secmodel => 'dac',
-            :sound        => nil
+            :secmodel     => 'dac',
+            :sound        => nil,
+            :nics         => [],
           }
           doc = REXML::Document.new definition
+
+          # Basic devices
           memory_unit = doc.elements["/domain/memory"].attributes["unit"]
           update({
             :name        => doc.elements["/domain/name"].text,
@@ -50,23 +53,33 @@ module VagrantPlugins
             :machine_type => doc.elements["/domain/os/type"].attributes["machine"],
             :disk        => doc.elements["//devices/disk/source"].attributes["file"],
             :network     => doc.elements["//devices/interface/source"].attributes["network"],
-            :network_model => :default,
-            :mac         => format_mac(doc.elements["//devices/interface/mac"].attributes["address"]),
+            :mac         => doc.elements["//devices/interface/mac"].attributes["address"],
             :image_type  => doc.elements["//devices/disk/driver"].attributes["type"],
             :qemu_bin    => doc.elements["/domain/devices/emulator"].text,
             :video_model => doc.elements["/domain/devices/video/model"].attributes["type"],
             :disk_bus    => doc.elements["//devices/disk/target"].attributes["bus"]
           })
-          model_node = doc.elements["//devices/interface/model"]
-          if model_node
-            update({
-              :model_node  => model_node,
-              :network_model => model_node.attributes["type"]
-            })
+          # NETWORK Interfaces
+          nics = []
+          doc.elements.each("//devices/interface") do |intf|
+            network     = intf.elements["source"].attributes["network"]
+            mac         = intf.elements["mac"].attributes["address"]
+            type        = intf.attributes["type"]
+            model       = intf.elements["model"].attributes["type"]
+            nics <<  {
+                :network => network,
+                :mac     => format_mac(mac),
+                :type    => type,
+                :model   => model,
+                # XXX: fixme for supprting bridge
+            } unless network == 'vagrant'
           end
+          update({ :nics => nics })
+          # UUID
           if doc.elements["/domain/uuid"]
             update({:uuid => doc.elements["/domain/uuid"].text})
           end
+          # VNC
           if doc.elements["//devices/graphics"]
             attrs = doc.elements["//devices/graphics"].attributes
             update({
@@ -76,6 +89,7 @@ module VagrantPlugins
               :vnc_password => attrs['passwd']
             })
           end
+          # SOUND
           if doc.elements["//devices/sound"]
             update({
               :sound => true
@@ -106,7 +120,61 @@ module VagrantPlugins
                 attributes.merge!(:memory_size => get_memory("KiB"),
                                   :memory_unit => "KiB")
                 )
-          xml
+          inject_nics(xml)
+        end
+
+        def inject_nics(xml)
+          nics=get(:nics)
+          doc = REXML::Document.new xml
+          primary_nic = doc.elements["//interface"]
+          funcid = 1
+          nics.each do |nic|
+            next if nic[:mac] == get(:mac)
+
+            nic[:type] = 'network' unless nic[:type]
+            nic[:model] = 'virtio' unless nic[:model]
+
+            e = REXML::Element.new('interface')
+            e.add_attributes({'type' => nic[:type]})
+            e.add_element('mac', {'address' => nic[:mac]})
+            e.add_element('source', {'network' => nic[:network]})
+            e.add_element('model', {'type' => nic[:model]})
+            e.add_element('address',{'type' => 'pci','domain' => '0x0000', 'bus' => '0x00',
+             'slot' => '0x0a', 'function' => "0x%x" % funcid})
+            primary_nic.next_sibling = e
+            funcid = funcid + 1
+          end
+          doc.to_s
+        end
+
+        # add_nic
+        #
+        # nic
+        #  mac:     mac address
+        #  network: network name(vagrant-*, bridged)
+        #  type:    network/bridge
+        #  model:   virtio/ne2k_pci
+        #
+        def add_nic(new_nic)
+          mac = format_mac(new_nic[:mac])
+          nics = get(:nics)
+          unless nics == []
+            # if nic has already exist, update it
+            nics.each_with_index do |nic,i|
+              if nic[:mac] == mac
+                nics[i] = new_nic
+                return set(:nics, nics)
+              end
+            end
+          end
+          # add nic to nics
+          nics << {
+                :mac     => mac,
+                :network => new_nic[:network],
+                :type    => new_nic[:type],
+                :model   => new_nic[:model]
+                }
+          set(:nics, nics)
         end
 
         def get_memory(unit="bytes")
