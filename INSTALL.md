@@ -76,7 +76,7 @@ $ sudo systemctl start libvirt-guests
 It uses PolicyKit for management access to libvirt,
 an additional polkit rules file may be required.
 Following sample configure that user who is in ~~virt~~ group
-can access libvirt in user previlege.
+can access libvirt in user privilege.
 
 /etc/polkit-1/rules.d/10.virt.rules
 ```
