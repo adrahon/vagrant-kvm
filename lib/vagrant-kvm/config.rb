@@ -70,7 +70,7 @@ module VagrantPlugins
       #
       # @return [String]
       attr_accessor :disk_bus
-      attr_accessor :force_suspend
+      attr_accessor :force_pause
 
       def initialize
         @customizations   = []
@@ -90,7 +90,7 @@ module VagrantPlugins
         @video_model      = UNSET_VALUE
         @disk_bus         = UNSET_VALUE
         @sound            = UNSET_VALUE
-        @force_suspend    = UNSET_VALUE
+        @force_pause    = UNSET_VALUE
       end
 
       # Customize the VM by predefined actions.
@@ -169,7 +169,7 @@ module VagrantPlugins
         @video_model = "cirrus" if @video_model == UNSET_VALUE
         @disk_bus = nil if @disk_bus == UNSET_VALUE
         @sound = false if @sound == UNSET_VALUE
-        @force_suspend = false if @force_suspend == UNSET_VALUE
+        @force_pause = false if @force_pause == UNSET_VALUE
       end
 
       def validate(machine)

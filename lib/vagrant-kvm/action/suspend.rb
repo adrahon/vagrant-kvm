@@ -14,7 +14,7 @@ module VagrantPlugins
             elsif  env[:machine].provider.driver.can_save?
               env[:machine].provider.driver.save
             else
-              env[:ui].warn ("Suspend is not supported. use stop instead.")
+              env[:ui].warn ("Suspend is not supported. use pause instead.")
               env[:machine].provider.driver.suspend
             end
           end
