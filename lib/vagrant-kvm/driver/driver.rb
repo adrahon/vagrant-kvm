@@ -58,7 +58,7 @@ module VagrantPlugins
           end
 
           @version = read_version
-          if @version < "1.1.0"
+          if @conn.version.to_i < 1001000
             raise Errors::KvmInvalidVersion,
               :actual => @version, :required => ">= 1.1.0"
           end
