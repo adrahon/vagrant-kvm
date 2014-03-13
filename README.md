@@ -42,20 +42,22 @@ OVF boxes conversion as been removed, you should use `vagrant-mutate` instead.
 sudo aa-complain /usr/lib/libvirt/virt-aa-helper
 ```
 
-* There is a problem in Fedora that get a permission denied messege.
-  It happens because default user home directory is in permission
+* There is a problem in Fedora and Arch that get a permission denied messege.
+  It happens because default user home directory has a too conservative
+  permission:
   ``` drwx------```.
   Qemu/kvm runs as 'qemu' user in default and could not go under your home
   directory. It causes a permission error.
 
-  Solutions:
+  To avoid it, please check and change your home directory permission and
+  child directories toward `~/.vagrant.d/tmp/storage-pool/`
 
-1. Change your home directory permission
 ```bash
 $ chmod go+x /home/<your account>
-```
+`
 
-2. run qemu/kvm as root.
+  If it is no luck with permission change,
+  You can run qemu/kvm as root user.
   Adding following configuration makes qemu running as root user.
 
 /etc/libvirt/qemu.conf
@@ -64,7 +66,7 @@ user = "root"
 group = "root"
 ```
 
-  Then restart libvirtd
+  Then restart libvirtd.
 
 ```bash
 $ sudo systemctl restart libvirtd
