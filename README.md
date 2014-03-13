@@ -44,8 +44,7 @@ sudo aa-complain /usr/lib/libvirt/virt-aa-helper
 
 * There is a problem in Fedora and Arch that get a permission denied messege.
   It happens because default user home directory has a too conservative
-  permission:
-  ``` drwx------```.
+  permission: `drwx------`.
   Qemu/kvm runs as 'qemu' user in default and could not go under your home
   directory. It causes a permission error.
 
@@ -54,11 +53,11 @@ sudo aa-complain /usr/lib/libvirt/virt-aa-helper
 
 ```bash
 $ chmod go+x /home/<your account>
-`
+```
 
-  If it is no luck with permission change,
-  You can run qemu/kvm as root user.
-  Adding following configuration makes qemu running as root user.
+If it is no luck with permission change,
+You can run qemu/kvm as root user.
+Adding following configuration makes qemu running as root user.
 
 /etc/libvirt/qemu.conf
 ```
@@ -66,7 +65,7 @@ user = "root"
 group = "root"
 ```
 
-  Then restart libvirtd.
+Then restart libvirtd.
 
 ```bash
 $ sudo systemctl restart libvirtd
