@@ -49,6 +49,35 @@ It was solved in Ubuntu 14.04(Trusty) and a backported libvirt provided by PPA a
 sudo aa-complain /usr/lib/libvirt/virt-aa-helper
 ```
 
+* There is a problem in Fedora and Arch that get a permission denied messege.
+  It happens because default user home directory has a too conservative
+  permission: `drwx------`.
+  Qemu/kvm runs as 'qemu' user in default and could not go under your home
+  directory. It causes a permission error.
+
+  To avoid it, please check and change your home directory permission and
+  child directories toward `~/.vagrant.d/tmp/storage-pool/`
+
+```bash
+$ chmod go+x /home/<your account>
+```
+
+If it is no luck with permission change,
+You can run qemu/kvm as root user.
+Adding following configuration makes qemu running as root user.
+
+/etc/libvirt/qemu.conf
+```
+user = "root"
+group = "root"
+```
+
+Then restart libvirtd.
+
+```bash
+$ sudo systemctl restart libvirtd
+```
+
 ## Usage
 
 Install using standard Vagrant 1.4+ plugin installation methods. After
