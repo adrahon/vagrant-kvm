@@ -64,6 +64,12 @@ user = "root"
 group = "root"
 ```
 
+  Then restart libvirtd
+
+```bash
+$ sudo systemctl restart libvirtd
+```
+
 ## Usage
 
 Install using standard Vagrant 1.1+ plugin installation methods. After
