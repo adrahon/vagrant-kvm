@@ -390,9 +390,22 @@ module VagrantPlugins
         end
 
         # Suspend the virtual machine and saves its states.
-        def suspend
+        def save
           domain = @conn.lookup_domain_by_uuid(@uuid)
           domain.managed_save
+        end
+
+        def can_save?
+          domain = @conn.lookup_domain_by_uuid(@uuid)
+          definition = Util::VmDefinition.new(domain.xml_desc)
+          disk_bus = definition.get(:disk_bus)
+          return disk_bus != 'sata'
+        end
+
+        # Suspend the virtual machine temporaly
+        def suspend
+          domain = @conn.lookup_domain_by_uuid(@uuid)
+          domain.suspend
         end
 
         # Export
