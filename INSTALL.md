@@ -64,6 +64,13 @@ $ sudo usermod -G libvirtd  -a ~~usrname~~
 
 ### Fedora preparation
 
+Home directory permission is too conservative for Vagrant with kvm.
+Please relax your home directory permission.
+
+```bash
+$ chmod o+x $HOME
+```
+
 To start libvirt:
 
 ```bash
@@ -73,9 +80,22 @@ $ sudo systemctl enable libvirt-guests
 $ sudo systemctl start libvirt-guests
 ```
 
-It uses PolicyKit for management access to libvirt,
+#### Additional information
+
+You may need to add SELinux label to vagrant standard storage-pool directory
+and box directory.
+
+```bash
+$ sudo yum install policycoreutils-python
+$ semanage fcontext -a -t virt_image_t "~/.vagrant.d/tmp/storage-pool(/.*)?"
+$ restorecon -R ~/.vagrant.d/tmp/storage-pool
+$ semanage fcontext -a -t virt_image_t "~/.vagrant.d/boxes(/.*)?"
+$ restorecon -R ~/.vagrant.d/boxes
+```
+
+Fedora uses PolicyKit for management access to libvirt,
 an additional polkit rules file may be required.
-Following sample configure that user who is in ~~virt~~ group
+Following sample configure that user who is in __virt__ group
 can access libvirt in user privilege.
 
 /etc/polkit-1/rules.d/10.virt.rules
@@ -102,7 +122,6 @@ Then restart polkit service
 ```bash
 $ systemctl restart polkit.service
 ```
-
 
 In alternate way, you can use polkit local authority compatibirity configuration
 
@@ -137,9 +156,8 @@ Here is also a good [reference blog post](https://niranjanmr.wordpress.com/2013/
 
 ###CentOS6/RedHat6 preparation
 
-Add SELinux label to vagrant standard storage-pool directory
-and box directory.It may be a bug in libvirt selinux handler that
-sometimes fails to handle a VM image with backing-images.
+You may need to add SELinux label to vagrant standard storage-pool directory
+and box directory.
 
 ```bash
 $ sudo yum install policycoreutils-python
@@ -184,9 +202,18 @@ This plugin requires
 - For `ruby-libvirt` gems installation dependency:
  * `libvirt-dev`
 
-To use with Vagrant, you must configure libvirt for non-root user to run KVM.
+
+Home directory permission is too conservative for Vagrant with kvm.
+Please relax your home directory permission.
+
+```bash
+$ chmod o+x $HOME
+```
+
+To use with Vagrant, you may need to configure libvirt for non-root user to run KVM.
 Consult [ArchLinux Wiki](https://wiki.archlinux.org/index.php/Libvirt#Configuration)
 for details.
+
 
 ## Install procedure
 
