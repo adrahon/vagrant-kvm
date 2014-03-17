@@ -16,7 +16,6 @@ module VagrantPlugins
           @env = env
 
           @env[:ui].info I18n.t("vagrant.actions.vm.network.preparing")
-          create_default_nic
           create_or_start_default_network!
           create_or_update_private_network!
 
@@ -25,25 +24,9 @@ module VagrantPlugins
 
         private
 
-        def create_default_nic
-          # default NAT network/nic
-          default_ip = select_default_ip
-          @logger.debug("select default ip: #{default_ip}")
-          @env[:machine_ip] = default_ip
-
-          #addr=@default_ip.split(".")
-          # nic need mac/network/type(network/bridge)/model/name
-          # XXX: use  format_mac(@env[:machine].config.vm.base_mac) ?
-          nic = {:mac => random_mac,
-                 :name=> "eth0",
-                 :type=> 'network',
-                 :model=> 'virtio',
-                 :network => "vagrant"}
-          @logger.debug("use default mac: #{nic[:mac]}" )
-          @env[:machine].provider.driver.add_nic(nic)
-        end
-
         def create_or_start_default_network!
+          # default NAT network/nic
+          @env[:machine_ip] = select_default_ip
           @env[:machine].provider.driver.create_network(
             :name  => get_network_name(@env[:machine_ip]), 
             :hosts => [{

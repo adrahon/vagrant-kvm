@@ -140,15 +140,16 @@ module VagrantPlugins
         # @param [String] definition Path to the VM XML file.
         # @param [String] volume_name Name of the imported volume
         # @param [Hash]   attributes
-        def import(definition, volume_name, args={})
+        def import(box_xml_filename, volume_name, args={})
           @logger.info("Importing VM #{@name}")
           # create vm definition from xml
-          definition = File.open(definition) { |f| Util::VmDefinition.new(f.read) }
+          definition = File.open(box_xml_filename) { |f| Util::VmDefinition.new(f.read) }
           volume_path = lookup_volume_path_by_name(volume_name)
           args = {
             :image_type => "qcow2",
             :qemu_bin => "/usr/bin/qemu",
             :disk => volume_path,
+            :network => 'vagrant',
             :name => @name
           }.merge(args)
           args.merge!(:virtio_rng => nil) if @conn.version.to_i < 1003000  # virtio_rng supported in 1.3.0+
@@ -400,10 +401,6 @@ module VagrantPlugins
           domain = @conn.lookup_domain_by_uuid(@uuid)
           definition = Util::VmDefinition.new(domain.xml_desc)
           definition.attributes[:mac]
-        end
-
-        def read_ip(mac)
-          # implement me
         end
 
         # Resumes the previously paused virtual machine.
