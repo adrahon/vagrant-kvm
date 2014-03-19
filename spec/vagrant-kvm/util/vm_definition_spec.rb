@@ -31,7 +31,7 @@ describe VagrantPlugins::ProviderKvm::Util::VmDefinition do
 
       it "should set and load the GUI settings" do
         should_set(:gui, true) do |xml|
-          xml.should include("<graphics type='vnc'")
+          xml.should include("type='vnc'")
         end
       end
 
