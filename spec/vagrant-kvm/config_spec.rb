@@ -10,7 +10,8 @@ describe  VagrantPlugins::ProviderKvm::Config do
 
   describe "#image_backing" do
     it "default to true" do
-      should_default(:image_backing, true)
+      subject.finalize!
+      subject.image_backing.should be_true
     end
   end
 
