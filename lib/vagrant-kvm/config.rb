@@ -90,7 +90,8 @@ module VagrantPlugins
         @video_model      = UNSET_VALUE
         @disk_bus         = UNSET_VALUE
         @sound            = UNSET_VALUE
-        @force_pause    = UNSET_VALUE
+        @force_pause      = UNSET_VALUE
+        @enable_virtfs    = UNSET_VALUE
       end
 
       # Customize the VM by predefined actions.
@@ -170,6 +171,7 @@ module VagrantPlugins
         @disk_bus = nil if @disk_bus == UNSET_VALUE
         @sound = false if @sound == UNSET_VALUE
         @force_pause = false if @force_pause == UNSET_VALUE
+        @enable_virtfs = false if @enable_virtfs == UNSET_VALUE
       end
 
       def validate(machine)
