@@ -152,11 +152,64 @@ such as Xen, LXC and KVM/qemu.
 
 In early 2014, Varant-libvirt only support kvm/qemu in local host,
 there is no big feature difference.
+Here is a fact:
 
-In technical view, vagrant-kvm control kvm/qemu via ruby-libvirt,libvirt and qemu.
+1. Travis CI and quality assurance
 
-In contrast, vagrant-libvirt control machines via fog, a cloud abstraction
-library in ruby, that is also used by vagrant-aws.
+Vagrant-kvm tested every pull request and repository with Travis-CI;
+https://travis-ci.org/adrahon/vagrant-kvm/
+Vagrant-libvirt does not.
+
+2. Copy-on-write
+
+Vagrant-kvm in default use qcow2 format in box
+and use qcow2 disk image backing with box disk.
+This has an advantage in boot time but low performance.
+You can configure to clone(copy) disk image to pool.
+This need more time for booting ,but get high performance.
+You can also configure use raw image instead of qcow2.
+It can archive best I/O performance.
+
+Vagrant-libvirt use qcow2 as disk image.
+
+3. VNC port/password
+
+Vagrant-kvm is configurable how to connect VNC, which provide virtual guest desktop.
+Vagrant-libvirt is not.
+
+4. Synced folder
+
+Vagrant-kvm can provide synced folder with NFS only.
+We plan to provide virtfs(p9share) that user can access
+their files without root privilege.
+
+Vagrant-libvirt provide synced folder with Rsync and NFS.
+They also plan to support virtfs in future.
+
+It is neccesary to fix several bugs in libvirt/qemu to enable
+virtfs feature in both providers.
+
+5. Snapshots via sahara
+
+Vagrant-kvm plan to support snapshot via sahara.
+We have already proposed to sahara project to add support
+and waiting review.
+https://github.com/jedi4ever/sahara/pull/32
+
+Vagrant-libvirt is supported by sahara.
+
+6. Use boxes from other Vagrant providers via vagrant-mutate
+
+Both are supported by vagrant-mutate as convert target
+
+
+7. Architecture
+
+Vagrant-kvm control kvm/qemu via ruby-libvirt, libvirt and qemu.
+
+Vagrant-libvirt control machines via fog,
+a cloud abstraction library in ruby,
+that is also used by vagrant-aws.
 A fog library control virtual machines on supported platforms and provide
 control of qemu/kvm machines through ruby-libvirt and libvirt.
 
