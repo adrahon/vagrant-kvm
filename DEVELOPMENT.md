@@ -71,7 +71,7 @@ $ bundle exec rake box:prepare
 Once box is added and prepared, you can run specs:
 
 ```bash
-$ bundle exec rspec spec/vagrnt-kvm/
+$ bundle exec rspec spec/vagrant-kvm/
 ```
 
 When you're done, feel free to remove the box.
