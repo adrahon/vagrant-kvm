@@ -67,6 +67,9 @@ Then restart libvirtd.
 $ sudo systemctl restart libvirtd
 ```
 
+This may or may not be sufficient to make it work with Fedora, there are still
+some issues for some users on Fedora 20.
+
 ## Usage
 
 Install using the standard Vagrant 1.1+ plugin installation command. After
