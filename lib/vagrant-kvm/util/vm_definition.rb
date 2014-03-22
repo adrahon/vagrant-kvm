@@ -66,13 +66,17 @@ module VagrantPlugins
             mac         = intf.elements["mac"].attributes["address"]
             type        = intf.attributes["type"]
             model       = intf.elements["model"].attributes["type"]
-            nics <<  {
+            if network == 'vagrant' then
+              update({:network_model => model})
+            else
+              nics <<  {
                 :network => network,
                 :mac     => format_mac(mac),
                 :type    => type,
                 :model   => model,
                 # XXX: fixme for supprting bridge
-            } unless network == 'vagrant'
+              }
+            end
           end
           update({ :nics => nics })
           # UUID
