@@ -32,19 +32,21 @@ OVF boxes conversion as been removed, you should use `vagrant-mutate` instead.
 
 ## Known issues
 
-* Some versions of Ubuntu kernel has a bug that will cause vagrant-kvm
-  to fail with a permission error on `vagrant up`. It is a kernel bug with the AppArmor security framework.
-  As a workaround, please run following command to disable access control for libvirt helper.
+### Ubuntu
+Some versions of Ubuntu kernel has a bug that will cause vagrant-kvm
+to fail with a permission error on `vagrant up`. It is a kernel bug with the AppArmor security framework.
+As a workaround, please run following command to disable access control for libvirt helper.
 
 ```bash
 sudo aa-complain /usr/lib/libvirt/virt-aa-helper
 ```
 
-* With Fedora and Arch, default home directory permissions are set to `drwx------`.
-  Qemu/kvm runs as 'qemu' user by default and cannot access your home directory.
+### Fedora and Arch
+With Fedora and Arch, default home directory permissions are set to `drwx------`.
+Qemu/kvm runs as 'qemu' user by default and cannot access your home directory.
 
-  To avoid this, please check and change your home directory and
-  child directories permission to permit qemu user access to `~/.vagrant.d/tmp/storage-pool/`
+To avoid this, please check and change your home directory and
+child directories permission to permit qemu user access to `~/.vagrant.d/tmp/storage-pool/`
 
 ```bash
 $ chmod go+x /home/<your account>
@@ -148,13 +150,13 @@ In early 2014, Varant-libvirt only support kvm/qemu in local host, there is no b
 
 Here are a few difference:
 
-1. Travis CI and quality assurance
+### 1. Travis CI and quality assurance
 
 Vagrant-kvm tests every pull request and repository with Travis-CI;
 https://travis-ci.org/adrahon/vagrant-kvm/
 Vagrant-libvirt does not.
 
-2. Copy-on-write
+### 2. Copy-on-write
 
 Vagrant-kvm by default uses the qcow2 format
 and qcow2 disk image backing to create a new volume
@@ -167,12 +169,12 @@ performance gain.
 
 Vagrant-libvirt use qcow2 as disk image.
 
-3. VNC port/password
+### 3. VNC port/password
 
 Vagrant-kvm allows you to configure how to connect with VNC, which provides virtual guest desktop.
 Vagrant-libvirt is not.
 
-4. Synced folder
+### 4. Synced folder
 
 Vagrant-kvm can provide synced folder with NFS only.
 We plan to provide virtfs(p9share) to allow sharing local folders
@@ -184,7 +186,7 @@ They also plan to support virtfs in future.
 It is neccesary to fix several bugs in libvirt/qemu to enable
 virtfs feature in both providers.
 
-5. Snapshots via sahara
+### 5. Snapshots via sahara
 
 Vagrant-kvm plan to support snapshot via sahara.
 We have already proposed to sahara project to add support
@@ -193,11 +195,11 @@ https://github.com/jedi4ever/sahara/pull/32
 
 Vagrant-libvirt is supported by sahara.
 
-6. Use boxes from other Vagrant providers via vagrant-mutate
+### 6. Use boxes from other Vagrant providers via vagrant-mutate
 
 Both are supported by vagrant-mutate as convert target
 
-7. Architecture
+### 7. Architecture
 
 Vagrant-kvm control kvm/qemu via ruby-libvirt, libvirt and qemu.
 
