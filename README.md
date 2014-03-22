@@ -15,7 +15,7 @@ Consult the [Requirements section in INSTALL.md](https://github.com/adrahon/vagr
 
 ## Recent changes
 
-Default image format is now qcow2 instead of sparsed raw imagei, with qcow2
+Default image format is now qcow2 instead of sparsed raw image, with qcow2
 `vagrant-kvm` uses the box volume as a backing volume so that VM creation is
 a lot faster. In most cases you want to use qcow2.
 
@@ -32,32 +32,26 @@ OVF boxes conversion as been removed, you should use `vagrant-mutate` instead.
 
 ## Known issues
 
-* Some versions of Ubuntu kernel has a bug that vagrant-kvm fails
-  to do `vagrant up` with permission error.
-  If you catch it, please run following command to work around.
-  It is a kernel bug on AppArmor security framework,
-  the command disables access control for libvirt helper.
+* Some versions of Ubuntu kernel has a bug that will cause vagrant-kvm
+  to fail with a permission error on `vagrant up`. It is a kernel bug with the AppArmor security framework.
+  As a workaround, please run following command to disable access control for libvirt helper.
 
 ```bash
 sudo aa-complain /usr/lib/libvirt/virt-aa-helper
 ```
 
-* There is a problem in Fedora and Arch that get a permission denied messege.
-  It happens because default user home directory has a too conservative
-  permission: `drwx------`.
-  Qemu/kvm runs as 'qemu' user in default and could not go under your home
-  directory. It causes a permission error.
+* With Fedora and Arch, default home directory permissions are set to `drwx------`.
+  Qemu/kvm runs as 'qemu' user by default and cannot access your home directory.
 
-  To avoid it, please check and change your home directory permission and
-  child directories toward `~/.vagrant.d/tmp/storage-pool/`
+  To avoid this, please check and change your home directory and
+  child directories permission to permit qemu user access to `~/.vagrant.d/tmp/storage-pool/`
 
 ```bash
 $ chmod go+x /home/<your account>
 ```
 
-If it is no luck with permission change,
-You can run qemu/kvm as root user.
-Adding following configuration makes qemu running as root user.
+Another option is to run qemu/kvm as the root user by changing the
+configuration in libvirt.
 
 /etc/libvirt/qemu.conf
 ```
@@ -73,8 +67,8 @@ $ sudo systemctl restart libvirtd
 
 ## Usage
 
-Install using standard Vagrant 1.1+ plugin installation methods. After
-installing, `vagrant up` and specify the `kvm` provider. An example is
+Install using the standard Vagrant 1.1+ plugin installation command. After
+installation, use `vagrant up` and specify the `kvm` provider. An example is
 shown below.
 
 ```bash
@@ -104,7 +98,7 @@ If you always use kvm provider as default, please set it in your .bashrc:
 ```bash
 export VAGRANT_DEFAULT_PROVIDER=kvm
 ```
-then you can simply run `vagrant up` with kvm provider.
+then you can simply run `vagrant up` to use the kvm provider.
 
 ## Configuration
 
@@ -144,44 +138,45 @@ image. This is slower but allows multiple VMs to be booted at the same time.
 
 Vagrant-kvm is a KVM/Qemu provider for single local host.
 Vagrant-kvm is simple, local host only, qemu/kvm only provider that is
-intend to alternate VirtualBox with KVM/Qemu in same work flow.
+intended as an alternative to VirtualBox while keeping the same workflow.
 
-Vagrant-libvirt is a libvirt provider to control machines via libvirt toolkit.
-Vagrant-libvirt is, in design, for local and remote hosts and multiple hypervisors,
+Vagrant-libvirt is a libvirt provider to control machines via the libvirt toolkit.
+Vagrant-libvirt covers a lot more libvirt options, local and remote hosts and multiple hypervisors,
 such as Xen, LXC and KVM/qemu.
 
-In early 2014, Varant-libvirt only support kvm/qemu in local host,
-there is no big feature difference.
-Here is a fact:
+In early 2014, Varant-libvirt only support kvm/qemu in local host, there is no big feature difference.
+
+Here are a few difference:
 
 1. Travis CI and quality assurance
 
-Vagrant-kvm tested every pull request and repository with Travis-CI;
+Vagrant-kvm tests every pull request and repository with Travis-CI;
 https://travis-ci.org/adrahon/vagrant-kvm/
 Vagrant-libvirt does not.
 
 2. Copy-on-write
 
-Vagrant-kvm in default use qcow2 format in box
-and use qcow2 disk image backing with box disk.
-This has an advantage in boot time but low performance.
-You can configure to clone(copy) disk image to pool.
-This need more time for booting ,but get high performance.
-You can also configure use raw image instead of qcow2.
-It can archive best I/O performance.
+Vagrant-kvm by default uses the qcow2 format
+and qcow2 disk image backing to create a new volume
+from the box disk.
+This makes creating a new vm very fast, with some performance penalties.
+You can change this through configuration to clone(copy) disk image to pool instead.
+This will make new vm creation slower, but give you better disk performance.
+You can also configure vagrant-kvm to use raw images for an additional
+performance gain.
 
 Vagrant-libvirt use qcow2 as disk image.
 
 3. VNC port/password
 
-Vagrant-kvm is configurable how to connect VNC, which provide virtual guest desktop.
+Vagrant-kvm allows you to configure how to connect with VNC, which provides virtual guest desktop.
 Vagrant-libvirt is not.
 
 4. Synced folder
 
 Vagrant-kvm can provide synced folder with NFS only.
-We plan to provide virtfs(p9share) that user can access
-their files without root privilege.
+We plan to provide virtfs(p9share) to allow sharing local folders
+without root privilege.
 
 Vagrant-libvirt provide synced folder with Rsync and NFS.
 They also plan to support virtfs in future.
@@ -193,7 +188,7 @@ virtfs feature in both providers.
 
 Vagrant-kvm plan to support snapshot via sahara.
 We have already proposed to sahara project to add support
-and waiting review.
+and are waiting for review.
 https://github.com/jedi4ever/sahara/pull/32
 
 Vagrant-libvirt is supported by sahara.
@@ -201,7 +196,6 @@ Vagrant-libvirt is supported by sahara.
 6. Use boxes from other Vagrant providers via vagrant-mutate
 
 Both are supported by vagrant-mutate as convert target
-
 
 7. Architecture
 

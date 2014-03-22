@@ -1,4 +1,4 @@
-# 0.1.5 (,2014)
+# 0.1.5 (March 22, 2014)
 
 * Change default box format to qcow2 [GH-63]
 * Support Vagrant 1.4.0+[GH-126]

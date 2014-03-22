@@ -65,7 +65,7 @@ $ sudo usermod -G libvirtd  -a ~~usrname~~
 ### Fedora preparation
 
 Home directory permission is too conservative for Vagrant with kvm.
-Please relax your home directory permission.
+Please relax your home directory permissions.
 
 ```bash
 $ chmod o+x $HOME
@@ -93,7 +93,13 @@ $ semanage fcontext -a -t virt_image_t "~/.vagrant.d/boxes(/.*)?"
 $ restorecon -R ~/.vagrant.d/boxes
 ```
 
-Fedora uses PolicyKit for management access to libvirt,
+Verify that this worked with
+```bash
+$ ls -Z ~/.vagrant.d/tmp/
+$ ls -Z ~/.vagrant.d/
+```
+
+Fedora uses PolicyKit to manage access to libvirt,
 an additional polkit rules file may be required.
 Following sample configure that user who is in __virt__ group
 can access libvirt in user privilege.
@@ -123,7 +129,7 @@ Then restart polkit service
 $ systemctl restart polkit.service
 ```
 
-In alternate way, you can use polkit local authority compatibirity configuration
+Alternatively, you can use polkit local authority compatibility configuration
 
 ```bash
 $ sudo yum install -y polkit-pkla-compat
@@ -201,7 +207,6 @@ This plugin requires
 
 - For `ruby-libvirt` gems installation dependency:
  * `libvirt-dev`
-
 
 Home directory permission is too conservative for Vagrant with kvm.
 Please relax your home directory permission.
