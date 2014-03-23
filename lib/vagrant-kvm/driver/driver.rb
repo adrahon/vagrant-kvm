@@ -152,6 +152,7 @@ module VagrantPlugins
             :disk => volume_path,
             :name => @name
           }.merge(args)
+          args.merge!(:virtio_rng => nil) if @conn.version.to_i < 1003000  # virtio_rng supported in 1.3.0+
           definition.update(args)
           # create vm
           @logger.info("Creating new VM")
