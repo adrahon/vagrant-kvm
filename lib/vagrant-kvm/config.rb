@@ -63,9 +63,17 @@ module VagrantPlugins
       attr_accessor :machine_type
       attr_accessor :network_model
       attr_accessor :video_model
+      attr_accessor :sound
+
+      # disk bus type
+      # sata/virtio
+      #
+      # @return [String]
+      attr_accessor :disk_bus
       attr_accessor :force_pause
 
       def initialize
+        @customizations   = []
         @name             = UNSET_VALUE
         @gui              = UNSET_VALUE
         @image_type       = UNSET_VALUE
@@ -80,7 +88,26 @@ module VagrantPlugins
         @machine_type     = UNSET_VALUE
         @network_model    = UNSET_VALUE
         @video_model      = UNSET_VALUE
-        @force_pause    = UNSET_VALUE
+        @disk_bus         = UNSET_VALUE
+        @sound            = UNSET_VALUE
+        @force_pause      = UNSET_VALUE
+        @enable_virtfs    = UNSET_VALUE
+      end
+
+      # Customize the VM by predefined actions.
+      #
+      # When called multiple times, the customizations will be applied
+      # in the order given.
+      #
+      # The special `:name` parameter in the command will be replaced with
+      # the unique ID or name of the virtual machine. This is useful for
+      # parameters to `modifyvm` and the like.
+      #
+      # @param [Array] command An array of arguments to pass to
+      def customize(*command)
+        event   = command.first.is_a?(String) ? command.shift : "pre-boot"
+        command = command[0]
+        @customizations << [event, command]
       end
 
       # This is the hook that is called to finalize the object before it
@@ -141,7 +168,32 @@ module VagrantPlugins
         @machine_type = "pc-1.2" if @machine_type == UNSET_VALUE
         @network_model = "virtio" if @network_model == UNSET_VALUE
         @video_model = "cirrus" if @video_model == UNSET_VALUE
+        @disk_bus = nil if @disk_bus == UNSET_VALUE
+        @sound = false if @sound == UNSET_VALUE
         @force_pause = false if @force_pause == UNSET_VALUE
+        @enable_virtfs = false if @enable_virtfs == UNSET_VALUE
+      end
+
+      def validate(machine)
+        errors = []
+
+        valid_events = ["pre-import", "pre-boot", "post-boot"]
+        @customizations.each do |event, _|
+          if !valid_events.include?(event)
+            errors << I18n.t(
+              "vagrant.kvm.config.invalid_event",
+              event: event.to_s,
+              valid_events: valid_events.join(", "))
+          end
+        end
+
+        @customizations.each do |event, command|
+          if event == "pre-import" && command.index(:id)
+            errors << I18n.t("vagrant.kvm.config.id_in_pre_import")
+          end
+        end
+
+        { "KVM Provider" => errors }
       end
     end
   end

@@ -35,8 +35,10 @@ module VagrantPlugins
             :cpu_model     => provider_config.cpu_model,
             :machine_type  => provider_config.machine_type,
             :network_model => provider_config.network_model,
-            :video_model   => provider_config.video_model
+            :video_model   => provider_config.video_model,
           }.merge(args)
+
+          args[:disk_bus]   = provider_config.disk_bus if provider_config.disk_bus
 
           # Import the virtual machine
           storage_path = File.join(@env[:tmp_path],"/storage-pool")
@@ -89,10 +91,20 @@ module VagrantPlugins
               # on Redhat/Fedora, permission is controlled
               # with only SELinux
               modes = {:dir => '0777',:file => '0666'}
-            elsif driver.host_debian?
+              secmodel = 'selinux'
+            elsif driver.host_arch?
+              # XXX: should be configurable
+              secmodel = 'dac'
+            elsif driver.host_ubuntu?
               groupid = Etc.getgrnam('kvm').gid.to_s
+              secmodel='apparmor'
+            elsif driver.host_debian?
+              # XXX: should be configurable
+              groupid = Etc.getgrnam('kvm').gid.to_s
+              secmodel='dac'
             else
-              # XXX: default
+              # default
+              secmodel='dac'
             end
             pool_name = 'vagrant_' + userid + '_' + box_name
             driver.init_storage_directory(
@@ -109,7 +121,8 @@ module VagrantPlugins
                 :owner => userid,
                 :group => groupid,
                 :mode => modes[:file],
-                :label => label)
+                :label => label,
+                :secmodel => secmodel)
             driver.free_storage_pool(pool_name)
           else
             @logger.info "Image type #{args[:image_type]} is not supported"

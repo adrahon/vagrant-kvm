@@ -6,8 +6,8 @@ end
 
 # This is a sanity check to make sure no one is attempting to install
 # this into an early Vagrant version.
-if Vagrant::VERSION < "1.1.0"
-  raise "The Vagrant KVM plugin is only compatible with Vagrant 1.1+"
+if Vagrant::VERSION < "1.4.0"
+  raise "The Vagrant KVM plugin is only compatible with Vagrant 1.4+"
 end
 
 module VagrantPlugins
@@ -32,6 +32,16 @@ module VagrantPlugins
         # Return the provider
         require_relative "provider"
         Provider
+      end
+
+      guest_capability("linux", "mount_p9_shared_folder") do
+        require_relative "cap/mount_p9"
+        Cap::MountP9
+      end
+
+      synced_folder("p9", 20) do
+        require_relative "synced_folder"
+        SyncedFolder
       end
 
       # This initializes the internationalization strings.

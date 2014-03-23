@@ -5,28 +5,56 @@ module VagrantPlugins
     module Driver
       describe Driver do
         let(:xml) { test_file "box.xml" }
-        let(:volume_name) { "" }
+        let(:name) { 'spec-test' }
+        let(:disk_name) { 'spec-test' }
+        let(:box_path) { test_file "box-disk1.img" }
+        let(:box_pool) { test_file "" }
+        let(:capacity) { {:size=>256, :unit=>'KB'} }
+        let(:image_path) { '/tmp/pool-storage/box-disk1.img' }
+        let(:image_type) { 'qcow2' }
+        let(:uid) { 1000 }
+        let(:gid) { 1000 }
 
         before do
           described_class.any_instance.stub(:load_kvm_module!) { true }
+          described_class.any_instance.stub(:init_storage_pool!) { true }
+          described_class.any_instance.stub(:lookup_volume_path_by_name) { "/tmp/pool-storage/box-disk1.img" }
         end
 
         describe "#import" do
-          # FIXME All of these required stubs are a symptom of bad design in the
-          # driver class. 
-          let(:volume) { double(path: "foo") }
-          let(:pool) { double(refresh: nil, lookup_volume_by_name: volume) }
-          let(:domain) { double(uuid: "abc") }
-          let(:conn) { double(version: 1000000000, 
-                              lookup_storage_pool_by_name: pool, 
-                              define_domain_xml: domain) }
           subject do
-            described_class.new(nil, conn)
+            described_class.new(nil)
+          end
+
+          it "does not raise exeption" do
+            expect do
+              subject.set_name(name)
+            end.to_not raise_exception
+          end
+
+          it "does not raise execption" do
+            expect do
+              subject.init_storage("/tmp", uid, gid)
+            end.to_not raise_exception
           end
 
           it "does not raise exception" do
             expect do
-              subject.import(xml, volume_name)
+              subject.init_storage("/tmp", uid, gid)
+              subject.create_volume(
+                  :disk_name  => disk_name,
+                  :capacity   => capacity,
+                  :path       => image_path,
+                  :image_type => image_type,
+                  :box_path   => box_path,
+                  :backing    => true)
+              end.to_not raise_exception
+          end
+
+          it "does not raise exception" do
+            expect do
+              subject.set_name(name)
+              subject.import(xml, disk_name)
             end.to_not raise_exception
           end
         end

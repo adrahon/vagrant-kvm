@@ -1,5 +1,6 @@
 require 'libvirt'
 require 'log4r'
+require 'pathname'
 
 module VagrantPlugins
   module ProviderKvm
@@ -29,47 +30,17 @@ module VagrantPlugins
         # The UUID of the virtual machine we represent
         attr_reader :uuid
 
-        # The QEMU version
-        # XXX sufficient or have to check kvm and libvirt versions?
-        attr_reader :version
-
-        # KVM support status
-        attr_reader :kvm
-
-        def initialize(uuid=nil, conn=nil)
+        def initialize(uuid=nil)
           @logger = Log4r::Logger.new("vagrant::provider::kvm::driver")
           @uuid = uuid
           # This should be configurable
           @pool_name = "vagrant"
           @network_name = "vagrant"
+          @virsh_path = "virsh"
 
           load_kvm_module!
-
-          # Open a connection to the qemu driver
-          begin
-            @conn = conn || Libvirt::open('qemu:///system')
-          rescue Libvirt::Error => e
-            if e.libvirt_code == 5
-              # can't connect to hypervisor
-              raise Vagrant::Errors::KvmNoConnection
-            else
-              raise e
-            end
-          end
-
-          @version = read_version
-          if @conn.version.to_i < 1001000
-            raise Errors::KvmInvalidVersion,
-              :actual => @version, :required => ">= 1.1.0"
-          end
-
-          # Get storage pool if it exists
-          begin
-            @pool = @conn.lookup_storage_pool_by_name(@pool_name)
-            @logger.info("Init storage pool #{@pool_name}")
-          rescue Libvirt::RetrieveError
-            # storage pool doesn't exist yet
-          end
+          connect_libvirt_qemu!
+          init_storage_pool!
 
           if @uuid
             # Verify the VM exists, and if it doesn't, then don't worry
@@ -174,11 +145,11 @@ module VagrantPlugins
           @logger.info("Importing VM #{@name}")
           # create vm definition from xml
           definition = File.open(definition) { |f| Util::VmDefinition.new(f.read) }
-          volume = @pool.lookup_volume_by_name(volume_name)
+          volume_path = lookup_volume_path_by_name(volume_name)
           args = {
             :image_type => "qcow2",
             :qemu_bin => "/usr/bin/qemu",
-            :disk => volume.path,
+            :disk => volume_path,
             :name => @name
           }.merge(args)
           definition.update(args)
@@ -235,8 +206,8 @@ module VagrantPlugins
           # Storage pool doesn't exist so we create it
           # create dir if it doesn't exist
           # if we let libvirt create the dir it is owned by root
-          pool_path = base_path.join("storage-pool")
-          pool_path.mkpath unless Dir.exists?(pool_path)
+          pool_path = File.join(base_path, "/storage-pool")
+          FileUtils.mkpath(pool_path) unless Dir.exists?(pool_path)
           @pool = init_storage_directory(
                      :pool_path => pool_path,
                      :pool_name => @pool_name,
@@ -282,6 +253,11 @@ module VagrantPlugins
           end
         end
 
+        def lookup_volume_path_by_name(volume_name)
+          volume = @pool.lookup_volume_by_name(volume_name)
+          volume.path
+        end
+
         # Returns a list of network interfaces of the VM.
         #
         # @return [Hash]
@@ -308,6 +284,22 @@ module VagrantPlugins
           end
         end
 
+        # Returns a hostname of the guest
+        # introduced from ruby-libvirt 0.5.0
+        #
+        # @return [String]
+        def hostname?
+          domain = @conn.lookup_domain_by_uuid(@uuid)
+          domain.hostname
+        end
+
+        # reset the guest
+        # introduced from ruby-libvirt 0.5.0
+        def reset
+          domain = @conn.lookup_domain_by_uuid(@uuid)
+          domain.reset
+        end
+
         def read_state
           domain = @conn.lookup_domain_by_uuid(@uuid)
           state, reason = domain.state
@@ -322,17 +314,6 @@ module VagrantPlugins
             return :poweroff
           end
           VM_STATE[state]
-        end
-
-        # Return the qemu version
-        #
-        # @return [String] of the form "1.2.2"
-        def read_version
-          # libvirt returns a number like 1002002 for version 1.2.2
-          maj = @conn.version / 1000000
-          min = (@conn.version - maj*1000000) / 1000
-          rel = @conn.version % 1000
-          "#{maj}.#{min}.#{rel}"
         end
 
         def read_mac_address
@@ -370,6 +351,14 @@ module VagrantPlugins
           update_domain_xml(:disk_bus => disk_bus)
         end
 
+        def share_folders(folders)
+          update_domain_xml(:p9 => folders)
+        end
+
+        def clear_shared_folders
+          #stub
+        end
+
         def update_domain_xml(options)
           domain = @conn.lookup_domain_by_uuid(@uuid)
           # Use DOMAIN_XML_SECURE to dump ALL options (including VNC password)
@@ -393,6 +382,20 @@ module VagrantPlugins
         def save
           domain = @conn.lookup_domain_by_uuid(@uuid)
           domain.managed_save
+        end
+
+        # Suspend for duration
+        # introduced from ruby-libvirt 0.5.0
+        def suspend_for_duration(target, duration)
+          domain = @conn.lookup_domain_by_uuid(@uuid)
+          domain.pmsuspend_for_duration(target, duration)
+        end
+
+        # Wakeup the virtual machine
+        # introduced from ruby-libvirt 0.5.0
+        def wakeup
+          domain = @conn.lookup_domain_by_uuid(@uuid)
+          domain.pmwakeup
         end
 
         def can_save?
@@ -432,7 +435,36 @@ module VagrantPlugins
           end
         end
 
-        # Verifies that the driver is ready and the connection is open
+        # Executes a command and returns the raw result object.
+        def raw(*command, &block)
+          int_callback = lambda do
+            @interrupted = true
+            @logger.info("Interrupted.")
+          end
+
+          # Append in the options for subprocess
+          command << { :notify => [:stdout, :stderr] }
+
+          Vagrant::Util::Busy.busy(int_callback) do
+            Vagrant::Util::Subprocess.execute(@virsh_path, *command, &block)
+          end
+        end
+
+        def execute_command(command)
+          raw(*command)
+        end
+
+        # Verifies that the connection is alive
+        # introduced from ruby-libvirt 0.5.0
+        #
+        # This will raise a VagrantError if things are not ready.
+        def alive!
+          unless @conn.alive?
+            raise Vagrant::Errors::KvmNoConnection
+          end
+        end
+
+        # Verifies that the driver is	 ready and the connection is open
         #
         # This will raise a VagrantError if things are not ready.
         def verify!
@@ -456,44 +488,80 @@ module VagrantPlugins
         # Checks which Linux OS variants
         #
         # host_redhat?
+        # host_ubuntu?
         # host_debian?
         # host_gentoo?
         # host_arch?
         # @return [Boolean]
         def host_redhat?
-          release_file = Pathname.new("/etc/redhat-release")
+          # Check also Korora, CentOS, Fedora,
+          #   Oracle Linux < 5.3 and
+          #   Red Hat Enterprise Linux and Oracle Linux >= 5.3
+          return true if check_os_release?("/etc/redhat-release",
+            ["CentOS","Fedora","Korora","Enterprise Linux Enterprise Linux","Red Hat Enterprise Linux"])
+          false
+        end
 
-          if release_file.exist?
-            release_file.open("r:ISO-8859-1:UTF-8") do |f|
-              contents = f.gets
-              return true if contents =~ /^CentOS/ # CentOS
-              return true if contents =~ /^Fedora/ # Fedora
-              return true if contents =~ /^Korora/ # Korora
+        def host_suse?
+          check_os_release?("/etc/SuSE-release")
+        end
 
-              # Oracle Linux < 5.3
-              return true if contents =~ /^Enterprise Linux Enterprise Linux/
-
-              # Red Hat Enterprise Linux and Oracle Linux >= 5.3
-              return true if contents =~ /^Red Hat Enterprise Linux/
-            end
+        def host_ubuntu?
+          if rel = check_lsb_release?
+            return true if rel == "Ubuntu"
           end
-
           false
         end
 
         def host_debian?
-          File.exists?("/etc/debian_version")
+          check_os_release?("/etc/debian_version")
         end
 
         def host_gentoo?
-          File.exists?("/etc/gentoo-release")
+          check_os_release?("/etc/gentoo-release")
         end
 
         def host_arch?
-          File.exist?("/etc/arch-release")
+          check_os_release?("/etc/arch-release")
         end
 
         private
+
+        # Return the qemu version
+        #
+        # @return [String] of the form "1.2.2"
+        def read_version
+          # libvirt returns a number like 1002002 for version 1.2.2
+          maj = @conn.version / 1000000
+          min = (@conn.version - maj*1000000) / 1000
+          rel = @conn.version % 1000
+          "#{maj}.#{min}.#{rel}"
+        end
+
+        # Check contents of release file
+        #
+        # filename: release file path
+        # criteria: ["CentOS","Fedora",...]
+        def check_os_release?(filename, criteria=nil)
+          return File.exists?(filename) unless criteria
+
+          release_file = Pathname.new(filename)
+          if release_file.exist?
+            release_file.open("r:ISO-8859-1:UTF-8") do |f|
+              contents = f.gets
+              criteria.each do |c|
+                return true if contents =~ /^#{c}/
+              end
+            end
+          end
+          false
+        end
+
+        def check_lsb_release?
+          return false unless File.exists?("/usr/bin/lsb_release")
+          IO.popen('/usr/bin/lsb_release -i') { |o| o.read.chomp.split("\t") }[1]
+        end
+
         def load_kvm_module!
           @logger.info("Check KVM kernel modules")
           kvm = File.readlines('/proc/modules').any? { |line| line =~ /kvm_(intel|amd)/ }
@@ -510,6 +578,43 @@ module VagrantPlugins
           # FIXME: see KVM/ARM project
           raise Errors::VagrantKVMError, "KVM is unavailable" unless kvm
           true
+        end
+
+        def connect_libvirt_qemu!
+          # Open a connection to the qemu driver
+          begin
+            @conn = Libvirt::open('qemu:///system')
+            @conn.capabilities
+          rescue Libvirt::Error => e
+            if e.libvirt_code == 5
+              # can't connect to hypervisor
+              raise Vagrant::Errors::KvmNoConnection
+            else
+              raise e
+            end
+          end
+
+          hv_type = @conn.type.to_s
+          unless hv_type == "QEMU"
+            raise Errors::KvmUnsupportedHypervisor,
+              :actual => hv_type, :required => "QEMU"
+          end
+
+          version = read_version
+          if @conn.version.to_i < 1001000
+            raise Errors::KvmInvalidVersion,
+              :actual => version, :required => ">= 1.1.0"
+          end
+        end
+
+        def init_storage_pool!
+          # Get storage pool if it exists
+          begin
+            @pool = @conn.lookup_storage_pool_by_name(@pool_name)
+            @logger.info("Init storage pool #{@pool_name}")
+          rescue Libvirt::RetrieveError
+            # storage pool doesn't exist yet
+          end
         end
       end
     end

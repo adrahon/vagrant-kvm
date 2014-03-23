@@ -35,7 +35,9 @@ module VagrantPlugins
             :vnc_password => nil,
             :network      => 'default',
             :network_model => 'virtio',
-            :video_model  => 'cirrus'
+            :video_model  => 'cirrus',
+            :secmodel => 'dac',
+            :sound        => nil
           }
           doc = REXML::Document.new definition
           memory_unit = doc.elements["/domain/memory"].attributes["unit"]
@@ -72,6 +74,11 @@ module VagrantPlugins
               :vnc_port     => attrs['port'].to_i,
               :vnc_autoport => attrs['autoport'] == 'yes',
               :vnc_password => attrs['passwd']
+            })
+          end
+          if doc.elements["//devices/sound"]
+            update({
+              :sound => true
             })
           end
         end

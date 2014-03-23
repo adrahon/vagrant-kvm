@@ -2,7 +2,7 @@
 
 # Vagrant KVM Provider
 
-This is a [Vagrant](http://www.vagrantup.com) 1.1+ plugin that adds a KVM
+This is a [Vagrant](http://www.vagrantup.com) 1.4+ plugin that adds a KVM
 provider to Vagrant, allowing Vagrant to control and provision KVM/QEMU VM.
 
 ## Requirements
@@ -21,13 +21,20 @@ a lot faster. In most cases you want to use qcow2.
 
 OVF boxes conversion as been removed, you should use `vagrant-mutate` instead.
 
+Synced folders are now provided by a QEMU/KVM Virtfs in default.
+You can also use NFS for file share using `type: "nfs"` option.
+
+There was a known libvirt bug in Ubuntu host:
+https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/943680
+It was solved in Ubuntu 14.04(Trusty) and a backported libvirt provided by PPA above.
+
 ## Features/Limitations
 
 * Provides the same workflow as the Vagrant VirtualBox provider.
-* Uses NFS for sync folders
+* Uses Virtfs for sync folders
 * Only works with 1 VM per Vagrantfile for now
 * Requires "libvirtd" group membership to run Vagrant (Debian/Ubuntu only)
-* Requires backporting qemu and libvirt from experimental (Debian) or raring (Ubuntu)
+* Requires backporting qemu and libvirt from experimental (Debian) or trusty (Ubuntu)
 * Use qcow2 backing image by default, which should make VM creation very fast
 
 ## Known issues
@@ -133,6 +140,10 @@ set to vga.
 * `image_mode` - Possible value are `clone` or `cow`, defaults to `cow`. If set
 to `clone`, the image disk will be copied rather than use the original box
 image. This is slower but allows multiple VMs to be booted at the same time.
+* `customize` - Customize virtual machine with virsh command. Similar functionality with virtualbox provider.
+* `disk_bus` - disk interface to show virtual disk to guest: 'virtio' or 'sata', 'scsi'
+  A box, which is 'mutate'-ed from virtualbox/vmware box, may specify sata/ide for disk bus.
+  It may be useful to specify 'virtio' for performance, even when box defaults disk bus as sata/ide/scsi.
 * `force_pause` - use `pause` for `vagrant suspend` instead of `suspend`.
   It keeps resource online but execution is stopped.
   When VM has a device that is not supported `hibernate`, automatically use

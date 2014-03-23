@@ -16,25 +16,19 @@ module VagrantPlugins
           b.use Network
           b.use Provision
           b.use Vagrant::Action::Builtin::HandleForwardedPortCollisions
-          if Vagrant::VERSION < "1.4.0"
-            b.use PruneNFSExports
-            b.use NFS
-            b.use PrepareNFSSettings
-          else
-            #FIXME
-            b.use PrepareNFSValidIds
-            b.use SyncedFolderCleanup
-            b.use SyncedFolders
-            b.use PrepareNFSSettings
-          end
+          b.use PrepareNFSValidIds
+          b.use SyncedFolderCleanup
+          b.use SyncedFolders
+          b.use PrepareNFSSettings
           b.use SetHostname
-          #b.use Customize
+          b.use Customize, "pre-boot"
           b.use ForwardPorts
           b.use Boot
           if Vagrant::VERSION >= "1.3.0"
             b.use WaitForCommunicator, [:running]
           end
           b.use ShareFolders
+          b.use Customize, "post-boot"
         end
       end
 
@@ -54,13 +48,10 @@ module VagrantPlugins
                 b3.use ConfigValidate
                 b3.use EnvSet, :force_halt => true
                 b3.use action_halt
-                if Vagrant::VERSION < "1.4.0"
-                  b3.use PruneNFSExports
-                else
-                  b3.use PrepareNFSSettings
-                  b3.use PrepareNFSValidIds
-                  b3.use SyncedFolderCleanup
-                end
+                b3.use PrepareNFSSettings
+                b3.use PrepareNFSValidIds
+                b3.use SyncedFolderCleanup
+                b3.use PrepareNFSSettings
                 b3.use Destroy
               else
                 b3.use MessageWillNotDestroy
@@ -108,13 +99,10 @@ module VagrantPlugins
 
             b2.use SetupPackageFiles
             b2.use action_halt
-            if Vagrant::VERSION < "1.4.0"
-              b2.use PruneNFSExports
-            else
-              b2.use PrepareNFSSettings
-              b2.use PrepareNFSValidIds
-              b2.use SyncedFolderCleanup
-            end
+            b2.use PrepareNFSSettings
+            b2.use PrepareNFSValidIds
+            b2.use SyncedFolderCleanup
+            b2.use PrepareNFSSettings
             b2.use Export
             b2.use PackageVagrantfile
             b2.use Package
@@ -226,7 +214,7 @@ module VagrantPlugins
 
                 # The VM is not saved, so we must have to boot it up
                 # like normal. Boot!
-                b4.use PrepareGui
+                b4.use PrepareKvmConfig
                 b4.use action_boot
               end
             end
@@ -262,6 +250,7 @@ module VagrantPlugins
             if !env[:result]
               b2.use CheckBox
               b2.use SetName
+              b2.use Customize, "pre-import"
               b2.use Import
               b2.use MatchMACAddress
             end
@@ -278,6 +267,7 @@ module VagrantPlugins
       autoload :CheckKvm, action_root.join("check_kvm")
       autoload :CheckRunning, action_root.join("check_running")
       autoload :ClearForwardedPorts, action_root.join("clear_forwarded_ports")
+      autoload :Customize, action_root.join("customize")
       autoload :Created, action_root.join("created")
       autoload :Destroy, action_root.join("destroy")
       autoload :DestroyConfirm, action_root.join("destroy_confirm")
@@ -296,10 +286,9 @@ module VagrantPlugins
       autoload :Network, action_root.join("network")
       autoload :PackageVagrantfile, action_root.join("package_vagrantfile")
       autoload :Package, action_root.join("package")
-      autoload :PrepareGui, action_root.join("prepare_gui")
+      autoload :PrepareKvmConfig, action_root.join("prepare_kvmconfig")
       autoload :PrepareNFSSettings, action_root.join("prepare_nfs_settings")
       autoload :PrepareNFSValidIds, action_root.join("prepare_nfs_valid_ids")
-      autoload :PruneNFSExports, action_root.join("prune_nfs_exports")
       autoload :ResetImagePermission, action_root.join("reset_image_permission")
       autoload :Resume, action_root.join("resume")
       autoload :ResumeNetwork, action_root.join("resume_network")
