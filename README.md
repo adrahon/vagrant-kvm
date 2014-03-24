@@ -78,6 +78,14 @@ $ sudo rm /etc/libvirt/storage/vagrant*
 $ sudo ls /etc/libvirt/storage/vagrant*
 ```
 
+alternative way:
+
+* open virt-manager
+* connect to localhost
+* right click and open details
+* click storage tab
+* right click 'vagrant*' storage pool and delete it.
+
 3. restart libvirt daemon
 
 Ubuntu/Debian
