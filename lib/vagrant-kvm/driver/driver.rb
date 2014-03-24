@@ -291,7 +291,7 @@ module VagrantPlugins
             #  Pools defined here will be removed after system reboot.
             #
             pool = @conn.create_storage_pool_xml(storage_pool_xml)
-            pool.build
+            pool.build unless pool.active?
             #XXX use? pool.build(Libvirt::StoragePool::BUILD_NO_OVERWRITE)
             @logger.info("Creating storage pool #{args[:pool_name]} in #{args[:pool_path]}")
           end
