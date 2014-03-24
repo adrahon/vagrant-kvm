@@ -39,6 +39,58 @@ It was solved in Ubuntu 14.04(Trusty) and a backported libvirt provided by PPA a
 
 ## Known issues
 
+### Vagrant 1.5 migration
+
+Vagrant 1.5 changes a structure of user boxes directories.
+vagrant-KVM handle box directory as libvirt/qemu temporary spool,
+but Vagrant 1.5 changes it at first time launched.
+
+Unfortunately vagrant-KVM 0.1.5 does not run on Vagrant-1.5.x.
+Users who interested in vagrant-kvm 0.1.5 may use with Vagrant 1.4.x.
+
+This caused problem when following sinario:
+
+1. user use vagrant-kvm 0.1.5 with vagrant-1.4.x
+2. user upgrade vagrant 1.5.x
+3. user upgrade vagrant 0.1.5.1 and after
+
+ We use transient pool instead of persistent one
+in vagrant-kvm 0.1.5.x, 0.1.6 and after
+Pools defined by vagrant-kvm will be removed after system reboot.
+
+We recommend to use following combinations.
+
+- Vagrant 1.3.x or before, and Vagrant-KVM 0.1.4
+
+- Vagrant 1.5.x or after, and  Vagrant-KVM 0.1.5.1 or after
+
+If you are joining test for vagrant-kvm or other reasons you use vagrant-kvm 0.1.5 with vagrant 1.4.x,
+you got `Call to virStoragePoolCreate failed: cannot open path` error, please follow the instructions bellow.
+Please take care for root operation.
+
+1. Upgrade vagrant-kvm to vagrant-kvm  0.1.5.1 or after
+
+2. Clear all storage definitions.
+
+```bash
+$ sudo ls /etc/libvirt/storage/vagrant*
+$ sudo rm /etc/libvirt/storage/vagrant*
+$ sudo ls /etc/libvirt/storage/vagrant*
+```
+
+3. restart libvirt daemon
+
+Ubuntu/Debian
+```bash
+$ sudo service libvirt-bin restart
+```
+
+Fedora/CentOS/SuSE/Arch
+```bash
+$ sudo systemctl libvirtd restart
+```
+
+
 ### Ubuntu
 Some versions of Ubuntu kernel has a bug that will cause vagrant-kvm
 to fail with a permission error on `vagrant up`. It is a kernel bug with the AppArmor security framework.
