@@ -36,12 +36,16 @@ module VagrantPlugins
         # KVM support status
         attr_reader :kvm
 
+        # Vagrant 1.5.x pool migration
+        attr_reader :pool_migrate
+
         def initialize(uuid=nil, conn=nil)
           @logger = Log4r::Logger.new("vagrant::provider::kvm::driver")
           @uuid = uuid
           # This should be configurable
           @pool_name = "vagrant"
           @network_name = "vagrant"
+          @pool_migrate = false
 
           load_kvm_module!
 
@@ -66,10 +70,13 @@ module VagrantPlugins
           # Get storage pool if it exists
           begin
             @pool = @conn.lookup_storage_pool_by_name(@pool_name)
-            @logger.info("Init storage pool #{@pool_name}")
+            # this is happen when user has already used vagrant-kvm 0.1.5 and after
+            # check neccesity of migration
+            check_migrate_box_storage_pool
           rescue Libvirt::RetrieveError
             # storage pool doesn't exist yet
           end
+
 
           if @uuid
             # Verify the VM exists, and if it doesn't, then don't worry
@@ -263,13 +270,34 @@ module VagrantPlugins
               </target>
               </pool>
              EOF
-            pool = @conn.define_storage_pool_xml(storage_pool_xml)
+            # create transient pool
+            #
+            #  vagrant-kvm 0.1.5 uses
+            #  pool = @conn.define_storage_pool_xml(storage_pool_xml)
+            #  that made pesistent storage pool
+            #  this caused problem when user use vagrant-kvm with vagrant-1.4.x
+            #  then upgrade vagrant 1.5.x
+            #
+            pool = @conn.create_storage_pool_xml(storage_pool_xml)
             pool.build
             @logger.info("Creating storage pool #{args[:pool_name]} in #{args[:pool_path]}")
           end
           pool.create unless pool.active?
           pool.refresh
           pool
+        end
+
+        def check_migrate_box_storage_pool
+          # Migration to new pool directory structure in vagrant 1.5.x
+          # delete if created with <vagrant-1.4.x
+          if Vagrant::VERSION >= "1.5.0"
+            if @pool.persistent?
+              # pool was made by vagrant-kvm-0.1.5 and before
+              # vagrant-kvm-0.1.5 NOT working in vagrant 1.5.x
+              # so need migrate
+              @pool_migrate = true
+            end
+          end
         end
 
         def free_storage_pool(pool_name)
