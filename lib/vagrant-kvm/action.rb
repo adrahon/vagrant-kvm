@@ -260,7 +260,11 @@ module VagrantPlugins
           b.use Call, Created do |env, b2|
             # If the VM is NOT created yet, then do the setup steps
             if !env[:result]
-              b2.use CheckBox
+              if Vagrant::VERSION < "1.5.0"
+                b2.use CheckBox
+              else
+                b2.use HandleBox
+              end
               b2.use SetName
               b2.use Import
               b2.use MatchMACAddress
