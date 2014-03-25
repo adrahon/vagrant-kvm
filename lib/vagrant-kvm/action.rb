@@ -248,6 +248,7 @@ module VagrantPlugins
           b.use Call, Created do |env, b2|
             # If the VM is NOT created yet, then do the setup steps
             if !env[:result]
+              b2.use CheckBox
               b2.use SetName
               b2.use Customize, "pre-import"
               b2.use Import
@@ -261,6 +262,7 @@ module VagrantPlugins
       # The autoload farm
       action_root = Pathname.new(File.expand_path("../action", __FILE__))
       autoload :Boot, action_root.join("boot")
+      autoload :CheckBox, action_root.join("check_box")
       autoload :CheckCreated, action_root.join("check_created")
       autoload :CheckKvm, action_root.join("check_kvm")
       autoload :CheckRunning, action_root.join("check_running")
