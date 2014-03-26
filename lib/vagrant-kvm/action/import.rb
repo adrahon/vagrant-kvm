@@ -46,6 +46,11 @@ module VagrantPlugins
           box_file = @env[:machine].box.directory.join("box.xml").to_s
           raise Errors::KvmBadBoxFormat unless File.file?(box_file)
 
+          # check pool migration neccesary?
+          if @env[:machine].provider.driver.pool_migrate
+            @env[:ui].output "Your vagrant-kvm environment should be fixed. see README"
+          end
+
           # import box volume
           volume_name = import_volume(storage_path, box_file, args)
 
