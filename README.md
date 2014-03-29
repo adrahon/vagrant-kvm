@@ -38,32 +38,17 @@ Vagrant 1.5 changes a structure of user boxes directories.
 vagrant-KVM handle box directory as libvirt/qemu temporary spool,
 but Vagrant 1.5 changes it at first time launched.
 
-Unfortunately vagrant-KVM 0.1.5 does not run on Vagrant-1.5.x.
-Users who interested in vagrant-kvm 0.1.5 may use with Vagrant 1.4.x.
+If you got `Call to virStoragePoolCreate failed: cannot open path` error, or
+`Your vagrant-kvm environment should be fixed. see README`,
+please follow the instructions bellow.
 
-This caused problem when following sinario:
+1. Upgrade vagrant-kvm to vagrant-kvm  0.1.6 or after
 
-1. user use vagrant-kvm 0.1.5 with vagrant-1.4.x
-2. user upgrade vagrant 1.5.x
-3. user upgrade vagrant 0.1.5.1 and after
+2. Clear all vagrant storage pool definitions
 
- We use transient pool instead of persistent one
-in vagrant-kvm 0.1.5.x, 0.1.6 and after
-Pools defined by vagrant-kvm will be removed after system reboot.
+3. restart libvirt daemon
 
-We recommend to use following combinations.
-
-- Vagrant 1.3.x or before, and Vagrant-KVM 0.1.4
-
-- Vagrant 1.5.x or after, and  Vagrant-KVM 0.1.5.1 or after
-
-If you are joining test for vagrant-kvm or other reasons you use vagrant-kvm 0.1.5 with vagrant 1.4.x,
-you got `Call to virStoragePoolCreate failed: cannot open path` error, please follow the instructions bellow.
-Please take care for root operation.
-
-1. Upgrade vagrant-kvm to vagrant-kvm  0.1.5.1 or after
-
-2. Clear all storage definitions.
+#### how to clear storage pool
 
 ```bash
 $ sudo ls /etc/libvirt/storage/vagrant*
@@ -75,22 +60,26 @@ alternative way:
 
 * open virt-manager
 * connect to localhost
-* right click and open details
+* right click connection and open details
 * click storage tab
-* right click 'vagrant*' storage pool and delete it.
+* right click each 'vagrant*' storage pool and delete it.
 
-3. restart libvirt daemon
+#### how to restart libvirt daemon
 
 Ubuntu/Debian
 ```bash
 $ sudo service libvirt-bin restart
 ```
 
-Fedora/CentOS/SuSE/Arch
+Fedora/CentOS/SuSE/Arch previous versions
+```bash
+$ sudo service libvirtd restart
+```
+
+Fedora/CentOS/SuSE/Arch recent versions
 ```bash
 $ sudo systemctl libvirtd restart
 ```
-
 
 ### Ubuntu
 Some versions of Ubuntu kernel has a bug that will cause vagrant-kvm
