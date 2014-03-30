@@ -213,10 +213,11 @@ module VagrantPlugins
           # if we let libvirt create the dir it is owned by root
           pool_path = File.join(base_path, "/storage-pool")
           FileUtils.mkpath(pool_path) unless Dir.exists?(pool_path)
-          @pool = init_storage_directory(
+          init_storage_directory(
                      :pool_path => pool_path,
                      :pool_name => @pool_name,
                      :owner => uid, :group=>gid, :mode=>'755')
+          init_storage_pool!
         end
 
         def init_storage_directory(args={})
