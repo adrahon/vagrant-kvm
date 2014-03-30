@@ -2,13 +2,20 @@ en:
   vagrant_kvm:
     test_message: |-
       これはテストメッセージです。
+    kvm_spool_problem_inform: |-
+      このVagrant-kvm環境は修正の必要があります。READMEを確認してください。
     errors:
       kvm_no_connection: |-
         KVMにLibvirt経由で接続できません。カーネルモジュールの
-	 'kvm' 及び、'kvm-intel'か'kvm-amd'が正しくインストールされ、(debian/ubuntuの場合)あなたのユーザIDが
-	 libvirtグループに属しているか、確認してください。 
+         'kvm' 及び、'kvm-intel'か'kvm-amd'が正しくインストールされ、
+         (debian/ubuntuの場合)あなたのユーザIDがlibvirtdグループに属しているか、
+         確認してください。
       kvm_invalid_version: |-
-        不適切なKVMのバージョンが検出されました：バージョン %{actual} が検出されましたが、%{required} 
-        が必要です。
+        不適切なKVMのバージョンが検出されました：バージョン %{actual} が
+        検出されましたが、%{required} が必要です。
       kvm_no_qemu_binary: |-
         Qemuの実行バイナリが見つかりません。%{cause}を確認してください。
+      kvm_failed_command: |-
+        システムコマンドの %{cmd} が、エラーコード %{res} を返しました。
+      kvm_bad_box_format: |-
+        サポートされないBOX形式です。

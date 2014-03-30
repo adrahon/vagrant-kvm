@@ -48,7 +48,7 @@ module VagrantPlugins
 
           # check pool migration neccesary?
           if @env[:machine].provider.driver.pool_migrate
-            @env[:ui].output "Your vagrant-kvm environment should be fixed. see README"
+            @env[:ui].output I18n.t("vagrant_kvm.kvm_spool_problem_inform")
           end
 
           # repair directories permission
