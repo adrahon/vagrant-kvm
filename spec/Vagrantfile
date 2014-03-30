@@ -15,6 +15,7 @@ Vagrant.configure('2') do |config|
   #
   # to use KVM with nested virtulization support.
   config.vm.provider :kvm do |kvm, override|
+    kvm.memory_size     = '512m'
     override.vm.box     = 'vagrant-kvm'
     override.vm.box_url = 'https://vagrant-kvm-boxes.s3.amazonaws.com/vagrant-kvm.box'
   end
@@ -27,7 +28,12 @@ Vagrant.configure('2') do |config|
     set -x
 
     export DEBIAN_FRONTEND=noninteractive
-    sudo apt-get update
+
+    ## When you use precise or saucy
+    ## No need for trusty(test box for kvm)
+    #sudo apt-get update
+    #sudo apt-get install -qq python-software-properties
+    #sudo add-apt-repository ppa:miurahr/vagrant-devel
 
     sudo apt-get install -y ruby2.0-dev
     ## NOTE qemu-bin should be installed before libvirt-bin
@@ -39,6 +45,25 @@ Vagrant.configure('2') do |config|
     sudo apt-get install -y libxml2-dev libxslt-dev
     sudo apt-get install -qq redir
 
+    sudo usermod vagrant -a -G libvirtd
+
+    # vagrant 1.4 and after only support ruby2.0
+    sudo update-alternatives --quiet --set ruby /usr/bin/ruby2.0
+    sudo update-alternatives --quiet --set gem /usr/bin/gem2.0
+
+    # force libvirt to recognize qemu
+    sudo service libvirtd-bin restart
+
+    # work around for kernel bug
+    sudo apt-get install -qq apparmor-utils
+    sudo aa-complain /usr/lib/libvirt/virt-aa-helper
+
     [[ `sudo gem list | grep bundler` ]] || sudo gem install --version '~> 1.5.2' bundler
+
+    ## Now you can do
+    #cd /vagrant
+    #bundle exec rake box:add
+    #bundle exec rake box:prepare
+
   SH
 end
