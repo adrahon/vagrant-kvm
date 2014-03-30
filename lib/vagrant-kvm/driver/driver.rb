@@ -30,12 +30,16 @@ module VagrantPlugins
         # The UUID of the virtual machine we represent
         attr_reader :uuid
 
+        # Vagrant 1.5.x pool migration
+        attr_reader :pool_migrate
+
         def initialize(uuid=nil)
           @logger = Log4r::Logger.new("vagrant::provider::kvm::driver")
           @uuid = uuid
           # This should be configurable
           @pool_name = "vagrant"
           @virsh_path = "virsh"
+          @pool_migrate = false
 
           load_kvm_module!
           connect_libvirt_qemu!
@@ -286,8 +290,29 @@ module VagrantPlugins
               </target>
               </pool>
              EOF
-            pool = @conn.define_storage_pool_xml(storage_pool_xml)
-            pool.build
+            # create transient pool
+            #
+            # WARN:
+            #  vagrant-kvm 0.1.5 uses
+            #     pool = @conn.define_storage_pool_xml(storage_pool_xml)
+            #  that made 'pesistent' storage pool
+            #  this caused problem when following sinario:
+            #
+            #  1. user use vagrant-kvm 0.1.5 with vagrant-1.4.x
+            #  2. user upgrade vagrant 1.5.x
+            #  3. user upgrade vagrant 0.1.5.1 and after
+            #
+            #  vagrant-kvm 0.1.5 don't work with vagrant 1.5.x
+            #  previous synario can be happned on many user.
+            #
+            # We use transient pool instead of persistent one
+            # in vagrant-kvm 0.1.5.x, 0.1.6 and after
+            #
+            #  Pools defined here will be removed after system reboot.
+            #
+            pool = @conn.create_storage_pool_xml(storage_pool_xml)
+            pool.build unless pool.active?
+            #XXX use? pool.build(Libvirt::StoragePool::BUILD_NO_OVERWRITE)
             @logger.info("Creating storage pool #{args[:pool_name]} in #{args[:pool_path]}")
           end
           pool.create unless pool.active?
@@ -295,9 +320,27 @@ module VagrantPlugins
           pool
         end
 
+        def check_migrate_box_storage_pool
+          # Migration to new pool directory structure in vagrant 1.5.x
+          # delete if created with <vagrant-1.4.x
+          if Vagrant::VERSION >= "1.5.0"
+            begin
+              if @pool && @pool.persistent?
+                # pool was made by vagrant-kvm-0.1.5 and before
+                # vagrant-kvm-0.1.5 NOT working in vagrant 1.5.x
+                # so need migrate
+                @pool_migrate = true
+              end
+            rescue Libvirt::RetrieveError
+              @logger.info("fail to retrieve storage pool")
+            end
+          end
+        end
+
         def free_storage_pool(pool_name)
           begin
             pool = @conn.lookup_storage_pool_by_name(pool_name)
+            # XXX  check reference counter for parallel action?
             pool.destroy
             pool.free
           rescue Libvirt::RetrieveError
@@ -705,6 +748,9 @@ module VagrantPlugins
           # Get storage pool if it exists
           begin
             @pool = @conn.lookup_storage_pool_by_name(@pool_name)
+            # this is happen when user has already used vagrant-kvm 0.1.5 and after
+            # check neccesity of migration
+            check_migrate_box_storage_pool
             @logger.info("Init storage pool #{@pool_name}")
           rescue Libvirt::RetrieveError
             # storage pool doesn't exist yet
