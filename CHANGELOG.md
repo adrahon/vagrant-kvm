@@ -1,3 +1,10 @@
+# 0.1.6 (April, ?, 2014)
+
+* Support Vagrant 1.5.x[GH-188][GH-187][GH-186][GH-174]
+* Handle Vagrant 1.5 migration with box folder structure change
+* Document vagrant-1.4 to 1.5 migration [GH-189]
+* Fix spec test error
+
 # 0.1.5 (March 22, 2014)
 
 * Change default box format to qcow2 [GH-63]
