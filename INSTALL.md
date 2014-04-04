@@ -89,7 +89,7 @@ and box directory.
 $ sudo yum install policycoreutils-python
 $ semanage fcontext -a -t virt_image_t "~/.vagrant.d/tmp/storage-pool(/.*)?"
 $ restorecon -R ~/.vagrant.d/tmp/storage-pool
-$ semanage fcontext -a -t virt_image_t "~/.vagrant.d/boxes(/.*)?"
+$ semanage fcontext -a -t virt_context_t "~/.vagrant.d/boxes(/.*)?"
 $ restorecon -R ~/.vagrant.d/boxes
 ```
 

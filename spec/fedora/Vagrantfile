@@ -44,14 +44,14 @@ Vagrant.configure('2') do |config|
 
     ## SELinux label
     sudo yum install -y policycoreutils-python
-    # sudo semanage login -a -s staff_u vagrant
 
     mkdir -p /home/vagrant/.vagrant.d/tmp/storage-pool
     mkdir -p /home/vagrant/.vagrant.d/boxes
     chown -R vagrant.vagrant /home/vagrant/.vagrant.d/
+    chmod -R o+x /home/vagrant/.vagrant.d/
     sudo semanage fcontext -a -t virt_image_t "/home/vagrant/.vagrant.d/tmp/storage-pool(/.*)?"
     sudo restorecon -R /home/vagrant/.vagrant.d/tmp/storage-pool
-    sudo semanage fcontext -a -t virt_image_t "/home/vagrant/.vagrant.d/boxes(/.*)?"
+    sudo semanage fcontext -a -t virt_content_t "/home/vagrant/.vagrant.d/boxes(/.*)?"
     sudo restorecon -R /home/vagrant/.vagrant.d/boxes
 
     # Get debug log: /var/log/libvirtd-debug.log
