@@ -2,6 +2,8 @@ en:
   vagrant_kvm:
     test_message: |-
       This is a test message.
+    repair_permission: |-
+      Change directory %{directory} permission from %{old_mode} to %{new_mode}.
     errors:
       kvm_no_connection: |-
         Cannot connect to KVM through Libvirt. Please check kernel module
