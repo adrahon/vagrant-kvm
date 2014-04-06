@@ -51,9 +51,22 @@ please follow the instructions bellow.
 #### how to clear storage pool
 
 ```bash
-$ sudo ls /etc/libvirt/storage/vagrant*
-$ sudo rm /etc/libvirt/storage/vagrant*
-$ sudo ls /etc/libvirt/storage/vagrant*
+$ sudo -i
+# ls /etc/libvirt/storage/vagrant*
+/etc/libvirt/storage/vagrant_1000_archlinux-x86_64-20140325.xml
+/etc/libvirt/storage/vagrant_1000_centos-6.5-20140316.xml
+/etc/libvirt/storage/vagrant_1000_centos-6.5-20140324.xml
+/etc/libvirt/storage/vagrant_1000_vagrant-kvm.xml
+/etc/libvirt/storage/vagrant.xml
+# rm -i /etc/libvirt/storage/vagrant*
+rm: remove regular file ‘/etc/libvirt/storage/vagrant_1000_archlinux-x86_64-20140325.xml’? y
+rm: remove regular file ‘/etc/libvirt/storage/vagrant_1000_centos-6.5-20140316.xml’? y
+rm: remove regular file ‘/etc/libvirt/storage/vagrant_1000_centos-6.5-20140324.xml’? y
+rm: remove regular file ‘/etc/libvirt/storage/vagrant_1000_vagrant-kvm.xml’? y
+rm: remove regular file ‘/etc/libvirt/storage/vagrant.xml’? y
+# ls /etc/libvirt/storage/vagrant*
+ls: cannot access /etc/libvirt/storage/vagrant*: No such file or directory
+# exit
 ```
 
 alternative way:
@@ -78,7 +91,7 @@ $ sudo service libvirtd restart
 
 Fedora/CentOS/SuSE/Arch recent versions
 ```bash
-$ sudo systemctl libvirtd restart
+$ sudo systemctl restart libvirtd
 ```
 
 ### Ubuntu
