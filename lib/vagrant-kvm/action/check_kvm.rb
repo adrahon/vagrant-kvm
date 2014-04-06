@@ -12,7 +12,7 @@ module VagrantPlugins
           # set-up and the driver is ready to function. If not, then an
           # exception will be raised which will break us out of execution
           # of the middleware sequence.
-          Driver::Driver.new.verify!
+          env[:machine].provider.driver.verify!
 
           # Carry on.
           @app.call(env)
