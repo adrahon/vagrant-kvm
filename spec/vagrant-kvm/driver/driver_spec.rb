@@ -17,7 +17,6 @@ module VagrantPlugins
 
         before do
           described_class.any_instance.stub(:load_kvm_module!) { true }
-          described_class.any_instance.stub(:init_storage_pool!) { true }
           described_class.any_instance.stub(:lookup_volume_path_by_name) { "/tmp/pool-storage/box-disk1.img" }
         end
 
