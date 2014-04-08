@@ -20,7 +20,10 @@ describe VagrantPlugins::ProviderKvm::Util::VmDefinition do
           vnc_autoport: false,
           vnc_password: 'abc123'
 
-        subject.should include("<graphics type='vnc' port='1234' autoport='false'")
+        subject.should include("<graphics")
+        subject.should include("type='vnc'")
+        subject.should include("port='1234'")
+        subject.should include("autoport='false'")
 
         new_definition = VagrantPlugins::ProviderKvm::Util::VmDefinition.new(subject)
         new_definition.get(:gui).should be_true
@@ -43,13 +46,6 @@ describe VagrantPlugins::ProviderKvm::Util::VmDefinition do
       it "sets the network driver type" do
         should_default(:network_model, "virtio")
         should_set(:network_model, "ne2k_pci")
-      end
-
-      it "doesn't set the network driver if network_mode=:default" do
-        should_set(:network_model, :default) do |xml|
-          doc = REXML::Document.new(xml)
-          doc.elements["//devices/interface/model"].should be_nil
-        end
       end
 
       it "sets the video type" do

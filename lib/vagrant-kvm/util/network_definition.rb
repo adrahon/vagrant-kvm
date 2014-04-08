@@ -13,11 +13,11 @@ module VagrantPlugins
           self.attributes = {
             :forward => "nat",
             :domain_name => "vagrant.local",
-            :base_ip => "192.168.192.1",
+            :base_ip => "192.168.123.1",
             :netmask => "255.255.255.0",
             :range => {
-              :start => "192.168.192.100",
-              :end => "192.168.192.200",
+              :start => "192.168.123.100",
+              :end => "192.168.123.200",
             },
             :hosts => [],
             name: name,
@@ -59,6 +59,33 @@ module VagrantPlugins
 
         def as_xml
           KvmTemplateRenderer.render("libvirt_network", attributes.dup)
+        end
+
+        # Provide host xml block to update definiton through libvirt(>= 0.5.0)
+        def as_host_xml
+          xml = ""
+          hosts.each do |host|
+            xml = xml + "<host mac='#{host[:mac]}' name='#{host[:name]}' ip='#{host[:ip]}' />"
+          end
+          xml
+        end
+
+        def hosts
+          get(:hosts)
+        end
+
+        def already_exist_host?(config)
+          hosts.each do |host|
+            return true if host[:mac]==config[:mac]
+          end
+          false
+        end
+
+        def already_exist_ip?(config)
+          hosts.each do |host|
+            return true if host[:ip]==config[:ip]
+          end
+          false
         end
       end
     end

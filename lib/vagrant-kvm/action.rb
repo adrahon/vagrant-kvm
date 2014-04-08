@@ -242,7 +242,6 @@ module VagrantPlugins
       def self.action_up
         Vagrant::Action::Builder.new.tap do |b|
           b.use CheckKvm
-          b.use SetName
           b.use ConfigValidate
           b.use InitStoragePool
           b.use Call, Created do |env, b2|
