@@ -51,6 +51,11 @@ module VagrantPlugins
             @env[:ui].output "Your vagrant-kvm environment should be fixed. see README"
           end
 
+          # repair directories permission
+          home_path = File.expand_path("../../", @env[:tmp_path])
+          boxes_path = File.expand_path("../boxes/", @env[:tmp_path])
+          repair_permissions!(home_path, boxes_path)
+
           # import box volume
           volume_name = import_volume(storage_path, box_file, args)
 
@@ -135,6 +140,26 @@ module VagrantPlugins
           end
           # TODO cleanup if interrupted
           new_disk
+        end
+
+        # Repairs $HOME an $HOME/.vagrangt.d/boxes permissions.
+        #
+        # work around for
+        # https://github.com/adrahon/vagrant-kvm/issues/193
+        # https://github.com/adrahon/vagrant-kvm/issues/163
+        # https://github.com/adrahon/vagrant-kvm/issues/130
+        #
+        def repair_permissions!(home_path, boxes_path)
+          # check pathes
+          [home_path, boxes_path].each do |d|
+            s = File::Stat.new(d)
+            @logger.debug("#{d} permission: #{s.mode}")
+            if (s.mode & 1 == 0)
+              @env[:ui].info I18n.t("vagrant_kvm.repair_permission",:directory => d,
+                :old_mode => sprintf("%o",s.mode), :new_mode => sprintf("%o", s.mode|1))
+              File.chmod(s.mode | 1, d)
+            end
+          end
         end
 
         def recover(env)
