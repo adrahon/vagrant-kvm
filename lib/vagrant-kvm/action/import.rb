@@ -155,8 +155,8 @@ module VagrantPlugins
             s = File::Stat.new(d)
             @logger.debug("#{d} permission: #{s.mode}")
             if (s.mode & 1 == 0)
-              env[:ui].info I18n.t("vagrant_kvm.repair_permission",:directory => d,
-                :old_mode => sprintf("%o",s.mode), :new_mode => sprintf("%o", s.mode|1)
+              @env[:ui].info I18n.t("vagrant_kvm.repair_permission",:directory => d,
+                :old_mode => sprintf("%o",s.mode), :new_mode => sprintf("%o", s.mode|1))
               File.chmod(s.mode | 1, d)
             end
           end
