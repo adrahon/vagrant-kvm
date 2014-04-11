@@ -1,4 +1,9 @@
-# 0.1.6 (April, ?, 2014)
+# 0.1.7 (April, 10, 2014)
+
+* fix show stop syntax error in 0.1.6
+* fix malformed version error [GH-212]
+
+# 0.1.6 (April, 7, 2014)
 
 * Support Vagrant 1.5.x[GH-188][GH-187][GH-186][GH-174]
 * Handle Vagrant 1.5 migration with box folder structure change
