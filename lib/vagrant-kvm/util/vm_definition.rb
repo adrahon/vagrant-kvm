@@ -124,7 +124,14 @@ module VagrantPlugins
                 attributes.merge!(:memory_size => get_memory("KiB"),
                                   :memory_unit => "KiB")
                 )
-          inject_nics(xml)
+          # not inject nics to definition when called for export
+          # FIXME: bad design
+          #   export call here with (uuid = nil)
+          if get(:uuid)
+            inject_nics(xml)
+          else
+            xml
+          end
         end
 
         def inject_nics(xml)
