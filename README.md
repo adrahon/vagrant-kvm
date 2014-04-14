@@ -95,7 +95,7 @@ $ sudo service libvirt-bin restart
 
 Fedora/CentOS/SuSE/Arch
 ```bash
-$ sudo systemctl libvirtd restart
+$ sudo systemctl restart libvirtd
 ```
 
 
