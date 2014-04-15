@@ -13,7 +13,6 @@ module VagrantPlugins
       # a bootup (i.e. not saved).
       def self.action_boot
         Vagrant::Action::Builder.new.tap do |b|
-          b.use Network
           b.use Provision
           b.use Vagrant::Action::Builtin::HandleForwardedPortCollisions
           b.use PrepareNFSValidIds
@@ -256,6 +255,7 @@ module VagrantPlugins
               b2.use Customize, "pre-import"
               b2.use Import
               b2.use MatchMACAddress
+              b2.use Network
             end
           end
           b.use action_start
