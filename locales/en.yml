@@ -4,18 +4,18 @@ en:
       This is a test message.
     repair_permission: |-
       Change directory %{directory} permission from %{old_mode} to %{new_mode}.
+    kvm_spool_problem_inform: |-
+      Your vagrant-kvm environment should be fixed. see README.
     errors:
       kvm_no_connection: |-
         Cannot connect to KVM through Libvirt. Please check kernel module
         'kvm' and 'kvm-intel' or 'kvm-amd' are installed and your id is in 
-        group libvirt(in debian/ubuntu).
+        group libvirtd(in debian/ubuntu).
       kvm_invalid_version: |-
         Invalid Kvm version detected: %{actual}, but a version %{required} is
         required.
       kvm_no_qemu_binary: |-
         Executable binary of qemu could not be found. Please re-examine %{cause}.
-      kvm_fail_image_conversion: |-
-        Failed to convert image to specified format.
       kvm_failed_command: |-
         System command %{cmd} returned with error code %{res}.
       kvm_bad_box_format: |-
