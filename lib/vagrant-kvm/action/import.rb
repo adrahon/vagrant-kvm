@@ -110,14 +110,14 @@ module VagrantPlugins
               secmodel = 'dac'
             elsif driver.host_ubuntu?
               groupid = Etc.getgrnam('kvm').gid.to_s
-              secmodel='apparmor'
+              secmodel = 'apparmor'
             elsif driver.host_debian?
               # XXX: should be configurable
               groupid = Etc.getgrnam('kvm').gid.to_s
-              secmodel='dac'
+              secmodel = 'dac'
             else
               # default
-              secmodel='dac'
+              secmodel = nil
             end
             pool_name = 'vagrant_' + userid + '_' + box_name
             driver.init_storage_pool(pool_name, File.dirname(old_path), modes[:dir])

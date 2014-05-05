@@ -7,7 +7,7 @@
   <seclabel type='dynamic' model='selinux'/>
   <% elsif secmodel == 'apparmor' %>
   <seclabel type='dynamic' model='apparmor'/>
-  <% else %>
+  <% elsif secmodel == 'dac' %>
   <seclabel type='dynamic' model='dac'/>
   <% end %>
   <memory unit='<%= memory_unit %>'><%= memory_size %></memory>

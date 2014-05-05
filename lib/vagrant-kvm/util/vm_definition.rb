@@ -36,7 +36,7 @@ module VagrantPlugins
             :network      => 'vagrant',
             :network_model => 'virtio',
             :video_model  => 'cirrus',
-            :secmodel     => 'dac',
+            :secmodel     => nil,
             :sound        => nil,
             :nics         => [],
           }
