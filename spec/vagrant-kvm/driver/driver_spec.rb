@@ -10,6 +10,7 @@ module VagrantPlugins
         let(:box_path) { test_file "box-disk1.img" }
         let(:box_pool) { test_file "" }
         let(:capacity) { {:size=>256, :unit=>'KB'} }
+        let(:pool_path) { '/tmp/pool-storage' }
         let(:image_path) { '/tmp/pool-storage/box-disk1.img' }
         let(:image_type) { 'qcow2' }
         let(:uid) { 1000 }
@@ -33,13 +34,13 @@ module VagrantPlugins
 
           it "does not raise execption" do
             expect do
-              subject.init_storage_pool("vagrant", "/tmp")
+              subject.init_storage_pool("vagrant", pool_path)
             end.to_not raise_exception
           end
 
           it "does not raise exception" do
             expect do
-              subject.init_storage_pool("vagrant", "/tmp")
+              subject.init_storage_pool("vagrant", pool_path)
               subject.create_volume(
                   :disk_name  => disk_name,
                   :capacity   => capacity,
