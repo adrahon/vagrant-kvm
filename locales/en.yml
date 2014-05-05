@@ -21,4 +21,4 @@ en:
       kvm_bad_box_format: |-
         Unsupported box format.
       kvm_fail_storagepool: |-
-        Failed to activate storage pool %{pool_name}.
+        Failed to activate storage pool.
