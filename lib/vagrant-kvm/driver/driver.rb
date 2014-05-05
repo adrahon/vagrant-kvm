@@ -500,9 +500,6 @@ module VagrantPlugins
         # Starts the virtual machine.
         def start
           domain = @conn.lookup_domain_by_uuid(@uuid)
-          puts "--------------"
-          puts domain.xml_desc
-          puts "--------------"
           domain.create
           true
         end
