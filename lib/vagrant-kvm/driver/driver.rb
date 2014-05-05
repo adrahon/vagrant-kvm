@@ -36,13 +36,11 @@ module VagrantPlugins
         def initialize(uuid=nil)
           @logger = Log4r::Logger.new("vagrant::provider::kvm::driver")
           @uuid = uuid
-          @pool_name = "vagrant"
           @virsh_path = "virsh"
           @pool_migrate = false
 
           load_kvm_module!
           connect_libvirt_qemu!
-          retrieve_storage_pool
 
           if @uuid
             # Verify the VM exists, and if it doesn't, then don't worry
@@ -256,15 +254,25 @@ module VagrantPlugins
           get_default_ip
         end
 
+        # Activate the driver's storage pool
+        def activate_storage_pool(pool_name)
+          # Get storage pool if it exists
+          @pool = init_storage_pool(pool_name)
+          # check neccesity of migrating to new storage pool format
+          # this is happen when user has already used vagrant-kvm 0.1.5 and after
+          # XXX needs clarification
+          check_migrate_box_storage_pool
+          @logger.info("Retrieving storage pool #{pool_name}")
+        end
+
         # Initialize or Create a new storage pool
-        def init_storage_pool(pool_name, pool_path, dir_mode='0755')
+        def init_storage_pool(pool_name, pool_path='/tmp', dir_mode='0755')
           begin
             # Try to retrieve the storage pool
             pool = @conn.lookup_storage_pool_by_name(pool_name)
             @logger.info("Activating storage pool #{pool_name}")
             pool.create unless pool.active?
             pool.refresh
-            pool
           rescue Libvirt::RetrieveError
             # create if it doesn't exist
             @logger.info("Creating new storage pool #{pool_name} in #{pool_path}")
@@ -718,19 +726,6 @@ module VagrantPlugins
           end
         end
 
-        def retrieve_storage_pool
-          # Get storage pool if it exists
-          begin
-            @pool = @conn.lookup_storage_pool_by_name(@pool_name)
-            # check neccesity of migrating to new storage pool format
-            # this is happen when user has already used vagrant-kvm 0.1.5 and after
-            # XXX needs clarification
-            check_migrate_box_storage_pool
-            @logger.info("Retrieving storage pool #{@pool_name}")
-          rescue Libvirt::RetrieveError
-            raise Errors::KvmFailStoragePool, :pool_name => @pool_name
-          end
-        end
       end
     end
   end
