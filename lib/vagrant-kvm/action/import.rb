@@ -118,9 +118,7 @@ module VagrantPlugins
               secmodel='dac'
             end
             pool_name = 'vagrant_' + userid + '_' + box_name
-            driver.init_storage_directory(
-                :pool_path => File.dirname(old_path), :pool_name => pool_name,
-                :owner => userid, :group => groupid, :mode => modes[:dir])
+            driver.create_storage_pool(pool_name, File.dirname(old_path), modes[:dir])
             driver.create_volume(
                 :disk_name => new_disk,
                 :capacity => box.capacity,

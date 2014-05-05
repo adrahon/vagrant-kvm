@@ -36,14 +36,13 @@ module VagrantPlugins
         def initialize(uuid=nil)
           @logger = Log4r::Logger.new("vagrant::provider::kvm::driver")
           @uuid = uuid
-          # This should be configurable
           @pool_name = "vagrant"
           @virsh_path = "virsh"
           @pool_migrate = false
 
           load_kvm_module!
           connect_libvirt_qemu!
-          init_storage_pool!
+          retrieve_storage_pool
 
           if @uuid
             # Verify the VM exists, and if it doesn't, then don't worry
@@ -257,64 +256,45 @@ module VagrantPlugins
           get_default_ip
         end
 
-        # Initialize or create storage pool
-        def init_storage(base_path, uid, gid)
-          # Storage pool doesn't exist so we create it
-          # create dir if it doesn't exist
-          # if we let libvirt create the dir it is owned by root
-          pool_path = File.join(base_path, "/storage-pool")
-          FileUtils.mkpath(pool_path) unless Dir.exists?(pool_path)
-          init_storage_directory(
-                     :pool_path => pool_path,
-                     :pool_name => @pool_name,
-                     :owner => uid, :group=>gid, :mode=>'755')
-          init_storage_pool!
+        # Return true if storage pool exists
+        def storage_pool_exists?(pool_name)
+          begin
+            # Try to retrieve the storage pool
+            pool = @conn.lookup_storage_pool_by_name(pool_name)
+            @logger.info("Storage pool #{pool_name} exists.")
+            true
+          rescue Libvirt::RetrieveError
+            @logger.info("Storage pool #{pool_name} doesn't exist.")
+            false
+          end
         end
 
-        def init_storage_directory(args={})
-          begin
-            # Get the storage pool if it exists
-            pool = @conn.lookup_storage_pool_by_name(args[:pool_name])
-            @logger.info("Init storage pool #{args[:pool_name]}")
-          rescue Libvirt::RetrieveError
-             @logger.info("Init storage pool with owner: #{args[:owner]}")
-             storage_pool_xml = <<-EOF
+        # Create a new storage pool
+        def create_storage_pool(pool_name, pool_path, dir_mode='0755')
+          # only create if it doesn't exist
+          unless storage_pool_exists?(pool_name)
+            @logger.info("Creating new storage pool #{pool_name} in #{pool_path}")
+            # create dir if it doesn't exist
+            FileUtils.mkpath(pool_path) unless Dir.exists?(pool_path)
+            storage_pool_xml = <<-EOF
               <pool type="dir">
-              <name>#{args[:pool_name]}</name>
+              <name>#{pool_name}</name>
               <target>
-                <path>#{args[:pool_path]}</path>
+                <path>#{pool_path}</path>
                 <permissions>
-                 <owner>#{args[:owner]}</owner>
-                 <group>#{args[:group]}</group>
-                 <mode>#{args[:mode]}</mode>
+                 <owner>#{Process.uid}</owner>
+                 <group>#{Process.gid}</group>
+                 <mode>#{dir_mode}</mode>
                 </permissions>
               </target>
               </pool>
              EOF
-            # create transient pool
-            #
-            # WARN:
-            #  vagrant-kvm 0.1.5 uses
-            #     pool = @conn.define_storage_pool_xml(storage_pool_xml)
-            #  that made 'pesistent' storage pool
-            #  this caused problem when following sinario:
-            #
-            #  1. user use vagrant-kvm 0.1.5 with vagrant-1.4.x
-            #  2. user upgrade vagrant 1.5.x
-            #  3. user upgrade vagrant 0.1.5.1 and after
-            #
-            #  vagrant-kvm 0.1.5 don't work with vagrant 1.5.x
-            #  previous synario can be happned on many user.
-            #
-            # We use transient pool instead of persistent one
-            # in vagrant-kvm 0.1.5.x, 0.1.6 and after
-            #
-            #  Pools defined here will be removed after system reboot.
-            #
+            # Create transient pool
+            # Pools defined here will be removed after system reboot.
+            @logger.debug("Creating storage pool with XML:\n #{storage_pool_xml}")
             pool = @conn.create_storage_pool_xml(storage_pool_xml)
-            pool.build unless pool.active?
             #XXX use? pool.build(Libvirt::StoragePool::BUILD_NO_OVERWRITE)
-            @logger.info("Creating storage pool #{args[:pool_name]} in #{args[:pool_path]}")
+            pool.build unless pool.active?
           end
           pool.create unless pool.active?
           pool.refresh
@@ -745,14 +725,15 @@ module VagrantPlugins
           end
         end
 
-        def init_storage_pool!
+        def retrieve_storage_pool
           # Get storage pool if it exists
           begin
             @pool = @conn.lookup_storage_pool_by_name(@pool_name)
+            # check neccesity of migrating to new storage pool format
             # this is happen when user has already used vagrant-kvm 0.1.5 and after
-            # check neccesity of migration
+            # XXX needs clarification
             check_migrate_box_storage_pool
-            @logger.info("Init storage pool #{@pool_name}")
+            @logger.info("Retrieving storage pool #{@pool_name}")
           rescue Libvirt::RetrieveError
             # storage pool doesn't exist yet
           end

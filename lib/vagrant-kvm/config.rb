@@ -21,6 +21,11 @@ module VagrantPlugins
       # @return [Hash]
       attr_reader :network_adapters
 
+      # The storage pool to use
+      #
+      # @return [String]
+      attr_accessor :storage_pool
+
       # The VM image format
       #
       # @return [String]
@@ -77,6 +82,7 @@ module VagrantPlugins
         @customizations   = []
         @name             = UNSET_VALUE
         @gui              = UNSET_VALUE
+        @storage_pool     = UNSET_VALUE
         @image_type       = UNSET_VALUE
         @image_mode       = UNSET_VALUE
         @qemu_bin         = UNSET_VALUE
@@ -119,6 +125,8 @@ module VagrantPlugins
         @name = nil if @name == UNSET_VALUE
         # Default is to not show a GUI
         @gui = false if @gui == UNSET_VALUE
+        # Default is a storage pool we create for vagrant
+        @storage_pool = 'vagrant' if @storage_pool == UNSET_VALUE
         # Default image type is a sparsed raw
         @image_type = 'qcow2' if @image_type == UNSET_VALUE
         case @image_mode
