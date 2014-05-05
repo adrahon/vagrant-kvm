@@ -728,7 +728,7 @@ module VagrantPlugins
             check_migrate_box_storage_pool
             @logger.info("Retrieving storage pool #{@pool_name}")
           rescue Libvirt::RetrieveError
-            # storage pool doesn't exist yet
+            raise Errors::KvmFailStoragePool, :pool_name => @pool_name
           end
         end
       end

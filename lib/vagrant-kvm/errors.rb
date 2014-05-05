@@ -26,6 +26,10 @@ module VagrantPlugins
       class KvmFailedCommand < VagrantKVMError
         error_key(:kvm_failed_command)
       end
+
+      class KvmFailStoragePool < VagrantKVMError
+        error_key(:kvm_fail_storagepool)
+      end
     end
   end
 end

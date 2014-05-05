@@ -20,3 +20,5 @@ en:
         System command %{cmd} returned with error code %{res}.
       kvm_bad_box_format: |-
         Unsupported box format.
+      kvm_fail_storagepool: |-
+        Failed to activate storage pool %{pool_name}.
