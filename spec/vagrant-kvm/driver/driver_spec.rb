@@ -33,13 +33,13 @@ module VagrantPlugins
 
           it "does not raise execption" do
             expect do
-              subject.init_storage("/tmp", uid, gid)
+              subject.create_storage_pool("vagrant", "/tmp")
             end.to_not raise_exception
           end
 
           it "does not raise exception" do
             expect do
-              subject.init_storage("/tmp", uid, gid)
+              subject.create_storage_pool("vagrant", "/tmp")
               subject.create_volume(
                   :disk_name  => disk_name,
                   :capacity   => capacity,
