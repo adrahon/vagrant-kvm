@@ -153,7 +153,7 @@ module VagrantPlugins
           # check pathes
           [home_path, boxes_path].each do |d|
             s = File::Stat.new(d)
-            @logger.debug("#{d} permission: #{s.mode}")
+            @logger.debug("#{d} permission: #{s.mode.to_s(8)}")
             if (s.mode & 1 == 0)
               @env[:ui].info I18n.t("vagrant_kvm.repair_permission",:directory => d,
                 :old_mode => sprintf("%o",s.mode), :new_mode => sprintf("%o", s.mode|1))
