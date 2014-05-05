@@ -1,6 +1,7 @@
 require 'libvirt'
 require 'log4r'
 require 'pathname'
+require "rexml/document"
 
 module VagrantPlugins
   module ProviderKvm
@@ -331,6 +332,11 @@ module VagrantPlugins
           end
         end
 
+        def storage_pool_path
+          doc = REXML::Document.new @pool.xml_desc
+          doc.elements["/pool/target/path"].text
+        end
+
         def lookup_volume_path_by_name(volume_name)
           volume = @pool.lookup_volume_by_name(volume_name)
           volume.path
@@ -494,6 +500,9 @@ module VagrantPlugins
         # Starts the virtual machine.
         def start
           domain = @conn.lookup_domain_by_uuid(@uuid)
+          puts "--------------"
+          puts domain.xml_desc
+          puts "--------------"
           domain.create
           true
         end

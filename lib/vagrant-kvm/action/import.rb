@@ -42,7 +42,9 @@ module VagrantPlugins
           args[:disk_bus]   = provider_config.disk_bus if provider_config.disk_bus
 
           # Import the virtual machine
-          storage_path = File.join(@env[:tmp_path],"/storage-pool")
+
+          # Get storage pool directory
+          storage_path = @env[:machine].provider.driver.storage_pool_path
           box_file = @env[:machine].box.directory.join("box.xml").to_s
           raise Errors::KvmBadBoxFormat unless File.file?(box_file)
 
