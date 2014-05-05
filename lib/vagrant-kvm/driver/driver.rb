@@ -273,6 +273,7 @@ module VagrantPlugins
             @logger.info("Activating storage pool #{pool_name}")
             pool.create unless pool.active?
             pool.refresh
+            pool
           rescue Libvirt::RetrieveError
             # create if it doesn't exist
             @logger.info("Creating new storage pool #{pool_name} in #{pool_path}")
@@ -314,7 +315,7 @@ module VagrantPlugins
                 @pool_migrate = true
               end
             rescue Libvirt::RetrieveError
-              @logger.info("fail to retrieve storage pool")
+              raise Errors::KvmFailStoragePool
             end
           end
         end
