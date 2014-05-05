@@ -256,23 +256,17 @@ module VagrantPlugins
           get_default_ip
         end
 
-        # Return true if storage pool exists
-        def storage_pool_exists?(pool_name)
+        # Initialize or Create a new storage pool
+        def init_storage_pool(pool_name, pool_path, dir_mode='0755')
           begin
             # Try to retrieve the storage pool
             pool = @conn.lookup_storage_pool_by_name(pool_name)
-            @logger.info("Storage pool #{pool_name} exists.")
-            true
+            @logger.info("Activating storage pool #{pool_name}")
+            pool.create unless pool.active?
+            pool.refresh
+            pool
           rescue Libvirt::RetrieveError
-            @logger.info("Storage pool #{pool_name} doesn't exist.")
-            false
-          end
-        end
-
-        # Create a new storage pool
-        def create_storage_pool(pool_name, pool_path, dir_mode='0755')
-          # only create if it doesn't exist
-          unless storage_pool_exists?(pool_name)
+            # create if it doesn't exist
             @logger.info("Creating new storage pool #{pool_name} in #{pool_path}")
             # create dir if it doesn't exist
             FileUtils.mkpath(pool_path) unless Dir.exists?(pool_path)
@@ -295,10 +289,9 @@ module VagrantPlugins
             pool = @conn.create_storage_pool_xml(storage_pool_xml)
             #XXX use? pool.build(Libvirt::StoragePool::BUILD_NO_OVERWRITE)
             pool.build unless pool.active?
+            pool.refresh
+            pool
           end
-          pool.create unless pool.active?
-          pool.refresh
-          pool
         end
 
         def check_migrate_box_storage_pool
