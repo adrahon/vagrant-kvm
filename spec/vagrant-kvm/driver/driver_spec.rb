@@ -41,6 +41,7 @@ module VagrantPlugins
           it "does not raise exception" do
             expect do
               subject.init_storage_pool("vagrant", pool_path)
+              subject.activate_storage_pool("vagrant")
               subject.create_volume(
                   :disk_name  => disk_name,
                   :capacity   => capacity,
