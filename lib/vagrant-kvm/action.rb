@@ -51,6 +51,7 @@ module VagrantPlugins
                 b3.use PrepareNFSValidIds
                 b3.use SyncedFolderCleanup
                 b3.use PrepareNFSSettings
+                b3.use InitStoragePool
                 b3.use Destroy
               else
                 b3.use MessageWillNotDestroy
