@@ -19,7 +19,7 @@ Default image format is now qcow2 instead of sparsed raw image, with qcow2
 `vagrant-kvm` uses the box volume as a backing volume so that VM creation is
 a lot faster. In most cases you want to use qcow2.
 
-OVF boxes conversion as been removed, you should use `vagrant-mutate` instead.
+OVF boxes conversion has been removed, you should use `vagrant-mutate` instead.
 
 Synced folders are now provided by a QEMU/KVM Virtfs in default.
 You can also use NFS for file share using `type: "nfs"` option.
@@ -65,8 +65,8 @@ We recommend to use following combinations.
 - Vagrant 1.5.x or after, and  Vagrant-KVM 0.1.5.1 or after
 
 If you are joining test for vagrant-kvm or other reasons you use vagrant-kvm 0.1.5 with vagrant 1.4.x,
-you got `Call to virStoragePoolCreate failed: cannot open path` error, please follow the instructions bellow.
-Please take care for root operation.
+you got `Call to virStoragePoolCreate failed: cannot open path` error, please follow the instructions below.
+Please take care when running commands as root.
 
 1. Upgrade vagrant-kvm to vagrant-kvm  0.1.5.1 or after
 
@@ -176,7 +176,7 @@ then you can simply run `vagrant up` to use the kvm provider.
 
 There are some provider specific parameter to control VM definition.
 
-* `cpu_model` - cpu architecture: 'i686' or 'x86_64': default is x86_64. Note
+* `cpu_model` - cpu architecture: 'i686' or 'x86\_64': default is x86\_64. Note
   that your base box should specify this.
 * `core_number` - number of cpu cores.
 * `memory_size` - memory size such as 512m, 1GiB, 100000KiB, unit is KiB if
@@ -194,7 +194,7 @@ in this flag being automatically turned on by KVM.
 * `machine_type` - The type of machine to boot. Default is pc-1.2.
 * `network_model` - The model of the network adapter you want to use. Defaults
 to virtio. Can be set to `:default` if you want to use the KVM default setting.
-Possible values include: ne2k_isa i82551 i82557b i82559er ne2k_pci pcnet rtl8139 e1000 virtio.
+Possible values include: ne2k\_isa i82551 i82557b i82559er ne2k\_pci pcnet rtl8139 e1000 virtio.
 * `video_model` - The model of the video adapter. Default to cirrus. Can also be
 set to vga.
 * `image_mode` - Possible value are `clone` or `cow`, defaults to `cow`. If set
@@ -222,7 +222,7 @@ Vagrant-libvirt is a libvirt provider to control machines via the libvirt toolki
 Vagrant-libvirt covers a lot more libvirt options, local and remote hosts and multiple hypervisors,
 such as Xen, LXC and KVM/qemu.
 
-In early 2014, Varant-libvirt only support kvm/qemu in local host, there is no big feature difference.
+In early 2014, Vagrant-libvirt only supports kvm/qemu in local host, there is no big feature difference.
 
 Here are a few difference:
 
@@ -248,7 +248,7 @@ Vagrant-libvirt use qcow2 as disk image.
 ### 3. VNC port/password
 
 Vagrant-kvm allows you to configure how to connect with VNC, which provides virtual guest desktop.
-Vagrant-libvirt is not.
+Vagrant-libvirt does not.
 
 ### 4. Synced folder
 
@@ -259,12 +259,12 @@ without root privilege.
 Vagrant-libvirt provide synced folder with Rsync and NFS.
 They also plan to support virtfs in future.
 
-It is neccesary to fix several bugs in libvirt/qemu to enable
+It is neccesary to fix several bugs in libvirt/qemu to enable the
 virtfs feature in both providers.
 
 ### 5. Snapshots via sahara
 
-Vagrant-kvm plan to support snapshot via sahara.
+Vagrant-kvm plans to support snapshot via sahara.
 We have already proposed to sahara project to add support
 and are waiting for review.
 https://github.com/jedi4ever/sahara/pull/32
@@ -277,11 +277,11 @@ Both are supported by vagrant-mutate as convert target
 
 ### 7. Architecture
 
-Vagrant-kvm control kvm/qemu via ruby-libvirt, libvirt and qemu.
+Vagrant-kvm controls kvm/qemu via ruby-libvirt, libvirt and qemu.
 
-Vagrant-libvirt control machines via fog,
+Vagrant-libvirt controls machines via fog,
 a cloud abstraction library in ruby,
 that is also used by vagrant-aws.
-A fog library control virtual machines on supported platforms and provide
+The fog library controls virtual machines on supported platforms and provides
 control of qemu/kvm machines through ruby-libvirt and libvirt.
 
