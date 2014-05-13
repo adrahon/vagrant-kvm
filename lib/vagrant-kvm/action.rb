@@ -254,10 +254,10 @@ module VagrantPlugins
               end
               b2.use SetName
               b2.use Customize, "pre-import"
-              b2.use Import
-              # Import reloads the driver so we need to init storage again
+              # we need to init storage again after driver is reloaded
               # XXX there must be a better way
               b2.use InitStoragePool
+              b2.use Import
               b2.use MatchMACAddress
               b2.use Network
             end
