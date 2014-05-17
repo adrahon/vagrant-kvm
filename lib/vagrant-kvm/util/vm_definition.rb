@@ -138,7 +138,7 @@ module VagrantPlugins
           nics=get(:nics)
           doc = REXML::Document.new xml
           primary_nic = doc.elements["//interface"]
-          funcid = 1
+          funcid = 0
           nics.each do |nic|
             next if nic[:mac] == get(:mac)
 
