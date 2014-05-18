@@ -59,6 +59,10 @@ module VagrantPlugins
             :video_model => doc.elements["/domain/devices/video/model"].attributes["type"],
             :disk_bus    => doc.elements["//devices/disk/target"].attributes["bus"]
           })
+          # Security Model
+          doc.elements["/domain/seclabel"] do |seclabel|
+            update({:secmodel => seclabel.attributes["model"]})
+          end
           # NETWORK Interfaces
           nics = []
           doc.elements.each("//devices/interface") do |intf|
