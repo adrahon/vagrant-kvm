@@ -134,11 +134,17 @@ module VagrantPlugins
           end
         end
 
+        # inject nics into XML
+        # every NICs are locagted in 0000:00:03.n
+        #
+        # primary NIC is 0000:00:03.0
+        # and injected to 0000:00:03.1 ~ 0000:00:03.ff
+        #
         def inject_nics(xml)
           nics=get(:nics)
           doc = REXML::Document.new xml
           primary_nic = doc.elements["//interface"]
-          funcid = 0
+          funcid = 1
           nics.each do |nic|
             next if nic[:mac] == get(:mac)
 
@@ -151,7 +157,7 @@ module VagrantPlugins
             e.add_element('source', {'network' => nic[:network]})
             e.add_element('model', {'type' => nic[:model]})
             e.add_element('address',{'type' => 'pci','domain' => '0x0000', 'bus' => '0x00',
-             'slot' => '0x0a', 'function' => "0x%x" % funcid})
+             'slot' => '0x03', 'function' => "0x%x" % funcid})
             primary_nic.next_sibling = e
             funcid = funcid + 1
           end

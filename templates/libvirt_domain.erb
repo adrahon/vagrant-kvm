@@ -61,6 +61,7 @@
       <mac address='<%= mac %>'/>
       <source network='<%= network %>'/>
       <model type='<%= network_model %>'/>
+      <%- # WARN: slot 0x03 is hardcoded in vm_definition.rb:inject_nics() -%>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0' />
     </interface>
     <serial type='pty'>
