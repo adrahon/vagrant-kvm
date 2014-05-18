@@ -60,7 +60,7 @@ module VagrantPlugins
             :disk_bus    => doc.elements["//devices/disk/target"].attributes["bus"]
           })
           # Security Model
-          doc.elements["/domain/seclabel"] do |seclabel|
+          doc.elements.each("/domain/seclabel") do |seclabel|
             update({:secmodel => seclabel.attributes["model"]})
           end
           # NETWORK Interfaces

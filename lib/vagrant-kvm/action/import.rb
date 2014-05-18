@@ -41,6 +41,34 @@ module VagrantPlugins
 
           args[:disk_bus]   = provider_config.disk_bus if provider_config.disk_bus
 
+          # Permission/Security Model detection
+          driver = @env[:machine].provider.driver
+          # defaults
+          args[:userid] = Process.uid.to_s
+          args[:groupid] = Process.gid.to_s
+          args[:dirmode] = '0775'
+          args[:filemode] = '0664'
+          args[:label] = 'virt_image_t'
+          args[:secmodel] = nil
+          # OS specific
+          if driver.host_redhat?
+            # on Redhat/Fedora, permission is controlled
+            # with only SELinux
+            args[:secmodel] = 'selinux'
+            args[:dirmode]  = '0777'
+            args[:filemode] = '0666'
+          elsif driver.host_arch?
+            # XXX: should be configurable
+            args[:secmodel] = 'dac'
+          elsif driver.host_ubuntu?
+            args[:secmodel] = 'apparmor'
+            args[:groupid] = Etc.getgrnam('kvm').gid.to_s
+          elsif driver.host_debian?
+            # XXX: should be configurable
+            args[:secmodel] = 'dac'
+            args[:groupid] = Etc.getgrnam('kvm').gid.to_s
+          end
+
           # Import the virtual machine
 
           # Get storage pool directory
@@ -96,31 +124,8 @@ module VagrantPlugins
             # create volume
             box_name = @env[:machine].config.vm.box
             driver = @env[:machine].provider.driver
-            userid = Process.uid.to_s
-            groupid = Process.gid.to_s
-            modes = {:dir => '0775', :file => '0664'}
-            label = 'virt_image_t'
-            if driver.host_redhat?
-              # on Redhat/Fedora, permission is controlled
-              # with only SELinux
-              modes = {:dir => '0777',:file => '0666'}
-              secmodel = 'selinux'
-            elsif driver.host_arch?
-              # XXX: should be configurable
-              secmodel = 'dac'
-            elsif driver.host_ubuntu?
-              groupid = Etc.getgrnam('kvm').gid.to_s
-              secmodel = 'apparmor'
-            elsif driver.host_debian?
-              # XXX: should be configurable
-              groupid = Etc.getgrnam('kvm').gid.to_s
-              secmodel = 'dac'
-            else
-              # default
-              secmodel = nil
-            end
             pool_name = 'vagrant_' + userid + '_' + box_name
-            driver.init_storage_pool(pool_name, File.dirname(old_path), modes[:dir])
+            driver.init_storage_pool(pool_name, File.dirname(old_path), args[:dirmode])
             driver.create_volume(
                 :disk_name => new_disk,
                 :capacity => box.capacity,
@@ -129,11 +134,10 @@ module VagrantPlugins
                 :box_pool => pool_name,
                 :box_path => old_path,
                 :backing => args[:image_backing],
-                :owner => userid,
-                :group => groupid,
-                :mode => modes[:file],
-                :label => label,
-                :secmodel => secmodel)
+                :owner => args[:userid],
+                :group => args[:groupid],
+                :mode => args[:filemode],
+                :label => args[:label])
             driver.free_storage_pool(pool_name)
           else
             @logger.info "Image type #{args[:image_type]} is not supported"
