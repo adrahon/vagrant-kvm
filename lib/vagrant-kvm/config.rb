@@ -129,9 +129,7 @@ module VagrantPlugins
         @gui = false if @gui == UNSET_VALUE
         # Default is a storage pool we create for vagrant
         login = Etc.getlogin
-        info = Etc.getpwnam(login)
-        username = info.gecos.split(/,/).first
-        @storage_pool = 'vagrant-'+username if @storage_pool == UNSET_VALUE
+        @storage_pool = 'vagrant-'+login.to_s if @storage_pool == UNSET_VALUE
         # Default image type is a sparsed raw
         @image_type = 'qcow2' if @image_type == UNSET_VALUE
         case @image_mode
