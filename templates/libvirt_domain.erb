@@ -61,7 +61,6 @@
       <mac address='<%= mac %>'/>
       <source network='<%= network %>'/>
       <model type='<%= network_model %>'/>
-      <%- # WARN: slot 0x03 is hardcoded in vm_definition.rb:inject_nics() -%>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0' />
     </interface>
     <serial type='pty'>
@@ -91,10 +90,13 @@
     </memballoon>
    <% if p9 %>
      <% p9.each_with_index do |p, index| %>
+     <%- # slot should be in 1..31 -%>
+     <% break if index > 30 %>
      <filesystem type='mount' accessmode='<%= p[:accessmode] %>'>
        <source dir='<%= p[:hostpath] %>'/>
        <target dir='<%= p[:mount_tag] %>'/>
-       <address type='pci' domain='0x0000' bus='0x00' slot='<%= "0x%02x"%(16+index) %>' function='0x0' />
+       <%- # WARN: bus 0x01 is reserved in vm_definition.rb:inject_nics() -%>
+       <address type='pci' domain='0x0000' bus='0x02' slot='<%= "0x%02x"%(1 + index) %>' function='0x0' />
      </filesystem>
      <% end %>
    <% end %>

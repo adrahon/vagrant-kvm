@@ -139,18 +139,20 @@ module VagrantPlugins
         end
 
         # inject nics into XML
-        # every NICs are locagted in 0000:00:03.n
         #
         # primary NIC is 0000:00:03.0
-        # and injected to 0000:00:03.1 ~ 0000:00:03.ff
+        # and injected to 0000:01:01.0 ~ 0000:00:1f.0
         #
         def inject_nics(xml)
           nics=get(:nics)
           doc = REXML::Document.new xml
           primary_nic = doc.elements["//interface"]
-          funcid = 1
+          devid = 1
           nics.each do |nic|
             next if nic[:mac] == get(:mac)
+            #XXX: support maximum 31 additional NICs
+            #     because of a PCI standard limitation.
+            break if devid > 31
 
             nic[:type] = 'network' unless nic[:type]
             nic[:model] = 'virtio' unless nic[:model]
@@ -160,10 +162,11 @@ module VagrantPlugins
             e.add_element('mac', {'address' => nic[:mac]})
             e.add_element('source', {'network' => nic[:network]})
             e.add_element('model', {'type' => nic[:model]})
-            e.add_element('address',{'type' => 'pci','domain' => '0x0000', 'bus' => '0x00',
-             'slot' => '0x03', 'function' => "0x%x" % funcid})
+            e.add_element('address',{'type' => 'pci','domain' => '0x0000',
+             'bus' => '0x01', # bus 0x01 is for NICs, 0x02 is for plan9fs
+             'slot' => '0x%02x'% devid, 'function' => "0"})
             primary_nic.next_sibling = e
-            funcid = funcid + 1
+            devid = devid + 1
           end
           doc.to_s
         end
