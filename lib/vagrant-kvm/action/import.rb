@@ -125,7 +125,14 @@ module VagrantPlugins
             box_name = @env[:machine].config.vm.box
             driver = @env[:machine].provider.driver
             userid = Process.uid.to_s
-            pool_name = 'vagrant_' + userid + '_' + box_name
+            begin
+              # vagrant 1.5+
+              box_version = @env[machine].config.vm.box_version
+              pool_name = 'vagrant_' + userid + '_' + box_name + '_' + box_version.to_s
+            rescue
+              # before varant 1.5
+              pool_name = 'vagrant_' + userid + '_' + box_name
+            end
             driver.init_storage_pool(pool_name, File.dirname(old_path), args[:dirmode])
             driver.create_volume(
                 :disk_name => new_disk,

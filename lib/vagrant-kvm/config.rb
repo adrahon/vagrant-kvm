@@ -1,3 +1,5 @@
+require 'etc'
+
 module VagrantPlugins
   module ProviderKvm
     class Config < Vagrant.plugin("2", :config)
@@ -126,7 +128,8 @@ module VagrantPlugins
         # Default is to not show a GUI
         @gui = false if @gui == UNSET_VALUE
         # Default is a storage pool we create for vagrant
-        @storage_pool = 'vagrant' if @storage_pool == UNSET_VALUE
+        login = Etc.getlogin
+        @storage_pool = 'vagrant-'+login.to_s if @storage_pool == UNSET_VALUE
         # Default image type is a sparsed raw
         @image_type = 'qcow2' if @image_type == UNSET_VALUE
         case @image_mode
