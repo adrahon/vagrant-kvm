@@ -134,8 +134,8 @@ Then restart libvirtd.
 $ sudo systemctl restart libvirtd
 ```
 
-This may or may not be sufficient to make it work with Fedora, there are still
-some issues for some users on Fedora 20.
+Another option is to specify an existing local storage pool with the
+`storage-pool` option for the KVM provider in your Vagrantfile (see below).
 
 ## Usage
 
@@ -181,6 +181,8 @@ There are some provider specific parameter to control VM definition.
 * `core_number` - number of cpu cores.
 * `memory_size` - memory size such as 512m, 1GiB, 100000KiB, unit is KiB if
   unspecified.
+* `storage_pool` - specify an existing local storage pool to use instead of
+  vagrant's own.
 * `gui` - boolean for starting VM with VNC enabled.
 * `vnc_port` - The port the VNC server listens to. Default is automatic port
 assignment.
