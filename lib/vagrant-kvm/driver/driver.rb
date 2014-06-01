@@ -276,11 +276,15 @@ module VagrantPlugins
             pool.refresh
             pool
           rescue Libvirt::RetrieveError
-            # create if it doesn't exist
-            @logger.info("Creating new storage pool #{pool_name} in #{pool_path}")
-            # create dir if it doesn't exist
-            FileUtils.mkpath(pool_path) unless Dir.exists?(pool_path)
-            storage_pool_xml = <<-EOF
+            create_storage_pool(pool_name, pool_path, dir_mode)
+          end
+        end
+
+        def create_storage_pool(pool_name, pool_path, dir_mode)
+          @logger.info("Creating new storage pool #{pool_name} in #{pool_path}")
+          # create dir if it doesn't exist
+          FileUtils.mkpath(pool_path) unless Dir.exists?(pool_path)
+          storage_pool_xml = <<-EOF
               <pool type="dir">
               <name>#{pool_name}</name>
               <target>
@@ -292,15 +296,32 @@ module VagrantPlugins
                 </permissions>
               </target>
               </pool>
-             EOF
-            # Create transient pool
-            # Pools defined here will be removed after system reboot.
-            @logger.debug("Creating storage pool with XML:\n #{storage_pool_xml}")
+          EOF
+          # Create transient pool
+          # Pools defined here will be removed after system reboot.
+          @logger.debug("Creating storage pool with XML:\n #{storage_pool_xml}")
+          begin
             pool = @conn.create_storage_pool_xml(storage_pool_xml)
-            #XXX use? pool.build(Libvirt::StoragePool::BUILD_NO_OVERWRITE)
             pool.build unless pool.active?
             pool.refresh
             pool
+          rescue
+            # check conflict and shutdown old pool
+            defined_pool_list = @conn.list_storage_pools
+            defined_pool_list.each do |defined_pool_name|
+              defined_pool = @conn.lookup_storage_pool_by_name(defined_pool_name)
+              defined_pool_doc = REXML::Document.new defined_pool.xml_desc
+              defined_pool_path = File.expand_path(defined_pool_doc.elements["/pool/target/path"].text)
+              @logger.debug("check whether conflict with #{defined_pool_name} on #{defined_pool_path}")
+              if defined_pool_path == File.expand_path(pool_path)
+                defined_pool.destroy
+                pool = @conn.create_storage_pool_xml(storage_pool_xml)
+                pool.build unless pool.active?
+                pool.refresh
+                return pool
+              end
+            end
+            raise Errors::KvmFailStoragePool
           end
         end
 
