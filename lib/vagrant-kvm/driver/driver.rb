@@ -152,7 +152,8 @@ module VagrantPlugins
             :qemu_bin => "/usr/bin/qemu",
             :disk => volume_path,
             :network => 'vagrant',
-            :name => @name
+            :name => @name,
+            :uuid => nil
           }.merge(args)
           args.merge!(:virtio_rng => nil) if @conn.version.to_i < 1003000  # virtio_rng supported in 1.3.0+
           definition.update(args)
