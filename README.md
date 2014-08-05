@@ -206,6 +206,7 @@ image. This is slower but allows multiple VMs to be booted at the same time.
 * `disk_bus` - disk interface to show virtual disk to guest: 'virtio' or 'sata', 'scsi'
   A box, which is 'mutate'-ed from virtualbox/vmware box, may specify sata/ide for disk bus.
   It may be useful to specify 'virtio' for performance, even when box defaults disk bus as sata/ide/scsi.
+* `seclabel` - enables security labelling using selinux, apparmor, dac... based on the host distribution if set to `on`
 * `force_pause` - use `pause` for `vagrant suspend` instead of `suspend`.
   It keeps resource online but execution is stopped.
   When VM has a device that is not supported `hibernate`, automatically use

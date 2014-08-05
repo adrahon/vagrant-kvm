@@ -50,23 +50,30 @@ module VagrantPlugins
           args[:filemode] = '0664'
           args[:label] = 'virt_image_t'
           args[:secmodel] = nil
-          # OS specific
-          if driver.host_redhat?
-            # on Redhat/Fedora, permission is controlled
-            # with only SELinux
-            args[:secmodel] = 'selinux'
-            args[:dirmode]  = '0777'
-            args[:filemode] = '0666'
-          elsif driver.host_arch?
-            # XXX: should be configurable
-            args[:secmodel] = 'dac'
-          elsif driver.host_ubuntu?
-            args[:secmodel] = 'apparmor'
-            args[:groupid] = Etc.getgrnam('kvm').gid.to_s
-          elsif driver.host_debian?
-            # XXX: should be configurable
-            args[:secmodel] = 'dac'
-            args[:groupid] = Etc.getgrnam('kvm').gid.to_s
+          puts "PROVIDER SECLABEL"
+          puts "pool = #{provider_config.storage_pool}"
+          puts "seclab = #{provider_config.seclabel}"
+          # Optional security label
+          if provider_config.seclabel == 'on'
+            puts "SECLABEL"
+            # OS specific
+            if driver.host_redhat?
+              # on Redhat/Fedora, permission is controlled
+              # with only SELinux
+              args[:secmodel] = 'selinux'
+              args[:dirmode]  = '0777'
+              args[:filemode] = '0666'
+            elsif driver.host_arch?
+              # XXX: should be configurable
+              args[:secmodel] = 'dac'
+            elsif driver.host_ubuntu?
+              args[:secmodel] = 'apparmor'
+              args[:groupid] = Etc.getgrnam('kvm').gid.to_s
+            elsif driver.host_debian?
+              # XXX: should be configurable
+              args[:secmodel] = 'dac'
+              args[:groupid] = Etc.getgrnam('kvm').gid.to_s
+            end
           end
 
           # Import the virtual machine

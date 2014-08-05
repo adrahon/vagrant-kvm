@@ -78,6 +78,12 @@ module VagrantPlugins
       #
       # @return [String]
       attr_accessor :disk_bus
+
+      # Security labelling
+      # default: off
+      #
+      # @return [String]
+      attr_accessor :seclabel
       attr_accessor :force_pause
 
       def initialize
