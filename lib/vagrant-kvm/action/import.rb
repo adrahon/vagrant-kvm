@@ -50,12 +50,8 @@ module VagrantPlugins
           args[:filemode] = '0664'
           args[:label] = 'virt_image_t'
           args[:secmodel] = nil
-          puts "PROVIDER SECLABEL"
-          puts "pool = #{provider_config.storage_pool}"
-          puts "seclab = #{provider_config.seclabel}"
           # Optional security label
           if provider_config.seclabel == 'on'
-            puts "SECLABEL"
             # OS specific
             if driver.host_redhat?
               # on Redhat/Fedora, permission is controlled
