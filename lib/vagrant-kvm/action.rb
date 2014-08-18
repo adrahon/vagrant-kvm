@@ -258,7 +258,7 @@ module VagrantPlugins
               # XXX there must be a better way
               b2.use InitStoragePool
               b2.use Import
-              b2.use MatchMACAddress
+              b2.use NewMACAddress
               b2.use Network
             end
           end
@@ -286,7 +286,7 @@ module VagrantPlugins
       autoload :IsPaused, action_root.join("is_paused")
       autoload :IsRunning, action_root.join("is_running")
       autoload :IsSaved, action_root.join("is_saved")
-      autoload :MatchMACAddress, action_root.join("match_mac_address")
+      autoload :NewMACAddress, action_root.join("new_mac_address")
       autoload :MessageNotCreated, action_root.join("message_not_created")
       autoload :MessageNotRunning, action_root.join("message_not_running")
       autoload :MessageWillNotDestroy, action_root.join("message_will_not_destroy")

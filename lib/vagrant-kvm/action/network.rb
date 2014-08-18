@@ -16,7 +16,6 @@ module VagrantPlugins
           @env = env
 
           @env[:ui].info I18n.t("vagrant.actions.vm.network.preparing")
-          create_default_nic
           create_or_start_default_network!
           create_or_update_private_network!
 
@@ -24,24 +23,6 @@ module VagrantPlugins
         end
 
         private
-
-        def create_default_nic
-          # default NAT network/nic
-          default_ip = select_default_ip
-          @logger.debug("select default ip: #{default_ip}")
-          @env[:machine_ip] = default_ip
-
-          #addr=@default_ip.split(".")
-          # nic need mac/network/type(network/bridge)/model/name
-          # XXX: use format_mac(@env[:machine].config.vm.base_mac) ?
-          nic = {:mac => random_mac,
-                 :name=> "eth0",
-                 :type=> 'network',
-                 :model=> 'virtio',
-                 :network => "vagrant"}
-          @logger.debug("use default mac: #{nic[:mac]}" )
-          @env[:machine].provider.driver.add_nic(nic)
-        end
 
         def create_or_start_default_network!
           # default NAT network/nic
@@ -157,15 +138,6 @@ module VagrantPlugins
             }.merge(options)
           end
           options
-        end
-
-        def random_mac
-          rng = Random.new(Time.now.to_i)
-          mac = [0x52, 0x54, 0x00, # KVM Vendor prefix
-                rng.rand(128),
-                rng.rand(256),
-                rng.rand(256)]
-          mac.map {|x| "%02x" % x}.join(":")
         end
 
         def format_mac(mac)
