@@ -2,8 +2,12 @@ en:
   vagrant_kvm:
     test_message: |-
       これはテストメッセージです。
+    repair_permission: |-
+      Change directory %{directory} permission from %{old_mode} to %{new_mode}.
     kvm_spool_problem_inform: |-
       このVagrant-kvm環境は修正の必要があります。READMEを確認してください。
+    new_mac_address: |-
+      Assigning a new mac address to the VM.
     errors:
       kvm_no_connection: |-
         KVMにLibvirt経由で接続できません。カーネルモジュールの

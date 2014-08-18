@@ -6,6 +6,8 @@ en:
       Change directory %{directory} permission from %{old_mode} to %{new_mode}.
     kvm_spool_problem_inform: |-
       Your vagrant-kvm environment should be fixed. see README.
+    new_mac_address: |-
+      Assigning a new mac address to the VM.
     errors:
       kvm_no_connection: |-
         Cannot connect to KVM through Libvirt. Please check kernel module
