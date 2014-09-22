@@ -24,6 +24,8 @@ RAM=2048
 VCPUS=2
 
 IMG=$(readlink -e $2)
+[[ "$?" -ne 0 ]] && error "'$2': No such image"
+
 IMG_BASENAME=$(basename $IMG)
 IMG_DIR=$(dirname $IMG)
 
@@ -51,6 +53,7 @@ virt-install \
     --ram $RAM --vcpus=$VCPUS \
     --disk path="$IMG",bus=virtio,format=qcow2 \
     -w network=default,model=virtio > box.xml
+[[ "$?" -ne 0 ]] && error "Error during virt-install"
 
 # extract the mac for the Vagrantfile
 MAC=$(cat box.xml | grep 'mac address' | cut -d\' -f2 | tr -d :)
