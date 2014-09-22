@@ -55,6 +55,9 @@ IMG=$(readlink -e $2)
 IMG_BASENAME=$(basename $IMG)
 IMG_DIR=$(dirname $IMG)
 
+BOX=$IMG_DIR/$NAME.box
+[[ -f "$BOX" ]] && error "'$BOX': Already exists"
+
 TMP_DIR=$IMG_DIR/_tmp_package
 TMP_IMG=$TMP_DIR/$IMG_BASENAME
 
@@ -102,9 +105,11 @@ Vagrant.configure("2") do |config|
 end
 EOF
 
-echo "==> Creating box"
+echo "==> Creating box, tarring and gzipping"
 
 tar cvzf $NAME.box --totals ./metadata.json ./Vagrantfile ./box.xml ./$IMG_BASENAME
 mv $NAME.box $IMG_DIR
 
-echo "==> $IMG_DIR/$NAME.box created"
+echo "==> ${IMG_DIR}/${NAME}.box created"
+echo "==> You can now add the box:"
+echo "==>   'vagrant box add ${IMG_DIR}/${NAME}.box --name ${NAME%.*}'"
