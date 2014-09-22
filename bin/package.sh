@@ -13,6 +13,19 @@ usage() {
     echo "It uses virt-install to do so"
 }
 
+# dump libvirt xml
+dumpxml(){
+    virt-install \
+        --print-xml \
+        --dry-run \
+        --import \
+        --name $NAME \
+        --ram $RAM --vcpus=$VCPUS \
+        --disk path="$IMG",bus=virtio,format=qcow2 \
+        -w network=default,model=virtio
+    [[ "$?" -ne 0 ]] && error "Error during virt-install"
+}
+
 if [ -z "$2" ]; then
     usage
     exit 1
@@ -44,16 +57,7 @@ IMG=$TMP_DIR/$IMG_BASENAME
 cd $TMP_DIR
 
 # generate box.xml
-
-virt-install \
-    --print-xml \
-    --dry-run \
-    --import \
-    --name $NAME \
-    --ram $RAM --vcpus=$VCPUS \
-    --disk path="$IMG",bus=virtio,format=qcow2 \
-    -w network=default,model=virtio > box.xml
-[[ "$?" -ne 0 ]] && error "Error during virt-install"
+dumpxml > box.xml
 
 # extract the mac for the Vagrantfile
 MAC=$(cat box.xml | grep 'mac address' | cut -d\' -f2 | tr -d :)
