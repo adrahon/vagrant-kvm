@@ -116,7 +116,7 @@ To avoid this, please check and change your home directory and
 child directories permission to permit qemu user access to `~/.vagrant.d/tmp/storage-pool/`
 
 ```bash
-$ chmod go+x /home/<your account>
+$ setfacl -m g:qemu:x /home/<your account>
 ```
 
 Another option is to run qemu/kvm as the root user by changing the
