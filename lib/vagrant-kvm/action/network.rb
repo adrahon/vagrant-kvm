@@ -75,7 +75,7 @@ module VagrantPlugins
         end
 
         def add_private_network_host(option, index)
-            mac = random_mac
+            mac = @env[:machine].provider.driver.generate_mac_address
             option[:hosts]= [{
               :mac => mac,
               :name => get_host_name,

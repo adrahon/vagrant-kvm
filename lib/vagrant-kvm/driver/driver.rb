@@ -451,6 +451,16 @@ module VagrantPlugins
           VM_STATE[state]
         end
 
+        # return a new (random) MAC address
+        def generate_mac_address
+          # Don't use Random.new, it causes collisions
+          mac = [0x52, 0x54, 0x00, # KVM Vendor prefix
+                Random.rand(256),
+                Random.rand(256),
+                Random.rand(256)]
+          mac.map {|x| "%02x" % x}.join(":")
+        end
+
         def read_mac_address
           domain = @conn.lookup_domain_by_uuid(@uuid)
           definition = Util::VmDefinition.new(domain.xml_desc)
