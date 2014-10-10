@@ -153,7 +153,8 @@ module VagrantPlugins
             :disk => volume_path,
             :network => 'vagrant',
             :name => @name,
-            :uuid => nil
+            :uuid => nil,
+            :mac => generate_mac_address
           }.merge(args)
           args.merge!(:virtio_rng => nil) if @conn.version.to_i < 1003000  # virtio_rng supported in 1.3.0+
           definition.update(args)
@@ -477,11 +478,6 @@ module VagrantPlugins
 
         def set_name(name)
           @name = name
-        end
-
-        def set_mac_address(mac)
-          update_domain_xml(:mac => mac)
-          @logger.debug("set mac: #{mac}")
         end
 
         def set_gui(vnc_port, vnc_autoport, vnc_password)
