@@ -114,6 +114,7 @@ module VagrantPlugins
         end
 
         def delete
+          cleanup_networks
           domain = @conn.lookup_domain_by_uuid(@uuid)
           definition = Util::VmDefinition.new(domain.xml_desc)
           volume = @pool.lookup_volume_by_path(definition.attributes[:disk])
@@ -255,6 +256,39 @@ module VagrantPlugins
             @logger.debug("missing uuid? #{@uuid}")
           end
           get_default_ip
+        end
+
+        # Remove DHCP entries from Networks
+        def cleanup_networks
+          # Get list of NICs
+          domain = @conn.lookup_domain_by_uuid(@uuid)
+          definition = Util::VmDefinition.new(domain.xml_desc)
+          nics = definition.get_all_nics
+          nics.each do |nic|
+            # for each nic remove dhcp entry from network
+            network = @conn.lookup_network_by_name(nic[:network])
+            network_def = Util::NetworkDefinition.new(nic[:network], network.xml_desc)
+
+            @logger.info("Removing host entry from network #{nic[:network]}")
+            @logger.debug("Removing #{nic[:mac]} defined as:\n#{network_def.get_host_xml(nic[:mac])}")
+            # 2 should be Libvirt::Network::NETWORK_UPDATE_COMMAND_DELETE
+            # but fails as undefined? XXX
+            network.update(2,
+              Libvirt::Network::NETWORK_SECTION_IP_DHCP_HOST,
+              -1,
+              network_def.get_host_xml(nic[:mac]),
+              Libvirt::Network::NETWORK_UPDATE_AFFECT_CURRENT
+              )
+
+            # if no entries left, destroy and undefine the network
+            network = @conn.lookup_network_by_name(nic[:network])
+            network_def = Util::NetworkDefinition.new(nic[:network], network.xml_desc)
+            if network_def.hosts.count == 0
+              @logger.info("Network #{nic[:network]} has no hosts left, deleting.")
+              network.destroy
+              network.undefine
+            end
+          end
         end
 
         # Activate the driver's storage pool

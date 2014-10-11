@@ -70,6 +70,17 @@ module VagrantPlugins
           xml
         end
 
+        # Returns xml definition for one host
+        def get_host_xml(mac)
+          xml = ""
+          hosts.each do |host|
+            if host[:mac] == mac
+             return "<host mac='#{host[:mac]}' name='#{host[:name]}' ip='#{host[:ip]}' />"
+            end
+          end
+          xml
+        end
+
         def hosts
           get(:hosts)
         end

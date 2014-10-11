@@ -201,6 +201,19 @@ module VagrantPlugins
           set(:nics, nics)
         end
 
+        # Return list of NICs including primary NIC
+        # FIXME we need to treat primary as ordinary NIC
+        def get_all_nics
+          nics = get(:nics)
+          nics << {
+                :mac     => get(:mac),
+                :network => get(:network),
+                # :type    => get(:type), XXX need to manage model
+                :model   => get(:network_model)
+                }
+          nics
+        end
+
         def get_memory(unit="bytes")
           size_from_bytes(get(:memory), unit)
         end
