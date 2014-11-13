@@ -223,7 +223,7 @@ Home directory permission is too conservative for Vagrant with kvm.
 Please relax your home directory permission.
 
 ```bash
-$ chmod o+x $HOME
+$ setfacl -m g:qemu:x /home/~~username~~
 ```
 
 To use with Vagrant, you may need to configure libvirt for non-root user to run KVM.
