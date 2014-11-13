@@ -56,7 +56,7 @@ to the libvirtd unix group.
 To enable libvirt management access for a user, add them to this group:
 
 ```bash
-$ sudo usermod -G libvirtd  -a ~~usrname~~
+$ sudo usermod -G libvirtd  -a ~~username~~
 ```
 
 ### Fedora/CentOS/RedHat/openSUSE requirements
@@ -68,7 +68,7 @@ $ sudo usermod -G libvirtd  -a ~~usrname~~
     yum install nfs-utils
 
 #### For Networking:
-    yum install redir`
+    yum install redir
 
 #### For `ruby-libvirt` gems installation dependency:
     yum install gcc make rubygem-rake ruby-devel libvirt-devel libxslt-devel libxml2-devel
