@@ -1,5 +1,9 @@
 [![Build Status](https://travis-ci.org/adrahon/vagrant-kvm.png)](https://travis-ci.org/adrahon/vagrant-kvm)
 
+# This project is dead, please use [vagrant-libvirt](https://github.com/pradels/vagrant-libvirt/) instead!
+
+There will be no update to this project anymore.
+
 # Vagrant KVM Provider
 
 This is a [Vagrant](http://www.vagrantup.com) 1.4+ plugin that adds a KVM
